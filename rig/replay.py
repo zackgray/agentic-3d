@@ -55,7 +55,7 @@ def main(argv=None) -> int:
     args = p.parse_args(argv)
     exe, rows = blender_path(), []
     for folder in args.runs:
-        for run in sorted(Path(folder).glob("*_harness_*")):
+        for run in sorted(Path(folder).glob("*_harness*_*")):
             rec = json.loads((run / "result.json").read_text(encoding="utf-8"))
             if rec["versions"].get("setup") != args.version:
                 continue

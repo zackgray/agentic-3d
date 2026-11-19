@@ -210,3 +210,26 @@ By group (pass, tokens per pass), no MCP → h7: hard-surface 20/24 10,822 → 2
 **Decided (recommended to the owner).** Don't adopt h8: it costs 18% more tokens typical on both models, and the gain it was built for is too small to see. The lathe warning is wrong as a rule, because legitimate ring parts are common. An expects-only variant would be cheaper, but at best it catches two of Sonnet's eight h7 failures, so it is not worth another round. h7 stays the harness.
 
 **Spend.** $0.56 (Haiku $0.05, Sonnet $0.50) against $0.45 estimated. Phase 3 about $7.15 of $20.
+
+## 2026-11-19 · Containment: the harness in a sandbox
+
+**Why.** Agent-written code ran in a Blender with the owner's full Windows permissions: every file (the API key included), the network, other programs. That needed a wall before any model outside Anthropic writes code here, and it was worth having for Haiku and Sonnet too. Options weighed with the owner: a low-privilege Windows account plus a Python hook (cheap, but a fence rather than a wall), Windows Sandbox (no automation), a Linux container (chosen), a full VM (overkill), and running Blender on a separate lab server (rejected: a breach there would reach more than dev files, and moving Blender off this machine would add a variable to every timing).
+
+**Built.** A new setup, `harness-sandbox`: the h7 harness with its Blender in a Linux container (official Blender 5.2.3 Linux build, checksum-pinned), one fresh container per run, removed afterwards. Walls: no network at all, a read-only system with a scratch area, no Linux capabilities or privilege escalation, a non-root user, capped processes and memory, nothing from the host environment, and only the run folder writable. The harness code is mounted read-only. On Docker Desktop a container can't be both cut off from the internet and reachable over the network, so the rig talks to Blender over the container's input and output instead of a port; the model is still called from the rig, outside. Inside, an audit hook logs (never blocks) what the agent's code tries past the walls, kept with each run. Scripts registered to run when a scene opens are stripped before every save, since the owner opens these scenes in an unsandboxed Blender, and the rig's own Blender now starts with auto-run scripts disabled. The model sees exactly what h7 shows it.
+
+**Verified, free.** The full harness self-test passes in the sandbox and on the host. A new walls test runs agent-style escape attempts: name lookup and a connection to the internet, writes to the system, the home folder and the harness code, a check for the API key in the environment, a look for host drives, and a planted auto-run script. Every attempt failed, the only mounts are the run folder and the read-only harness code, the only network interface is loopback, and the audit log recorded each watched attempt.
+
+**Measured: check round** (owner's go; Haiku 5.5 low, development, one run per task, no voids, no containers left behind).
+
+| | Harness h7, host (90) | Harness h7, sandbox (30) |
+|---|---|---|
+| Pass | 86/90 (96%) | 26/30 (87%) |
+| Tokens per passed task | 6,489 | 7,205 |
+| Geometric mean tokens per task | 4,855 | 5,158 |
+| Wall time per run | 12.3 s | 14.4 s |
+
+The lower pass rate isn't the sandbox. Replaying all 30 sandboxed runs' code in the host's Windows Blender gave the same verdict and the same number of calls on every one (`python -m rig.replay runs/_sandbox-check --version "harness-sandbox h7"`). All four failures were decided in code the agent wrote before it had seen anything from the sandbox: a soap bar built in metres instead of millimetres, a grinder crank left named "Shaft", a charger port that misses its probe, and r03's borderline fillet volume, which fails about one run in three on the host too. The audit log recorded nothing in 30 runs. The sandbox costs about 2 seconds a run (container start); tokens differ only by sampling, since the model sees identical text.
+
+**Decided (recommended).** Use `harness-sandbox` for any new model arm, and keep `harness` only to reproduce the published h7 numbers. The replay tool now also replays sandbox runs.
+
+**Spend.** $0.05. Phase 3 about $7.20 of $20.

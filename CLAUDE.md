@@ -11,4 +11,5 @@ Run `/orient` (or read the private handoff beside the project memory) and the ne
 - **Owner's split:** the agent models (and later animates); the owner lights, textures and finishes in other software. Don't build lighting or texturing tooling.
 - **Documentation is part of the work.** At the end of every session, add a dated entry to `docs/journal.md`: what was done, decided (and why), and measured. Keep numbers and the reasons behind decisions; those are the story. When a measured result lands, update `docs/case-study.md`.
 - Blender 5.2 is installed on this workstation (`C:/Program Files/Blender Foundation/Blender 5.2`).
+- **Publishing:** before any commit that will be pushed, follow `docs/publishing.md` (only `main` and explicit tags are public; scan the diff for private details; docs ship with the code).
 - Files under ~300 lines; Markdown with no hard wraps.

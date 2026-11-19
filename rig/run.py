@@ -25,10 +25,11 @@ from .prompt_arms import ARMS, REQUEST, apply
 from .setups.harness import HarnessSetup
 from .setups.mcp_servers import MCP_SETUPS
 from .setups.no_mcp import NoMcpSetup
+from .setups.sandbox import SandboxHarnessSetup
 from .task import load_task
 
 ROOT = Path(__file__).resolve().parent.parent
-SETUPS = {"no-mcp": NoMcpSetup, "harness": HarnessSetup, **MCP_SETUPS}
+SETUPS = {"no-mcp": NoMcpSetup, "harness": HarnessSetup, "harness-sandbox": SandboxHarnessSetup, **MCP_SETUPS}
 
 
 def rig_version() -> str:
@@ -64,6 +65,7 @@ def execute(args, rec: dict, run_dir: Path, transcript: list) -> None:
     setup = SETUPS[args.setup](exe)
     rec["versions"]["setup"] = f"{setup.name} {setup.version}"
     setup.start(run_dir, scene)
+    rec["versions"].update(getattr(setup, "versions", {}))
     t0 = time.monotonic()
     try:
         rec["agent"] = run_agent(client, args.model, args.effort, setup, apply(task.prompt, args.arm), counter, ledger,
@@ -75,6 +77,8 @@ def execute(args, rec: dict, run_dir: Path, transcript: list) -> None:
         rec["metrics"]["wall_seconds"] = round(time.monotonic() - t0, 1)
         rec["turns"] = ledger.turns
         rec["tool_calls"] = ledger.tool_calls
+        if hasattr(setup, "audit"):
+            rec["sandbox_audit_events"] = len(setup.audit)
     rec["checks"] = run_checks(exe, scene, task.checks)
     rec["verdict"] = "pass" if rec["checks"]["passed"] else "fail"
 

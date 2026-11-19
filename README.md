@@ -50,6 +50,7 @@ pip install -e .[dev]
 
 - **Blender:** the rig looks for `C:/Program Files/Blender Foundation/Blender 5.2/blender.exe`; elsewhere, set `BLENDER_PATH` to the Blender executable.
 - **API key:** put `ANTHROPIC_API_KEY=...` in a `.env` file at the repo root (git-ignored), or set it in the environment.
+- **Sandbox** (recommended whenever a model you don't fully trust writes the code): the `harness-sandbox` setup runs the harness's Blender in a Linux container with no network, a read-only system, no host environment and only the run folder writable; the model sees exactly what `harness` shows it. Needs Docker; build the image once with `docker build -t agentic3d-blender:5.2.3 sandbox`. An audit log of anything the agent's code tries past those walls is kept with each run.
 - **MCP baselines** (only to rerun the Phase 2 comparison; Windows, since they need a GUI Blender on a hidden desktop): `python -m rig.vendor_setup` fetches each server at its pinned commit into an isolated Blender profile.
 
 ### Free (no model calls)
@@ -57,7 +58,8 @@ pip install -e .[dev]
 ```
 python -m pytest                                       # unit tests, no Blender needed
 python -m rig.verify_checks heldout4/w03-candlestick   # prove a task's checks against its reference and variants
-python tests/harness_selftest.py                       # the harness against a live Blender
+python tests/harness_selftest.py [--sandbox]           # the harness against a live Blender (or in the sandbox)
+python tests/sandbox_walls.py                          # agent-style code tries to get out of the sandbox; every attempt must fail
 python -m rig.opening_read --no-count                  # the opening read on every scripted starting scene
 ```
 
@@ -75,8 +77,9 @@ Runs are recorded under `runs/` (git-ignored): result, full transcript and per-c
 
 - `rig/`: the runner, batch and comparison tools, the setups (no MCP, three MCP servers, the harness), and the Blender-side checks and harness server.
 - `tasks/`: the 30-task development suite and shared reference-model helpers; `heldout/` … `heldout4/`: the four held-out sets, each spent.
+- `sandbox/`: the container image for the `harness-sandbox` setup.
 - `tests/`: unit tests (`tests/unit/`) and live-Blender tests.
-- `docs/`: `case-study.md` (the write-up), `journal.md` and the earlier journals (dated record of what was done, decided and measured), `eval-method.md`, `task-authoring.md`, `research.md` (the landscape at the start), `roadmap.md`.
+- `docs/`: `case-study.md` (the write-up), `journal.md` and the earlier journals (dated record of what was done, decided and measured), `eval-method.md`, `task-authoring.md`, `publishing.md` (how changes reach this repo), `research.md` (the landscape at the start), `roadmap.md`.
 
 ## License
 

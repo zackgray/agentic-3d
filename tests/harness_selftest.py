@@ -1,6 +1,6 @@
 """Free checks of the h6 and h7 behaviours against a live harness Blender (no model calls). Run from the repo root:
 
-    python tests/harness_selftest.py
+    python tests/harness_selftest.py [--sandbox]   # --sandbox: the same checks in the container
 """
 import json
 import shutil
@@ -10,6 +10,7 @@ from pathlib import Path
 sys.path.insert(0, ".")
 from rig.blender import blender_path, make_starting_scene  # noqa: E402
 from rig.setups.harness import HarnessSetup  # noqa: E402
+from rig.setups.sandbox import SandboxHarnessSetup  # noqa: E402
 
 exe = blender_path()
 work = Path("runs/_smoke/h6check")
@@ -17,7 +18,7 @@ shutil.rmtree(work, ignore_errors=True)
 work.mkdir(parents=True)
 scene = work / "scene.blend"
 make_starting_scene(exe, "empty", scene)
-h = HarnessSetup(exe, timeout=8)
+h = (SandboxHarnessSetup if "--sandbox" in sys.argv else HarnessSetup)(exe, timeout=8)
 h.start(work, scene)
 h.initial_context()
 fails = []

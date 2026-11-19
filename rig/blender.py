@@ -26,7 +26,7 @@ def run_script(exe: Path, script: str, args: list[str], blend: Path | None = Non
     cmd = [str(exe), "-b"]
     if blend is not None:
         cmd.append(str(blend))
-    cmd += ["--factory-startup", "--python-exit-code", "1", "--python", str(SIDE / script), "--", *args]
+    cmd += ["--factory-startup", "--disable-autoexec", "--python-exit-code", "1", "--python", str(SIDE / script), "--", *args]
     try:
         return subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8",
                               errors="replace", timeout=timeout)
