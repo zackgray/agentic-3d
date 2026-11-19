@@ -123,3 +123,5 @@ No MCP failed all three w07 runs (parts misplaced or the wrong size, one unit sl
 - **Run records for the release:** 1,629 runs (every matrix, every held-out set, the pilot, the prompt test and the thinking arms; one void excluded), with result, transcript and per-call records, 24.5 MB zipped. Local paths were replaced with placeholders, and a second scan found no keys or personal data. Every headline figure recomputes from it exactly. The final .blend scenes are left out: each embeds a local home path.
 
 **Spend.** None.
+
+**Published.** The repository went public on 2026-11-18 with the h7 release and its run records.
