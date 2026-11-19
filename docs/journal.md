@@ -125,3 +125,28 @@ No MCP failed all three w07 runs (parts misplaced or the wrong size, one unit sl
 **Spend.** None.
 
 **Published.** The repository went public on 2026-11-18 with the h7 release and its run records.
+
+## 2026-11-19 · Sonnet 5.5 arm, round one
+
+**Why.** To test whether h7's advantage is a property of the harness or only compensation for Haiku's mistakes: a stronger model should repair less on its own, so its no-MCP baseline should be leaner.
+
+**Priced first.** Repricing all 180 scored Haiku development runs (no MCP and h7, 90 each) at Sonnet 5.5 rates gave about $9.60 for the full arm (30 × 3 per setup): $6.90 no MCP, $2.70 h7, with output (mostly thinking) about 75–80% of the cost. The owner approved one round (30 × 1 per setup) first, to measure Sonnet's own token profile before committing the rest.
+
+**Fixed.** Cost accounting priced cache reads at 0.1× input for every model. Sonnet 5.5 and Opus 5.5 cache reads are 0.05× ($0.10 and $0.20 per million), so prices now carry a per-model cache-read rate. Haiku's costs are unchanged.
+
+**Measured (round one, Sonnet 5.5 low, development, one run per task).** `python -m rig.compare --setups no-mcp harness --version harness=h7 --model claude-sonnet-5-5 --groups`. No voids.
+
+| | No MCP | h7 | Ratio |
+|---|---|---|---|
+| Pass | 25/30 (83%) | 28/30 (93%) | |
+| Tokens per passed task | 10,512 | 3,577 | 0.34 |
+| Geometric mean tokens per task | 7,386 | 3,089 | 0.42 |
+| Model turns per run | 2.9 | 1.2 | |
+| Wall time per run | 21.1 s | 7.9 s | 0.37 |
+| Cost | $0.864 | $0.389 | |
+
+For comparison, Haiku 5.5 low on the same suite (90 runs each): no MCP 26,727 tokens per pass, h7 6,489 (0.24); geometric mean ratio 0.29.
+
+**What it means so far.** Sonnet is leaner on its own: its no-MCP baseline uses about 40% of Haiku's tokens per pass, and it barely thinks at low effort. h7 still cuts tokens by about two thirds and wall time by about the same, with the pass rate at least as good, so the advantage holds on the stronger model, though it is smaller than on Haiku (0.34 against 0.24 per pass). On cost, Haiku plus h7 remains far cheaper: about $0.0016 per passed task against $0.014 for Sonnet plus h7. One round is 30 runs per setup, so these are directional.
+
+**Spend.** $1.25 for the round, against $3.20 estimated. Phase 3 about $4.00 of $20. Rounds two and three re-quote at about $2.50.

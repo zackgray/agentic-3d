@@ -3,7 +3,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from rig.accounting import CACHE_READ, CACHE_WRITE, PRICES, Counter, Ledger
+from rig.accounting import CACHE_WRITE, PRICES, Counter, Ledger
 
 
 def usage(inp=0, out=0, write=0, read=0, thinking=None):
@@ -13,18 +13,18 @@ def usage(inp=0, out=0, write=0, read=0, thinking=None):
 
 
 def test_cost_matches_list_price():
-    pin, pout = PRICES["claude-haiku-5-5"]
+    pin, pout, pread = PRICES["claude-haiku-5-5"]
     row = Ledger("claude-haiku-5-5").turn(usage(1000, 500, write=2000, read=10_000), 0, 0, 1.0, "end_turn")
-    want = (1000 + 2000 * CACHE_WRITE + 10_000 * CACHE_READ) * pin / 1e6 + 500 * pout / 1e6
+    want = (1000 + 2000 * CACHE_WRITE) * pin / 1e6 + 10_000 * pread / 1e6 + 500 * pout / 1e6
     assert row["cost_usd"] == pytest.approx(want, abs=1e-6)
 
 
 def test_cost_one_million_each():
     led = Ledger("claude-sonnet-5-5")
-    pin, pout = PRICES["claude-sonnet-5-5"]
+    pin, pout, pread = PRICES["claude-sonnet-5-5"]
     assert led._cost(1_000_000, 0, 0, 1_000_000) == pytest.approx(pin + pout)
     assert led._cost(0, 1_000_000, 0, 0) == pytest.approx(pin * CACHE_WRITE)
-    assert led._cost(0, 0, 1_000_000, 0) == pytest.approx(pin * CACHE_READ)
+    assert led._cost(0, 0, 1_000_000, 0) == pytest.approx(0.10)  # Sonnet 5.5 cache reads are $0.10, not 0.1x input
 
 
 def test_unknown_model_has_no_cost():

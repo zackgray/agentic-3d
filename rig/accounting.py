@@ -8,13 +8,14 @@ Block sizes come from the count_tokens endpoint (free), never a third-party toke
 """
 from collections import defaultdict
 
-# USD per million tokens, list price (Claude API skill table cached 2026-11-03). Haiku 5.5 is for prompts up to 100K.
+# USD per million tokens, list price (Claude API skill table cached 2026-11-03): input, output, cache read.
+# Haiku 5.5 is for prompts up to 100K. Cache reads differ by model (Sonnet and Opus 5.5 are 0.05x input).
 PRICES = {
-    "claude-haiku-5-5": (0.10, 0.50),
-    "claude-sonnet-5-5": (2.00, 10.00),
-    "claude-opus-5-5": (4.00, 20.00),
+    "claude-haiku-5-5": (0.10, 0.50, 0.01),
+    "claude-sonnet-5-5": (2.00, 10.00, 0.10),
+    "claude-opus-5-5": (4.00, 20.00, 0.20),
 }
-CACHE_WRITE, CACHE_READ = 1.25, 0.10  # multiples of the input price (5-minute cache)
+CACHE_WRITE = 1.25  # multiple of the input price (5-minute cache)
 
 INPUT_SOURCES = ("system", "tool_definitions", "task_prompt", "agent_code", "agent_text",
                  "tool_results", "images", "thinking_replay")
@@ -99,8 +100,8 @@ class Ledger:
     def _cost(self, fresh, write, read, out) -> float | None:
         if not self.price:
             return None
-        pin, pout = self.price
-        return round((fresh + write * CACHE_WRITE + read * CACHE_READ) * pin / 1e6 + out * pout / 1e6, 6)
+        pin, pout, pread = self.price
+        return round(((fresh + write * CACHE_WRITE) * pin + read * pread + out * pout) / 1e6, 6)
 
     def summary(self) -> dict:
         t = self.turns
