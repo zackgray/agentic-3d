@@ -1,6 +1,6 @@
 # Working in Agentic 3D
 
-Read `docs/handoff.md` if it exists, then `README.md` and the newest entries of `docs/journal.md`, before proposing work.
+Run `/orient` (or read the private handoff beside the project memory) and the newest entries of `docs/journal.md` before proposing work.
 
 - **Measure before building.** No harness code until the eval suite and baselines exist. If a step is being skipped, name it and recommend doing it first.
 - **Goal #1 is fewer tokens** for Blender modeling work; accuracy and speed follow. Every claim about efficiency needs a number from the eval.
