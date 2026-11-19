@@ -41,12 +41,14 @@ def test_done_counts(tmp_path, monkeypatch):
         dict(task="t1", setup="harness", verdict="pass", prompt_sha="old"),
         dict(task="t1", setup="harness", verdict="pass", prompt_sha="s1", arm="think-off"),
         dict(task="t1", setup="no-mcp", verdict="pass", prompt_sha="s1", effort="high"),
+        dict(task="t1", setup="harness", verdict="pass", prompt_sha="s1", versions={"setup": "harness h0"}),
     ]
     for i, r in enumerate(recs):
         d = tmp_path / "runs" / f"r{i}"
         d.mkdir(parents=True)
         r.setdefault("model", "claude-haiku-5-5")
         r.setdefault("effort", "low")
+        r.setdefault("versions", {"setup": f"{r['setup']} {batch.SETUPS[r['setup']].version}"})
         (d / "result.json").write_text(json.dumps(r), encoding="utf-8")
     c = batch.done_counts("claude-haiku-5-5", "low", "base", {"t1": "s1"})
     assert c[("t1", "harness")] == 2

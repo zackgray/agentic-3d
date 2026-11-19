@@ -16,12 +16,13 @@ from .run import main as run_one
 
 
 def done_counts(model: str, effort: str, arm: str, shas: dict) -> Counter:
-    """Scored runs per (task, setup) that saw exactly the current prompt (task text + arm)."""
+    """Scored runs per (task, setup) that saw exactly the current prompt (task text + arm) and ran
+    the setup's current version (h8: a new harness version must not count the old one's runs)."""
     c = Counter()
     for f in (ROOT / "runs").glob("*/result.json"):
         r = json.loads(f.read_text(encoding="utf-8"))
         if r.get("model") == model and r.get("effort") == effort and r.get("arm", "base") == arm \
-                and r.get("verdict") in ("pass", "fail") and r.get("prompt_sha") is not None and r.get("prompt_sha") == shas.get(r["task"]):
+                and r.get("verdict") in ("pass", "fail") and r.get("prompt_sha") is not None and r.get("prompt_sha") == shas.get(r["task"])                 and r["setup"] in SETUPS and r.get("versions", {}).get("setup") == f"{r['setup']} {SETUPS[r['setup']].version}":
             c[(r["task"], r["setup"])] += 1
     return c
 

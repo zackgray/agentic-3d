@@ -173,3 +173,40 @@ By group (pass, tokens per pass), no MCP → h7: hard-surface 20/24 10,822 → 2
 **Spend.** Rounds two and three $2.59; the arm $3.85 against $9.60 first estimated. Phase 3 about $6.60 of $20.
 
 **Proposed, not decided.** Cross-family models through OpenRouter to map where the harness stops paying. It would reverse the Anthropic-only rule, needs an adapter for the OpenAI-style tool interface (about a day), and I recommended code containment first. Waiting on the owner.
+
+## 2026-11-19 · Reading h7's eight Sonnet failures
+
+**Done.** Read the code, scene report and failed checks for all eight Sonnet 5.5 + h7 failures on development, and compared Haiku 5.5 + h7 on the same tasks. No runs, no spend.
+
+**The earlier framing was wrong.** The entry above read the failures as a stronger model trusting a clean report and stopping early. Haiku with h7 also finishes p04, h02 and h07 in one call every time and passes. Both models stop after one clean call; Sonnet simply makes more geometry slips, and the scene report only checks that the mesh is valid, so neither model gets any feedback on shape.
+
+**What each failure was.** Every scene report said "no problems found", and every mesh was valid; the shape was wrong.
+
+- p04 gable carton, 3/3: the extruded side profile meets the 2 mm fin at y = ±1 mm with the roof at z = 230 (twice) or 231 (once, reasoned out as "230 + 1"). The roof falls 1 mm per mm, so it should be 229 there; Haiku wrote 229. An arithmetic slip of about 1 mm that only a probe catches.
+- h02 lipstick, 2/3: the angled tip was cut with a rotated box, rotated the wrong way, so the slant runs backwards and the bullet tops out at 62 mm. Sonnet's own text said the top should be 72.91 mm. Haiku built the slanted top directly as vertices and avoided the rotation.
+- h07 wide-mouth jar, 1/3: neither lathe profile reaches the axis, so the jar has no floor and the lid no top: both are watertight rings. Volumes 19% and 49% short.
+- h08 soap bar, 1/3: the recess cutter was rounded with Blender's low-level bevel call without a profile setting. In Blender 5.2 that default makes a square inward notch, not a round, so the recess corners came out sharp. Confirmed in Blender: the bevelled corner points lie on a square, not an arc.
+- r03 soften edge, 1/3: volume 0.50% short against a 0.5% tolerance, from a coarse fillet. Borderline faceting; Haiku fails r03 at the same rate.
+
+**What the check catches that the report doesn't.** Dimensions and shape. The report is generic validation (watertight, normals, hygiene, unchanged booleans) and says nothing about size or form. Two generic additions would have caught three of the eight: reporting each object's bounding box (h02 twice: 62 mm against the 72.91 mm the model itself stated), and a warning when a lathe profile never touches the axis, which makes a ring rather than a solid (h07). p04 and r03 are not catchable generically; h08 needs either a note on the bevel default or a helper that rounds chosen edges.
+
+**Proposed, not decided.** An h8 that adds the bounding box and the open-lathe warning to the report. It costs a few tokens per object on every run, so it has to be measured on Haiku as well as Sonnet: one development round each on the harness setup, about $0.45. Waiting on the owner.
+
+## 2026-11-19 · h8: shape feedback before a clean finish, one round each
+
+**Built** (local branch, not merged). The scene report already lists every object's bounding box, but a clean done=true call ends the run before the agent reads it, so a bounding-box report alone could not have caught anything. h8 added two things instead. First, a helper that takes the extents the agent expects and warns on a mismatch; a warning holds the run open once, as a missed boolean does. Second, a warning when a lathe profile never touches the axis. The batch runner now counts only runs at the setup's current version, so a new harness version doesn't skip cells the old one filled. Unit tests and the live self-test pass.
+
+**Measured** (owner's go; development, harness only, one run per task, no voids). `python -m rig.compare --setups harness --version harness=h8 --model <model>`.
+
+| | Haiku h7 (90) | Haiku h8 (30) | Sonnet h7 (90) | Sonnet h8 (30) |
+|---|---|---|---|---|
+| Pass | 86/90 (96%) | 30/30 | 82/90 (91%) | 27/30 (90%) |
+| Tokens per passed task | 6,489 | 6,888 | 3,828 | 5,831 |
+| Geometric mean tokens per task | 4,855 | 5,729 | 3,107 | 3,635 |
+| Wall time per run | 12.3 s | 14.2 s | 7.7 s | 9.7 s |
+
+**What happened.** The lathe warning fired only on parts that are meant to be rings: a bezel, a lid, a collar, a dip tube and a liner, on both models. Each one cost an extra call, and on Sonnet's spray bottle (p03) the run took 7 calls and 51k tokens, which alone moves Sonnet's tokens per pass by about half. It never fired on a real mistake. The extents helper fired once, on a Haiku soap bar built 1,000 times too large, which the run then fixed. Sonnet called it in only 15 of 30 runs. The four tasks Sonnet failed under h7 (p04, h02, h07, h08) all passed this round, but Sonnet's new failures (m03, r04, r07) came in runs that never called the helper. One round of 30 cannot show a change of two or three passes in 90.
+
+**Decided (recommended to the owner).** Don't adopt h8: it costs 18% more tokens typical on both models, and the gain it was built for is too small to see. The lathe warning is wrong as a rule, because legitimate ring parts are common. An expects-only variant would be cheaper, but at best it catches two of Sonnet's eight h7 failures, so it is not worth another round. h7 stays the harness.
+
+**Spend.** $0.56 (Haiku $0.05, Sonnet $0.50) against $0.45 estimated. Phase 3 about $7.15 of $20.
