@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "agentic-3d"
+version = "0.1.0"
+description = "Benchmark rig and agent harness that drives headless Blender for product modeling, measured in tokens."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "GPL-3.0-or-later"
+license-files = ["LICENSE"]
+# Only what the rig imports outside rig/blender_side; that code runs inside Blender's own Python.
+dependencies = [
+    "anthropic",
+    "mcp",
+]
+
+[project.optional-dependencies]
+dev = ["pytest"]
+
+# No console scripts: the CLI stays `python -m rig.<module>`, run from the repo root
+# (the rig finds tasks/, runs/ and vendor/ relative to the source tree, so install editable).
+[tool.setuptools]
+packages = ["rig", "rig.setups"]
+
+[tool.setuptools.package-data]
+rig = ["blender_side/*.py"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests/unit"]

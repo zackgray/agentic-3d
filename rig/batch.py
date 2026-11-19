@@ -26,6 +26,17 @@ def done_counts(model: str, effort: str, arm: str, shas: dict) -> Counter:
     return c
 
 
+def resolve_tasks(folders: list[Path], prefixes: list[str]) -> list[Path]:
+    """Each prefix must match exactly one task folder name; anything else stops the batch."""
+    tasks = []
+    for t in prefixes:
+        match = [d for d in folders if d.name.startswith(t)]
+        if len(match) != 1:
+            raise SystemExit(f"task {t!r} matches {[m.name for m in match]}")
+        tasks.append(match[0])
+    return tasks
+
+
 def main(argv=None) -> int:
     p = argparse.ArgumentParser()
     p.add_argument("--tasks", nargs="+", required=True, help="task folder names or unique prefixes")
@@ -40,12 +51,7 @@ def main(argv=None) -> int:
     args = p.parse_args(argv)
 
     folders = sorted(d for d in (ROOT / args.suite).iterdir() if d.is_dir() and not d.name.startswith("_"))
-    tasks = []
-    for t in args.tasks:
-        match = [d for d in folders if d.name.startswith(t)]
-        if len(match) != 1:
-            raise SystemExit(f"task {t!r} matches {[m.name for m in match]}")
-        tasks.append(match[0])
+    tasks = resolve_tasks(folders, args.tasks)
 
     shas = {t.name: prompt_sha((lt := load_task(t)).prompt, args.arm, lt.scene_text) for t in tasks}
     done, started = done_counts(args.model, args.effort, args.arm, shas), 0

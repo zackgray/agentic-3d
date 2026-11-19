@@ -111,3 +111,15 @@ No MCP failed all three w07 runs (parts misplaced or the wrong size, one unit sl
 **Spend.** This session $0.19; Phase 3 about $2.75 of the $20 standing budget.
 
 **Housekeeping.** Phase 3's entries from harness v1 through h6 moved to `docs/journal-phase-3-h1-h6.md` to keep this file small.
+
+## 2026-11-18 · Open-source preparation
+
+**Decided (owner).** The repository is GPL-3.0-or-later throughout, following Blender's licence, since the Blender-side code uses its Python API. Nothing personal and nothing about why the project exists outside its own goals goes in the repository; the case study keeps its results and drops the personal section. An independent review (Fable) checked every tracked file and the full history: the files were then cleaned of the rest it found, and because the old history held personal context in nearly every commit, the public repository starts from one clean commit at h7. The full history is kept privately.
+
+**Done.**
+- **README rewritten results-first:** headline numbers, a tokens-per-pass chart across all six setups, a gallery of h7's passing models on the fourth held-out set, the method, setup and commands. Both figures are rebuilt by `python -m rig.figures chart|gallery`.
+- **Packaging and tests:** `pyproject.toml` (`pip install -e .[dev]`), and 858 unit tests (3 expected failures for known gaps) that need no Blender and no network (about 4 s): every task file across all suites, the comparison arithmetic, cost accounting, the batch runner's task matching, the `.env` loader. CI runs them on Linux and Windows.
+- **The tests found real defects.** Two heldout2 tasks carried short ids (`y07`, `y08`) instead of their folder names; fixed (runs are matched by folder name and prompt fingerprint, and the heldout2 comparison reproduces exactly). Three development or spent shape checks have no variant that fails them (`m01` probe_tail, `p04` probe_body, `z08` volume_motor); they're recorded as known gaps in the tests, not changed, since the tasks are spent or their results already published.
+- **Run records for the release:** 1,629 runs (every matrix, every held-out set, the pilot, the prompt test and the thinking arms; one void excluded), with result, transcript and per-call records, 24.5 MB zipped. Local paths were replaced with placeholders, and a second scan found no keys or personal data. Every headline figure recomputes from it exactly. The final .blend scenes are left out: each embeds a local home path.
+
+**Spend.** None.

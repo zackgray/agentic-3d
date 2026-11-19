@@ -30,7 +30,6 @@ h7's held-out losses are genuine: two w05 runs lost the top-edge round while ref
 
 ## Also open
 
-- **Open-source prep:** licence decided and applied (GPL-3.0-or-later for everything). Still to do before publishing: a results-first README, a setup and reproduce section (the Blender path is a hard-coded default), unit tests and CI, visuals (review renders, a tokens chart), a curated runs bundle as a release asset (runs/ is about 433 MB), then a fresh-clone test.
 - **Code containment** (raised 2026-11-18): agent code runs in Blender as the logged-in user with no boundary. Recommended a low-privilege account for the harness Blender plus an audit hook refusing writes outside the run folder, process launches and network; applies to the Haiku runs too, and is a prerequisite for any local-model arm.
 - **Local models on the 4090** (asked 2026-11-18): about a day of work (an OpenAI-style client shim, local token counting); compare within the model only, since tokenizers differ. Breaks the Anthropic-only rule, so it needs an explicit owner decision; recommended after the held-out result.
 - **Stronger model:** Sonnet 5.5 at low effort with its own no-MCP baseline, about $7–10.
