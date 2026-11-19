@@ -37,6 +37,8 @@ AI agents can now drive Blender, but the popular setups are expensive and imprec
 
 **Fourth held-out set (h7), run once.** I froze h7, and only then did agents write eight new tasks at development difficulty. The authors were kept away from the harness code, so the tasks couldn't be shaped around the new read. Two independent builders then remade every task from its prompt alone, a different way each, and all 16 builds passed. On the run, h7 passed 20 of 24 (no MCP: 18) at 11,934 tokens per passed task against 58,147: 21%, and 27% on the typical task, in half the wall time. No task defeated both setups, so nothing is excluded. One revision did cost the baseline up to 291k tokens a run, and the result holds without it: 32% overall and 34% typical. On the earlier hard held-out sets the same figures were about 0.65 overall and 0.42 typical. So h7's gain on revisions carries to work it has never seen, and the whole held-out run cost 19 cents.
 
+**A stronger model (Sonnet 5.5).** To check whether the harness only makes up for a small model's mistakes, I ran the same development suite on Claude Sonnet 5.5 at low effort, with its own no-MCP baseline (180 runs, $3.85). Sonnet is leaner on its own: its baseline needs about 38% of Haiku's tokens per pass and barely thinks. h7 still used 38% of its tokens per passed task (3,828 against 10,103) and 41% on the typical task, passed 82 of 90 against 79, and cut wall time from 21 seconds to 8. The advantage narrows on the stronger model (Haiku: 24% and 29%) but holds. Haiku with h7 stays about nine times cheaper per passed task than Sonnet with h7; Sonnet with h7 is the fastest setup measured.
+
 ## What it shows
 
 *Pending.*

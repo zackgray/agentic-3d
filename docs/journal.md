@@ -150,3 +150,26 @@ For comparison, Haiku 5.5 low on the same suite (90 runs each): no MCP 26,727 to
 **What it means so far.** Sonnet is leaner on its own: its no-MCP baseline uses about 40% of Haiku's tokens per pass, and it barely thinks at low effort. h7 still cuts tokens by about two thirds and wall time by about the same, with the pass rate at least as good, so the advantage holds on the stronger model, though it is smaller than on Haiku (0.34 against 0.24 per pass). On cost, Haiku plus h7 remains far cheaper: about $0.0016 per passed task against $0.014 for Sonnet plus h7. One round is 30 runs per setup, so these are directional.
 
 **Spend.** $1.25 for the round, against $3.20 estimated. Phase 3 about $4.00 of $20. Rounds two and three re-quote at about $2.50.
+
+## 2026-11-19 · Sonnet 5.5 arm complete
+
+**Done.** Rounds two and three (owner's go, re-quoted at about $2.50), completing 30 × 3 per setup. No voids. `python -m rig.compare --setups no-mcp harness --version harness=h7 --model claude-sonnet-5-5 --groups`.
+
+| Sonnet 5.5 low, development | No MCP | h7 | Ratio |
+|---|---|---|---|
+| Pass | 79/90 (88%) | 82/90 (91%) | |
+| Tokens per passed task | 10,103 | 3,828 | 0.38 |
+| Geometric mean tokens per task | 7,504 | 3,107 | 0.41 |
+| Model turns per run | 2.8 | 1.2 | |
+| Wall time per run | 20.8 s | 7.7 s | 0.37 |
+| Cost per passed task | $0.034 | $0.015 | |
+
+By group (pass, tokens per pass), no MCP → h7: hard-surface 20/24 10,822 → 20/24 3,858; layout 14/15 5,096 → 15/15 2,440; multi-step 11/12 11,470 → 12/12 4,729; product 14/15 8,347 → 12/15 5,034; revisions 20/24 13,367 → 23/24 3,609.
+
+**What it means.** The harness advantage holds on the stronger model but narrows: 0.38 per pass and 0.41 typical, against Haiku's 0.24 and 0.29. Sonnet repairs less on its own, so there is less waste for the harness to remove. Revisions still gain the most (3.7× fewer tokens), as on Haiku. Sonnet with h7 is the fastest setup measured (7.7 s a run against Haiku with h7 at 12.3 s), but Haiku with h7 stays about nine times cheaper per passed task ($0.0016 against $0.015).
+
+**h7's eight Sonnet failures are all one-call runs**: the agent built once, the call came back clean, and the run ended. p04 (gable carton) failed all three and h02 (lipstick) two. Haiku with h7 passed both every time, so a stronger model trusting a clean report and stopping early is worth reading before any Sonnet claim; no held-out set has been run for Sonnet.
+
+**Spend.** Rounds two and three $2.59; the arm $3.85 against $9.60 first estimated. Phase 3 about $6.60 of $20.
+
+**Proposed, not decided.** Cross-family models through OpenRouter to map where the harness stops paying. It would reverse the Anthropic-only rule, needs an adapter for the OpenAI-style tool interface (about a day), and I recommended code containment first. Waiting on the owner.
