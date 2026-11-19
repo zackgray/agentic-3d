@@ -1,0 +1,214 @@
+id = "x05-desk-lamp"
+title = "Desk lamp: chamfered base with socket, cross-drilled post, arm with hollow shade, and switch"
+group = "multi-step"
+starting_scene = "empty"
+
+prompt = """
+Model a hypothetical product in the open Blender scene: a desk lamp, as four separate mesh objects. Units are metres (1 Blender unit = 1 m). The base stands on the ground plane, centred on the world Z axis; the arm reaches out along +X.
+
+Base (mesh object "Base"), one solid part:
+- A cylinder 120 mm in diameter from z = 0 to z = 15 mm, topped by a 45-degree chamfer that narrows it to 114 mm in diameter at its flat top face at z = 18 mm.
+- Socket: a centred, flat-bottomed blind hole 16 mm in diameter, from the top face down to its floor at z = 6 mm.
+- Switch pocket: a rectangular pocket 12 mm in X by 8 mm in Y, centred at (x, y) = (-35, 0) mm, from the top face down to a flat floor at z = 15 mm, with sharp corners.
+- All other edges are sharp.
+
+Post (mesh object "Post"), one solid part:
+- A cylinder 15 mm in diameter from z = 6.5 mm to a flat top at z = 250 mm, standing in the socket 0.5 mm above its floor and clearing its wall by 0.5 mm all round.
+- Cross hole: a hole 8 mm in diameter straight through the post along the X axis, its axis at z = 240 mm.
+
+Arm (mesh object "Arm"), one connected solid made of three fused pieces:
+- Rod: a cylinder 7 mm in diameter lying along the X axis at y = 0, z = 240 mm, from a flat end at x = -20 mm to x = 165 mm. It passes through the post's cross hole without touching it.
+- Neck: a vertical cylinder 12 mm in diameter on the axis (x, y) = (165, 0) mm, from the top of the shade at z = 230 mm up to a flat top at z = 246 mm, fused to the rod and the shade.
+- Shade: a hollow cone on the same vertical axis, open at the bottom. Outside: a straight cone from 90 mm in diameter at its bottom rim at z = 180 mm to 30 mm in diameter at its flat top at z = 230 mm. The sloped wall is 1.5 mm thick measured horizontally (so the inside is a parallel cone, 87 mm across at z = 180 mm), and the top wall is 2 mm thick (the inside ceiling is flat at z = 228 mm). The bottom rim is a flat ring at z = 180 mm.
+
+Switch (mesh object "Switch"): a solid rectangular block 11 mm in X by 7 mm in Y, centred at (x, y) = (-35, 0) mm, from z = 15.5 mm to z = 20 mm, so it sits in the switch pocket 0.5 mm above its floor, clears its walls by 0.5 mm all round and stands 2 mm proud of the base top. Sharp edges.
+
+All four objects:
+- Each is a single closed (watertight) mesh in one connected piece, with consistent outward normals and no self-intersections.
+- No two objects touch or intersect.
+- Transforms applied: location at the origin, no rotation, scale 1, so the mesh data holds world coordinates.
+- At most 20,000 faces per object.
+- No other mesh objects in the scene.
+
+Mesh hygiene: no duplicate or coincident vertices, no zero-length edges and no zero-area faces. Merge any coincident vertices before you finish.
+
+Tell me when you're done.
+"""
+
+[[checks]]
+type = "objects"
+expected = ["Arm", "Base", "Post", "Switch"]
+
+[[checks]]
+type = "transforms_applied"
+objects = ["Arm", "Base", "Post", "Switch"]
+
+[[checks]]
+type = "bbox"
+label = "bbox_base"
+object = "Base"
+min = [-0.06, -0.06, 0.0]
+max = [0.06, 0.06, 0.018]
+tol = 0.0003
+
+[[checks]]
+type = "bbox"
+label = "bbox_post"
+object = "Post"
+min = [-0.0075, -0.0075, 0.0065]
+max = [0.0075, 0.0075, 0.25]
+tol = 0.0003
+
+[[checks]]
+type = "bbox"
+label = "bbox_arm"
+object = "Arm"
+min = [-0.02, -0.045, 0.18]
+max = [0.21, 0.045, 0.246]
+tol = 0.0005
+
+[[checks]]
+type = "bbox"
+label = "bbox_switch"
+object = "Switch"
+min = [-0.0405, -0.0035, 0.0155]
+max = [-0.0295, 0.0035, 0.02]
+tol = 0.0003
+
+[[checks]]
+type = "watertight"
+objects = ["Arm", "Base", "Post", "Switch"]
+
+[[checks]]
+type = "shells"
+objects = ["Arm", "Base", "Post", "Switch"]
+
+[[checks]]
+type = "self_intersection"
+objects = ["Arm", "Base", "Post", "Switch"]
+
+[[checks]]
+type = "topology"
+objects = ["Arm", "Base", "Post", "Switch"]
+
+[[checks]]
+type = "face_budget"
+objects = ["Arm", "Base", "Post", "Switch"]
+max = 20000
+
+[[checks]]
+type = "no_overlap"
+label = "no_overlap_base_post"
+a = "Base"
+b = "Post"
+
+[[checks]]
+type = "no_overlap"
+label = "no_overlap_post_arm"
+a = "Post"
+b = "Arm"
+
+[[checks]]
+type = "no_overlap"
+label = "no_overlap_base_switch"
+a = "Base"
+b = "Switch"
+
+[[checks]]
+type = "no_overlap"
+label = "no_overlap_base_arm"
+a = "Base"
+b = "Arm"
+
+# cylinder pi*60^2*15 + chamfer frustum pi*3/3*(60^2 + 60*57 + 57^2) - socket pi*8^2*12 - pocket 12*8*3
+[[checks]]
+type = "volume"
+label = "volume_base"
+object = "Base"
+mm3 = 199206
+rel_tol = 0.01
+
+# shade: outer frustum pi*50/3*(45^2 + 45*15 + 15^2) - inner frustum pi*48/3*(43.5^2 + 43.5*14.7 + 14.7^2)
+#   + neck pi*6^2*16 + rod pi*3.5^2*185 - rod inside neck, int_{-3.5}^{3.5} 2*sqrt(3.5^2-y^2)*sqrt(6^2-y^2) dy = 220.6
+[[checks]]
+type = "volume"
+label = "volume_arm"
+object = "Arm"
+mm3 = 23742
+rel_tol = 0.015
+
+[[checks]]
+type = "ray_probe"
+label = "probe_base"
+objects = ["Base"]
+tol = 0.0003
+probes = [
+  { name = "top face", origin = [0.03, 0.0, 0.03], dir = [0, 0, -1], hit = 0.012 },
+  { name = "chamfer at mid-height", origin = [0.08, 0.0, 0.0165], dir = [-1, 0, 0], hit = 0.0215 },
+  { name = "side", origin = [0.0, -0.08, 0.007], dir = [0, 1, 0], hit = 0.02 },
+  { name = "underside", origin = [0.02, 0.0, -0.01], dir = [0, 0, 1], hit = 0.01 },
+  { name = "socket floor", origin = [0.0, 0.0, 0.03], dir = [0, 0, -1], hit = 0.024 },
+  { name = "socket wall", origin = [0.0, 0.0, 0.01], dir = [1, 0, 0], hit = 0.008 },
+  { name = "switch pocket floor", origin = [-0.035, 0.0, 0.03], dir = [0, 0, -1], hit = 0.015 },
+  { name = "switch pocket end wall", origin = [-0.035, 0.0, 0.0165], dir = [1, 0, 0], hit = 0.006 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_post"
+objects = ["Post"]
+tol = 0.0003
+probes = [
+  { name = "post side", origin = [0.05, 0.0, 0.1], dir = [-1, 0, 0], hit = 0.0425 },
+  { name = "post top", origin = [0.003, 0.0, 0.27], dir = [0, 0, -1], hit = 0.02 },
+  { name = "post bottom", origin = [0.0, 0.0, 0.0], dir = [0, 0, 1], hit = 0.0065 },
+  { name = "cross hole wall", origin = [0.0, 0.0, 0.24], dir = [0, 1, 0], hit = 0.004 },
+  { name = "cross hole runs along X", origin = [0.0, 0.0, 0.24], dir = [1, 0, 0], hit = false },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_arm"
+objects = ["Arm"]
+tol = 0.0003
+probes = [
+  { name = "rod end", origin = [-0.05, 0.0, 0.24], dir = [1, 0, 0], hit = 0.03 },
+  { name = "rod top", origin = [0.1, 0.0, 0.3], dir = [0, 0, -1], hit = 0.0565 },
+  { name = "neck side", origin = [0.165, 0.05, 0.234], dir = [0, -1, 0], hit = 0.044 },
+  { name = "shade outside at mid-height", origin = [0.25, 0.0, 0.205], dir = [-1, 0, 0], hit = 0.055 },
+  { name = "shade inside at mid-height", origin = [0.165, 0.0, 0.205], dir = [1, 0, 0], hit = 0.0285 },
+  { name = "shade ceiling", origin = [0.17, 0.0, 0.2], dir = [0, 0, 1], hit = 0.028 },
+  { name = "shade rim", origin = [0.209, 0.0, 0.1], dir = [0, 0, 1], hit = 0.08 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_switch"
+objects = ["Switch"]
+tol = 0.0003
+probes = [
+  { name = "switch top", origin = [-0.035, 0.0, 0.03], dir = [0, 0, -1], hit = 0.01 },
+  { name = "switch side", origin = [-0.035, -0.05, 0.017], dir = [0, 1, 0], hit = 0.0465 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_fit"
+tol = 0.0003
+probes = [
+  { name = "down the socket clearance to its floor", origin = [0.0, 0.00775, 0.03], dir = [0, 0, -1], hit = 0.024 },
+  { name = "under the switch to the pocket wall", origin = [-0.035, -0.0038, 0.01525], dir = [0, 1, 0], hit = 0.0078 },
+]
+
+[variants]
+good = []
+no_chamfer = ["probe_base"]
+no_socket = ["no_overlap_base_post", "volume_base", "probe_base", "probe_fit"]
+no_switch_pocket = ["no_overlap_base_switch", "probe_base", "probe_fit"]
+post_seated = ["bbox_post", "no_overlap_base_post", "probe_post"]
+no_hole = ["no_overlap_post_arm", "probe_post"]
+hole_along_y = ["no_overlap_post_arm", "probe_post"]
+solid_shade = ["volume_arm", "probe_arm"]
+arm_short = ["bbox_arm", "volume_arm", "probe_arm"]
+loose_shade = ["shells"]
+switch_flush = ["bbox_switch", "probe_switch"]

@@ -1,0 +1,148 @@
+id = "w03-candlestick"
+title = "Candlestick: chamfered rounded-square foot lofting to a round top, candle socket, underside recess"
+group = "hard-surface"
+starting_scene = "empty"
+
+prompt = """
+Model a hypothetical product in the open Blender scene: a table candlestick for a taper candle, as one mesh object named "Candlestick". Units are metres (1 Blender unit = 1 m). It stands on the ground plane, centred on the world Z axis, with its flat underside at z = 0 and its flat top at z = 120 mm.
+
+- Foot: seen from above, a rounded square 60 mm by 60 mm (x and y from -30 mm to +30 mm) whose four vertical corners are rounded with a 12 mm radius. Its sides are vertical from z = 3 mm up to z = 25 mm.
+- Bottom chamfer: the whole bottom perimeter edge, all the way round including round the rounded corners, carries a 45-degree chamfer of 3 mm. So the flat underside is the same rounded square inset by 3 mm on every side (x and y from -27 mm to +27 mm, corners rounded with a 9 mm radius, the corner arcs keeping the same centres), and the chamfer meets the vertical sides at z = 3 mm.
+- Stem: from the foot outline at z = 25 mm, the side lofts up to a circle of radius 15 mm centred on the Z axis at the top (z = 120 mm). The loft is a straight blend: at every angle around the Z axis, the side runs in a straight line from the point on the foot outline at that angle to the point on the top circle at the same angle. So at half height (z = 72.5 mm) the side is 22.5 mm from the axis on the +X, -X, +Y and -Y sides, and at every height the section is round-cornered and symmetric about the X and Y axes and both diagonals.
+- Candle socket: a blind round hole 22 mm in diameter (radius 11 mm), centred on the Z axis, from the top face down to a flat bottom at z = 100 mm.
+- Felt recess: a round recess 36 mm in diameter (radius 18 mm), centred on the Z axis, cut 2 mm up into the underside (flat ceiling at z = 2 mm).
+- All edges not described as chamfered are sharp.
+
+The object:
+- A single closed (watertight) mesh, one connected piece, with consistent outward normals and no self-intersections.
+- Transforms applied: location at the origin, no rotation, scale 1, so the mesh data holds world coordinates.
+- At most 20,000 faces.
+- No other mesh objects in the scene.
+
+Mesh hygiene: no duplicate or coincident vertices, no zero-length edges and no zero-area faces. Merge any coincident vertices before you finish.
+
+Tell me when you're done.
+"""
+
+[[checks]]
+type = "objects"
+expected = ["Candlestick"]
+
+[[checks]]
+type = "transforms_applied"
+objects = ["Candlestick"]
+
+[[checks]]
+type = "bbox"
+object = "Candlestick"
+min = [-0.03, -0.03, 0.0]
+max = [0.03, 0.03, 0.12]
+tol = 0.0003
+
+[[checks]]
+type = "watertight"
+objects = ["Candlestick"]
+
+[[checks]]
+type = "shells"
+objects = ["Candlestick"]
+
+[[checks]]
+type = "self_intersection"
+objects = ["Candlestick"]
+
+[[checks]]
+type = "topology"
+objects = ["Candlestick"]
+
+[[checks]]
+type = "face_budget"
+object = "Candlestick"
+max = 20000
+
+# With A(h, r) = 4h^2 - (4-pi)r^2 for a rounded square: chamfer band integral_0^3 A(27+z, 9+z) dz = 9470.2
+# + vertical foot A(30, 12) * 22 = 76480.6 + stem integral_25^120 of (1/2) integral_0^2pi ((1-t)R(th) + 15t)^2
+# dth dz with t = (z-25)/95 and R(th) the foot outline's polar radius (= 95 * [I2/3 + 15*I1/3 + 225*2pi/3]/2
+# with I1 = integral R dth, I2 = integral R^2 dth = 2*A(30,12)) = 181949.2 - socket pi*11^2*20 = 7602.7
+# - recess pi*18^2*2 = 2035.8, total 258261.5. Joining the stem by arc length instead of by angle
+# changes it by +0.14%; a missing chamfer is +0.37%, a 30-degree twist -2.3%.
+[[checks]]
+type = "volume"
+object = "Candlestick"
+mm3 = 258261.5
+rel_tol = 0.01
+
+# straight up into the chamfer at inset 1.5 mm: on the +X flat and through the +X+Y corner arc's
+# widest point (diagonal distance 18*sqrt(2) + 12 - 1.5 = 35.956 mm), chamfer height 1.5 mm
+[[checks]]
+type = "ray_probe"
+label = "probe_chamfer"
+tol = 0.0003
+probes = [
+  { name = "chamfer +X flat", origin = [0.0285, 0.0, -0.01], dir = [0, 0, 1], hit = 0.0115 },
+  { name = "chamfer -Y flat", origin = [0.005, -0.0285, -0.01], dir = [0, 0, 1], hit = 0.0115 },
+  { name = "chamfer +X+Y corner", origin = [0.0254246, 0.0254246, -0.01], dir = [0, 0, 1], hit = 0.0115 },
+  { name = "chamfer -X-Y corner", origin = [-0.0254246, -0.0254246, -0.01], dir = [0, 0, 1], hit = 0.0115 },
+  { name = "underside flat", origin = [0.024, 0.0, -0.01], dir = [0, 0, 1], hit = 0.01 },
+]
+
+# foot at z = 15: flat sides at 30 mm, corners along the diagonal at 18*sqrt(2) + 12 = 37.456 mm
+[[checks]]
+type = "ray_probe"
+label = "probe_foot"
+tol = 0.0003
+probes = [
+  { name = "foot +X side", origin = [0.05, 0.0, 0.015], dir = [-1, 0, 0], hit = 0.02 },
+  { name = "foot -Y side", origin = [0.01, -0.05, 0.015], dir = [0, 1, 0], hit = 0.02 },
+  { name = "foot +X+Y corner", origin = [0.05, 0.05, 0.015], dir = [-1, -1, 0], hit = 0.0332548 },
+  { name = "foot -X+Y corner", origin = [-0.05, 0.05, 0.022], dir = [1, -1, 0], hit = 0.0332548 },
+]
+
+# stem side on the axes: 30 - 15*(z-25)/95; on the diagonals: 37.456 - 22.456*(z-25)/95 (the corner
+# arc's widest point blended to the circle). 24 segments on the top circle shift a hit by at most 0.13 mm.
+[[checks]]
+type = "ray_probe"
+label = "probe_stem"
+tol = 0.0003
+probes = [
+  { name = "stem +X at z 72.5", origin = [0.05, 0.0, 0.0725], dir = [-1, 0, 0], hit = 0.0275 },
+  { name = "stem -Y at z 40", origin = [0.0, -0.05, 0.04], dir = [0, 1, 0], hit = 0.0223684 },
+  { name = "stem -X at z 110", origin = [-0.05, 0.0, 0.11], dir = [1, 0, 0], hit = 0.0334211 },
+  { name = "stem +X+Y diagonal at z 72.5", origin = [0.05, 0.05, 0.0725], dir = [-1, -1, 0], hit = 0.0444828 },
+  { name = "stem -X+Y diagonal at z 100", origin = [-0.05, 0.05, 0.1], dir = [1, -1, 0], hit = 0.0509831 },
+  { name = "stem +X-Y diagonal at z 40", origin = [0.05, -0.05, 0.04], dir = [-1, 1, 0], hit = 0.0368005 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_socket"
+tol = 0.0003
+probes = [
+  { name = "socket floor", origin = [0.0, 0.0, 0.15], dir = [0, 0, -1], hit = 0.05 },
+  { name = "socket floor off centre", origin = [0.008, 0.0, 0.15], dir = [0, 0, -1], hit = 0.05 },
+  { name = "socket wall +X", origin = [0.0, 0.0, 0.11], dir = [1, 0, 0], hit = 0.011 },
+  { name = "socket wall -Y", origin = [0.0, 0.0, 0.105], dir = [0, -1, 0], hit = 0.011 },
+  { name = "top face ring", origin = [0.013, 0.0, 0.15], dir = [0, 0, -1], hit = 0.03 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_recess"
+tol = 0.0003
+probes = [
+  { name = "recess ceiling", origin = [0.0, 0.0, -0.01], dir = [0, 0, 1], hit = 0.012 },
+  { name = "recess ceiling off centre", origin = [0.0, 0.016, -0.01], dir = [0, 0, 1], hit = 0.012 },
+  { name = "underside outside the recess", origin = [0.0, 0.02, -0.01], dir = [0, 0, 1], hit = 0.01 },
+  { name = "recess wall +X", origin = [0.0, 0.0, 0.001], dir = [1, 0, 0], hit = 0.018 },
+]
+
+[variants]
+good = []
+coarse = []
+no_chamfer = ["probe_chamfer"]
+sharp_corners = ["volume", "probe_chamfer", "probe_foot", "probe_stem"]
+square_top = ["volume", "probe_stem"]
+no_foot = ["volume", "probe_foot", "probe_stem"]
+twisted = ["volume", "probe_stem"]
+shallow_socket = ["volume", "probe_socket"]
+no_recess = ["probe_recess"]

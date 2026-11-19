@@ -1,0 +1,146 @@
+id = "z02-control-knob"
+title = "Appliance control knob: tapered body, chamfered top, 12 finger scallops, D-shaft bore, pointer dimple"
+group = "hard-surface"
+starting_scene = "empty"
+
+prompt = """
+Model a hypothetical product part in the open Blender scene: the rotary control knob of a small kitchen appliance, as one mesh object named "Knob". Units are metres (1 Blender unit = 1 m). The knob stands on the ground plane, centred on the world Z axis, with its flat underside at z = 0 and its flat top facing +Z.
+
+- Body: a solid of revolution about the Z axis. The side tapers in a straight line from a radius of 21 mm at the underside (z = 0) to a radius of 19 mm at z = 14 mm. Above that, a 45-degree chamfer runs from radius 19 mm at z = 14 mm to radius 17 mm at the flat top at z = 16 mm. The underside and the top are flat discs.
+- Finger scallops: 12 identical scallops are cut into the side, evenly spaced 30 degrees apart, centred at 15, 45, 75, ... 345 degrees measured from +X towards +Y (so none is centred on an axis). Each scallop removes everything within 3 mm of a vertical line (parallel to Z) that stands 21.5 mm from the Z axis at the scallop's angle, over the knob's full height. So the deepest point of each scallop is 18.5 mm from the Z axis, the scallops open through the underside, and each one runs out where it meets the chamfer.
+- Shaft bore: a blind D-shaped hole up into the underside, for a D-shaft. Its section is a circle of radius 3 mm centred on the Z axis, cut off by a flat at x = +1.5 mm (the flat faces +X; nothing at x > 1.5 mm is removed). It runs from the underside up to a flat ceiling at z = 12 mm.
+- Pointer dimple: a round dimple 3 mm in diameter and 1.5 mm deep in the top face (flat bottom at z = 14.5 mm), centred at (x, y) = (+12, 0) mm, on the same side as the bore's flat.
+
+The object:
+- A single closed (watertight) mesh, one connected piece, with consistent outward normals and no self-intersections.
+- Transforms applied: location at the origin, no rotation, scale 1, so the mesh data holds world coordinates.
+- At most 20,000 faces.
+- No other mesh objects in the scene.
+
+Mesh hygiene: no duplicate or coincident vertices, no zero-length edges and no zero-area faces. Merge any coincident vertices before you finish.
+
+Tell me when you're done.
+"""
+
+[[checks]]
+type = "objects"
+expected = ["Knob"]
+
+[[checks]]
+type = "transforms_applied"
+objects = ["Knob"]
+
+# the underside rim between scallops (at 0, 90, 180, 270 deg) sets +-21 in X and Y; a 24-segment
+# body turned half a step reaches 21*cos(7.5 deg) = 20.82, inside the tolerance
+[[checks]]
+type = "bbox"
+object = "Knob"
+min = [-0.021, -0.021, 0.0]
+max = [0.021, 0.021, 0.016]
+tol = 0.0005
+
+[[checks]]
+type = "watertight"
+objects = ["Knob"]
+
+[[checks]]
+type = "shells"
+objects = ["Knob"]
+
+[[checks]]
+type = "self_intersection"
+objects = ["Knob"]
+
+[[checks]]
+type = "topology"
+objects = ["Knob"]
+
+[[checks]]
+type = "face_budget"
+object = "Knob"
+max = 20000
+
+# taper frustum pi*14/3*(21^2 + 21*19 + 19^2) = 17607.6 + chamfer frustum pi*2/3*(19^2 + 19*17 + 17^2)
+# = 2037.8 - scallops 12 * integral over z of lens(R(z), 3, 21.5) = 920.3 (lens = overlap area of a
+# circle of radius R(z) about the axis and the 3 mm circle 21.5 mm out; R = 21 - z/7 up to z = 14,
+# then 33 - z) - D bore 12*(pi*3^2 - (9*acos(0.5) - 1.5*sqrt(6.75))) = 273.0 - dimple pi*1.5^2*1.5
+# = 10.6, total 18441.5. A 24-segment body is 1.1% smaller; tolerance 2%. Missing scallops: +5%.
+[[checks]]
+type = "volume"
+object = "Knob"
+mm3 = 18441.5
+rel_tol = 0.02
+
+# radial rays from r = 30 mm at 0/90/180 deg, midway between scallops; side radius 21 - z/7.
+# Sagitta of a 24-segment body at r = 21 is 0.18 mm, under the tolerance.
+[[checks]]
+type = "ray_probe"
+label = "probe_taper"
+tol = 0.0003
+probes = [
+  { name = "side at z=1, 0 deg", origin = [0.03, 0.0, 0.001], dir = [-1, 0, 0], hit = 0.0091429 },
+  { name = "side at z=7, 0 deg", origin = [0.03, 0.0, 0.007], dir = [-1, 0, 0], hit = 0.01 },
+  { name = "side at z=13, 0 deg", origin = [0.03, 0.0, 0.013], dir = [-1, 0, 0], hit = 0.0108571 },
+  { name = "side at z=7, 90 deg", origin = [0.0, 0.03, 0.007], dir = [0, -1, 0], hit = 0.01 },
+  { name = "side at z=13, 180 deg", origin = [-0.03, 0.0, 0.013], dir = [1, 0, 0], hit = 0.0108571 },
+  { name = "underside", origin = [0.01, 0.0, -0.01], dir = [0, 0, 1], hit = 0.01 },
+]
+
+# straight down at r = 18 mm: chamfer height there is z = 15. Worst 24-segment error 0.16 mm.
+[[checks]]
+type = "ray_probe"
+label = "probe_chamfer"
+tol = 0.0003
+probes = [
+  { name = "chamfer at r=18, 0 deg", origin = [0.018, 0.0, 0.03], dir = [0, 0, -1], hit = 0.015 },
+  { name = "chamfer at r=18, 90 deg", origin = [0.0, 0.018, 0.03], dir = [0, 0, -1], hit = 0.015 },
+  { name = "chamfer at r=18, 270 deg", origin = [0.0, -0.018, 0.03], dir = [0, 0, -1], hit = 0.015 },
+  { name = "top centre", origin = [0.0, 0.0, 0.03], dir = [0, 0, -1], hit = 0.014 },
+]
+
+# radial rays through each probed scallop's centre line, from r = 30 mm: deepest point at r = 18.5
+[[checks]]
+type = "ray_probe"
+label = "probe_scallops"
+tol = 0.0003
+probes = [
+  { name = "scallop 15 deg, z=7", origin = [0.028978, 0.0077646, 0.007], dir = [-0.965926, -0.258819, 0], hit = 0.0115 },
+  { name = "scallop 15 deg, z=1", origin = [0.028978, 0.0077646, 0.001], dir = [-0.965926, -0.258819, 0], hit = 0.0115 },
+  { name = "scallop 105 deg, z=7", origin = [-0.0077646, 0.028978, 0.007], dir = [0.258819, -0.965926, 0], hit = 0.0115 },
+  { name = "scallop 225 deg, z=7", origin = [-0.0212132, -0.0212132, 0.007], dir = [0.707107, 0.707107, 0], hit = 0.0115 },
+  { name = "scallop 345 deg, z=12", origin = [0.028978, -0.0077646, 0.012], dir = [-0.965926, 0.258819, 0], hit = 0.0115 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_bore"
+tol = 0.0003
+probes = [
+  { name = "flat at x=+1.5", origin = [0.0, 0.0, 0.006], dir = [1, 0, 0], hit = 0.0015 },
+  { name = "round side -X", origin = [0.0, 0.0, 0.006], dir = [-1, 0, 0], hit = 0.003 },
+  { name = "round side +Y", origin = [0.0, 0.0, 0.006], dir = [0, 1, 0], hit = 0.003 },
+  { name = "ceiling at z=12", origin = [-0.001, 0.0, -0.005], dir = [0, 0, 1], hit = 0.017 },
+  { name = "solid beyond the flat", origin = [0.0022, 0.0, -0.005], dir = [0, 0, 1], hit = 0.005 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_pointer"
+tol = 0.0003
+probes = [
+  { name = "dimple at +X", origin = [0.012, 0.0, 0.03], dir = [0, 0, -1], hit = 0.0155 },
+  { name = "top at -X is plain", origin = [-0.012, 0.0, 0.03], dir = [0, 0, -1], hit = 0.014 },
+]
+
+[variants]
+good = []
+no_taper = ["bbox", "volume", "probe_taper"]
+no_chamfer = ["probe_chamfer"]
+no_scallops = ["volume", "probe_scallops"]
+scallops_rotated = ["probe_taper", "probe_scallops"]
+scallops_10 = ["probe_taper", "probe_scallops"]
+round_bore = ["probe_bore"]
+flat_wrong_side = ["probe_bore"]
+bore_through = ["probe_bore", "probe_chamfer"]
+no_pointer = ["probe_pointer"]
+pointer_wrong_side = ["probe_pointer"]

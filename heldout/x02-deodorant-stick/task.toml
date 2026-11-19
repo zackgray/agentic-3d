@@ -1,0 +1,179 @@
+id = "x02-deodorant-stick"
+title = "Oval deodorant stick: barrel, domed stick and cap"
+group = "hard-surface"
+starting_scene = "empty"
+
+prompt = """
+Model a hypothetical product in the open Blender scene: an oval deodorant stick with its cap on, as three mesh objects. Units are metres (1 Blender unit = 1 m). The product stands on the ground plane, centred on the world Z axis, with the long axis of its oval section along world X.
+
+Every oval below is an exact ellipse centred on the Z axis, given as its full length along X by its full width along Y.
+
+Barrel (mesh object "Barrel"), an open-top oval cup:
+- Outside: an ellipse 50 mm by 30 mm, straight-sided, from a flat underside at z = 0 to a flat rim at z = 90 mm.
+- Inside: an ellipse 46 mm by 26 mm (so the wall is 2 mm thick at the ends of both axes), from a flat floor at z = 3 mm up through the open top. All edges sharp.
+
+Stick (mesh object "Stick"), the product itself, a solid:
+- Section: an ellipse 45 mm by 25 mm, straight-sided, from a flat bottom at z = 3.5 mm (0.5 mm above the barrel floor) up to z = 96 mm.
+- Domed top: above z = 96 mm the top surface is the elliptic paraboloid z = 96 + 4 * (1 - (x / 22.5)^2 - (y / 12.5)^2), all in mm. It meets the straight side at z = 96 mm and rises to a crown at z = 100 mm on the Z axis.
+
+Cap (mesh object "Cap"), an oval cup upside down over the stick:
+- Outside: an ellipse 50 mm by 30 mm, straight-sided, from its open rim at z = 90.5 mm (0.5 mm above the barrel rim) to a flat top at z = 110 mm.
+- Inside: an ellipse 46 mm by 26 mm, from the rim up to a flat ceiling at z = 107 mm (a 3 mm top wall). All edges sharp.
+
+Every object:
+- A single closed (watertight) mesh, one connected piece, with consistent outward normals and no self-intersections. Surfaces are smooth enough for close-up product renders.
+- No two objects touch or intersect.
+- Transforms applied: location at the origin, no rotation, scale 1, so the mesh data holds world coordinates.
+- At most 20,000 faces each.
+- No other mesh objects in the scene.
+
+Mesh hygiene: no duplicate or coincident vertices, no zero-length edges and no zero-area faces. Merge any coincident vertices before you finish.
+
+Tell me when you're done.
+"""
+
+[[checks]]
+type = "objects"
+expected = ["Barrel", "Cap", "Stick"]
+
+[[checks]]
+type = "transforms_applied"
+objects = ["Barrel", "Cap", "Stick"]
+
+[[checks]]
+type = "bbox"
+label = "bbox_barrel"
+object = "Barrel"
+min = [-0.025, -0.015, 0.0]
+max = [0.025, 0.015, 0.09]
+tol = 0.0003
+
+[[checks]]
+type = "bbox"
+label = "bbox_stick"
+object = "Stick"
+min = [-0.0225, -0.0125, 0.0035]
+max = [0.0225, 0.0125, 0.1]
+tol = 0.0003
+
+[[checks]]
+type = "bbox"
+label = "bbox_cap"
+object = "Cap"
+min = [-0.025, -0.015, 0.0905]
+max = [0.025, 0.015, 0.11]
+tol = 0.0003
+
+[[checks]]
+type = "watertight"
+objects = ["Barrel", "Cap", "Stick"]
+
+[[checks]]
+type = "shells"
+objects = ["Barrel", "Cap", "Stick"]
+
+[[checks]]
+type = "self_intersection"
+objects = ["Barrel", "Cap", "Stick"]
+
+[[checks]]
+type = "topology"
+objects = ["Barrel", "Cap", "Stick"]
+
+[[checks]]
+type = "face_budget"
+objects = ["Barrel", "Cap", "Stick"]
+max = 20000
+
+[[checks]]
+type = "no_overlap"
+label = "no_overlap_barrel_stick"
+a = "Barrel"
+b = "Stick"
+
+[[checks]]
+type = "no_overlap"
+label = "no_overlap_barrel_cap"
+a = "Barrel"
+b = "Cap"
+
+[[checks]]
+type = "no_overlap"
+label = "no_overlap_cap_stick"
+a = "Cap"
+b = "Stick"
+
+# pi*25*15*90 - pi*23*13*87
+[[checks]]
+type = "volume"
+label = "volume_barrel"
+object = "Barrel"
+mm3 = 24307
+rel_tol = 0.01
+
+# prism pi*22.5*12.5*92.5 + paraboloid dome pi*22.5*12.5*4/2
+[[checks]]
+type = "volume"
+label = "volume_stick"
+object = "Stick"
+mm3 = 83498
+rel_tol = 0.01
+
+# pi*25*15*19.5 - pi*23*13*16.5
+[[checks]]
+type = "volume"
+label = "volume_cap"
+object = "Cap"
+mm3 = 7474
+rel_tol = 0.01
+
+[[checks]]
+type = "ray_probe"
+label = "probe_barrel"
+objects = ["Barrel"]
+tol = 0.0003
+probes = [
+  { name = "outside +X", origin = [0.05, 0.0, 0.045], dir = [-1, 0, 0], hit = 0.025 },
+  { name = "outside -Y", origin = [0.0, -0.05, 0.045], dir = [0, 1, 0], hit = 0.035 },
+  { name = "inside +X", origin = [0.0, 0.0, 0.045], dir = [1, 0, 0], hit = 0.023 },
+  { name = "inside +Y", origin = [0.0, 0.0, 0.045], dir = [0, 1, 0], hit = 0.013 },
+  { name = "rim top", origin = [0.024, 0.0, 0.2], dir = [0, 0, -1], hit = 0.11 },
+  { name = "floor top", origin = [0.0, 0.0, 0.2], dir = [0, 0, -1], hit = 0.197 },
+  { name = "underside", origin = [0.0, 0.0, -0.01], dir = [0, 0, 1], hit = 0.01 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_stick"
+objects = ["Stick"]
+tol = 0.0003
+probes = [
+  { name = "crown", origin = [0.0, 0.0, 0.2], dir = [0, 0, -1], hit = 0.1 },
+  { name = "dome at x=15", origin = [0.015, 0.0, 0.2], dir = [0, 0, -1], hit = 0.1017778 },
+  { name = "dome at y=-8", origin = [0.0, -0.008, 0.2], dir = [0, 0, -1], hit = 0.1016384 },
+  { name = "side +X", origin = [0.05, 0.0, 0.05], dir = [-1, 0, 0], hit = 0.0275 },
+  { name = "side -Y", origin = [0.0, -0.05, 0.05], dir = [0, 1, 0], hit = 0.0375 },
+  { name = "bottom", origin = [0.0, 0.0, -0.01], dir = [0, 0, 1], hit = 0.0135 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_cap"
+objects = ["Cap"]
+tol = 0.0003
+probes = [
+  { name = "cap top", origin = [0.0, 0.0, 0.2], dir = [0, 0, -1], hit = 0.09 },
+  { name = "cap ceiling", origin = [0.0, 0.0, 0.101], dir = [0, 0, 1], hit = 0.006 },
+  { name = "cap outside +X", origin = [0.05, 0.0, 0.1], dir = [-1, 0, 0], hit = 0.025 },
+  { name = "cap inside +Y", origin = [0.0, 0.0, 0.104], dir = [0, 1, 0], hit = 0.013 },
+  { name = "cap rim underside", origin = [0.024, 0.0, 0.05], dir = [0, 0, 1], hit = 0.0405 },
+]
+
+[variants]
+good = []
+rotated = ["bbox_barrel", "bbox_stick", "bbox_cap", "probe_barrel", "probe_stick", "probe_cap"]
+flat_top = ["volume_stick", "probe_stick"]
+cap_resting = ["bbox_cap", "no_overlap_barrel_cap", "probe_cap"]
+stick_on_floor = ["bbox_stick", "no_overlap_barrel_stick", "probe_stick"]
+no_floor = ["volume_barrel", "probe_barrel"]
+solid_cap = ["volume_cap", "probe_cap", "no_overlap_cap_stick"]

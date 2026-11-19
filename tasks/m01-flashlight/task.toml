@@ -1,0 +1,232 @@
+id = "m01-flashlight"
+title = "Flashlight: grooved body with flared head, lens, bezel ring and tail switch"
+group = "multi-step"
+starting_scene = "empty"
+
+prompt = """
+Model a hypothetical product in the open Blender scene: a handheld flashlight standing upright on its tail, as four separate mesh objects. Units are metres (1 Blender unit = 1 m). Every part is centred on the world Z axis; the tail switch button rests on the ground plane and the light points up +Z.
+
+Body (mesh object "Body"), one solid part:
+- Tube: a cylinder 26 mm in diameter from a flat tail face at z = 3 mm up to z = 110 mm.
+- Grip grooves: six circumferential grooves cut into the tube, each 3 mm tall (in Z) and 1 mm deep (so the groove floor is a cylinder 24 mm in diameter), with flat floors and square shoulders, centred at z = 30, 40, 50, 60, 70 and 80 mm.
+- Flare: a straight cone from 26 mm in diameter at z = 110 mm out to 40 mm in diameter at z = 125 mm.
+- Head: a cylinder 40 mm in diameter from z = 125 mm to a flat top at z = 150 mm.
+- Lens seat: a flat-bottomed counterbore 34 mm in diameter in the head top, from z = 150 mm down to its floor at z = 146.5 mm.
+- Tail pocket: a flat-bottomed blind hole 13 mm in diameter in the tail face, from z = 3 mm up to its ceiling at z = 8 mm.
+- All edges are sharp.
+
+Lens (mesh object "Lens"): a solid disc 33 mm in diameter and 3 mm thick, from z = 147 mm to z = 150 mm, sitting in the lens seat 0.5 mm above its floor and clearing its wall by 0.5 mm all round.
+
+Bezel (mesh object "Bezel"): a flat ring 42 mm in outer diameter and 31 mm in inner diameter, from z = 150.5 mm to z = 154 mm, floating 0.5 mm above the head top. It overhangs the head by 1 mm all round and overlaps the lens rim from above.
+
+Tail switch button (mesh object "Button"): a solid cylinder 12 mm in diameter from z = 0 to z = 7.5 mm, standing in the tail pocket with 0.5 mm clearance all round and 0.5 mm below the pocket ceiling, and protruding 3 mm below the tail face.
+
+All four objects:
+- Each is a single closed (watertight) mesh in one connected piece, with consistent outward normals and no self-intersections.
+- No two objects touch or intersect.
+- Transforms applied: location at the origin, no rotation, scale 1, so the mesh data holds world coordinates.
+- At most 20,000 faces per object.
+- No other mesh objects in the scene.
+
+Mesh hygiene: no duplicate or coincident vertices, no zero-length edges and no zero-area faces. Merge any coincident vertices before you finish.
+
+Tell me when you're done.
+"""
+
+[[checks]]
+type = "objects"
+expected = ["Bezel", "Body", "Button", "Lens"]
+
+[[checks]]
+type = "transforms_applied"
+objects = ["Bezel", "Body", "Button", "Lens"]
+
+[[checks]]
+type = "bbox"
+label = "bbox_body"
+object = "Body"
+min = [-0.02, -0.02, 0.003]
+max = [0.02, 0.02, 0.15]
+tol = 0.0003
+
+[[checks]]
+type = "bbox"
+label = "bbox_lens"
+object = "Lens"
+min = [-0.0165, -0.0165, 0.147]
+max = [0.0165, 0.0165, 0.15]
+tol = 0.0003
+
+[[checks]]
+type = "bbox"
+label = "bbox_bezel"
+object = "Bezel"
+min = [-0.021, -0.021, 0.1505]
+max = [0.021, 0.021, 0.154]
+tol = 0.0003
+
+[[checks]]
+type = "bbox"
+label = "bbox_button"
+object = "Button"
+min = [-0.006, -0.006, 0.0]
+max = [0.006, 0.006, 0.0075]
+tol = 0.0003
+
+[[checks]]
+type = "watertight"
+objects = ["Bezel", "Body", "Button", "Lens"]
+
+[[checks]]
+type = "shells"
+objects = ["Bezel", "Body", "Button", "Lens"]
+
+[[checks]]
+type = "self_intersection"
+objects = ["Bezel", "Body", "Button", "Lens"]
+
+[[checks]]
+type = "topology"
+objects = ["Bezel", "Body", "Button", "Lens"]
+
+[[checks]]
+type = "face_budget"
+objects = ["Bezel", "Body", "Button", "Lens"]
+max = 20000
+
+[[checks]]
+type = "no_overlap"
+label = "no_overlap_body_lens"
+a = "Body"
+b = "Lens"
+
+[[checks]]
+type = "no_overlap"
+label = "no_overlap_body_bezel"
+a = "Body"
+b = "Bezel"
+
+[[checks]]
+type = "no_overlap"
+label = "no_overlap_lens_bezel"
+a = "Lens"
+b = "Bezel"
+
+[[checks]]
+type = "no_overlap"
+label = "no_overlap_body_button"
+a = "Body"
+b = "Button"
+
+# tube pi*13^2*107 - grooves 6*pi*(13^2-12^2)*3 + flare pi*15/3*(13^2+13*20+20^2) + head pi*20^2*25
+#   - lens seat pi*17^2*3.5 - tail pocket pi*6.5^2*5
+[[checks]]
+type = "volume"
+label = "volume_body"
+object = "Body"
+mm3 = 95992
+rel_tol = 0.01
+
+# pi*(21^2 - 15.5^2)*3.5
+[[checks]]
+type = "volume"
+label = "volume_bezel"
+object = "Bezel"
+mm3 = 2207
+rel_tol = 0.01
+
+[[checks]]
+type = "ray_probe"
+label = "probe_grooves"
+objects = ["Body"]
+tol = 0.0003
+probes = [
+  { name = "groove z30", origin = [0.03, 0.0, 0.03], dir = [-1, 0, 0], hit = 0.018 },
+  { name = "groove z40", origin = [0.03, 0.0, 0.04], dir = [-1, 0, 0], hit = 0.018 },
+  { name = "groove z50 from -Y", origin = [0.0, -0.03, 0.05], dir = [0, 1, 0], hit = 0.018 },
+  { name = "groove z60", origin = [0.03, 0.0, 0.06], dir = [-1, 0, 0], hit = 0.018 },
+  { name = "groove z70", origin = [0.03, 0.0, 0.07], dir = [-1, 0, 0], hit = 0.018 },
+  { name = "groove z80", origin = [0.03, 0.0, 0.08], dir = [-1, 0, 0], hit = 0.018 },
+  { name = "land below grooves", origin = [0.03, 0.0, 0.02], dir = [-1, 0, 0], hit = 0.017 },
+  { name = "land z35", origin = [0.03, 0.0, 0.035], dir = [-1, 0, 0], hit = 0.017 },
+  { name = "land z75", origin = [0.03, 0.0, 0.075], dir = [-1, 0, 0], hit = 0.017 },
+  { name = "land above grooves", origin = [0.03, 0.0, 0.09], dir = [-1, 0, 0], hit = 0.017 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_head"
+objects = ["Body"]
+tol = 0.0003
+probes = [
+  { name = "flare at mid-height", origin = [0.04, 0.0, 0.1175], dir = [-1, 0, 0], hit = 0.0235 },
+  { name = "head side", origin = [0.04, 0.0, 0.135], dir = [-1, 0, 0], hit = 0.02 },
+  { name = "head top", origin = [0.0185, 0.0, 0.17], dir = [0, 0, -1], hit = 0.02 },
+  { name = "lens seat floor", origin = [0.0168, 0.0, 0.17], dir = [0, 0, -1], hit = 0.0235 },
+  { name = "lens seat wall", origin = [0.0, 0.0, 0.148], dir = [1, 0, 0], hit = 0.017 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_tail"
+objects = ["Body"]
+tol = 0.0003
+probes = [
+  { name = "tail face", origin = [0.01, 0.0, -0.01], dir = [0, 0, 1], hit = 0.013 },
+  { name = "tail pocket ceiling", origin = [0.0, 0.0, -0.01], dir = [0, 0, 1], hit = 0.018 },
+  { name = "tail pocket wall", origin = [0.0, 0.0, 0.005], dir = [1, 0, 0], hit = 0.0065 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_lens"
+objects = ["Lens"]
+tol = 0.0003
+probes = [
+  { name = "lens top", origin = [0.0, 0.0, 0.17], dir = [0, 0, -1], hit = 0.02 },
+  { name = "lens bottom", origin = [0.0, 0.0, 0.1], dir = [0, 0, 1], hit = 0.047 },
+  { name = "lens edge", origin = [0.03, 0.0, 0.1485], dir = [-1, 0, 0], hit = 0.0135 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_bezel"
+objects = ["Bezel"]
+tol = 0.0003
+probes = [
+  { name = "bezel outer", origin = [0.04, 0.0, 0.152], dir = [-1, 0, 0], hit = 0.019 },
+  { name = "bezel inner", origin = [0.0, 0.0, 0.152], dir = [1, 0, 0], hit = 0.0155 },
+  { name = "bezel top", origin = [0.018, 0.0, 0.17], dir = [0, 0, -1], hit = 0.016 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_button"
+objects = ["Button"]
+tol = 0.0003
+probes = [
+  { name = "button side", origin = [0.03, 0.0, 0.0015], dir = [-1, 0, 0], hit = 0.024 },
+  { name = "button underside", origin = [0.0, 0.0, -0.01], dir = [0, 0, 1], hit = 0.01 },
+  { name = "button top", origin = [0.0, 0.0, 0.1], dir = [0, 0, -1], hit = 0.0925 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_fit"
+tol = 0.0003
+probes = [
+  { name = "lens seen through the bezel", origin = [0.0, 0.0, 0.17], dir = [0, 0, -1], hit = 0.02 },
+  { name = "gap between head top and bezel", origin = [0.03, 0.0, 0.15025], dir = [-1, 0, 0], hit = false },
+  { name = "gap under the lens to the seat wall", origin = [0.0, 0.0, 0.14675], dir = [1, 0, 0], hit = 0.017 },
+  { name = "up the tail-pocket clearance", origin = [0.00625, 0.0, -0.01], dir = [0, 0, 1], hit = 0.018 },
+]
+
+[variants]
+good = []
+no_grooves = ["probe_grooves", "volume_body"]
+no_flare = ["probe_head", "volume_body"]
+lens_touching = ["bbox_lens", "no_overlap_body_lens", "probe_lens", "probe_fit"]
+bezel_on_head = ["bbox_bezel", "no_overlap_body_bezel", "no_overlap_lens_bezel", "probe_bezel", "probe_fit"]
+solid_bezel = ["volume_bezel", "probe_bezel", "probe_fit"]
+button_tight = ["bbox_button", "no_overlap_body_button", "probe_button", "probe_fit"]
+button_flush = ["bbox_button", "no_overlap_body_button", "probe_button"]

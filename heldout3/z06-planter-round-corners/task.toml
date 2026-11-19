@@ -1,0 +1,127 @@
+id = "z06-planter-round-corners"
+title = "Revision: round the slanted corners of a tapered planter, inside and out"
+group = "revision"
+starting_scene = "start.py"
+
+prompt = """
+The open Blender scene holds an approved model of a hypothetical product: a moulded planter, an open-top box whose side walls taper outward from the base to the rim, with drain holes in its floor (mesh object "Planter"). It stands on the ground plane, centred on the world Z axis. Units are metres (1 Blender unit = 1 m). At the moment every edge is sharp. The client has one revision:
+
+- Round the four outside corner edges, the slanted edges where neighbouring side walls meet, to a 15 mm radius. Measured in a horizontal cross-section at any height from the base to the rim, each outside corner is a 15 mm radius arc tangent to both walls.
+- Round the four inside corner edges to match: in horizontal cross-section an 11 mm radius arc tangent to both inside walls and concentric with the outside arc at that height, so the wall keeps its thickness all the way round the corners. The inside corners run from the floor to the rim.
+- Nothing else changes: the base and rim outlines (their lengths and widths), the height, the taper, the wall thickness on the flat sides, the floor thickness and the drain holes all stay exactly as they are. The rim, the base edges and the edges where the inside walls meet the floor stay sharp.
+
+The object keeps its name. It stays a single closed (watertight) mesh in one connected piece, with consistent outward normals and no self-intersections, transforms applied (location at the origin, no rotation, scale 1), and at most 20,000 faces. No other mesh objects in the scene.
+
+Mesh hygiene: no duplicate or coincident vertices, no zero-length edges and no zero-area faces. Merge any coincident vertices before you finish.
+
+Tell me when you're done.
+"""
+
+[[checks]]
+type = "objects"
+expected = ["Planter"]
+
+[[checks]]
+type = "transforms_applied"
+objects = ["Planter"]
+
+[[checks]]
+type = "bbox"
+object = "Planter"
+min = [-0.09, -0.06, 0.0]
+max = [0.09, 0.06, 0.1]
+tol = 0.0002
+
+[[checks]]
+type = "watertight"
+objects = ["Planter"]
+
+[[checks]]
+type = "shells"
+objects = ["Planter"]
+
+[[checks]]
+type = "self_intersection"
+objects = ["Planter"]
+
+[[checks]]
+type = "topology"
+objects = ["Planter"]
+
+[[checks]]
+type = "face_budget"
+object = "Planter"
+max = 20000
+
+# With hx(z) = 80 + z/10, hy(z) = 50 + z/10 and A(hx, hy, r) = 4*hx*hy - (4-pi)*r^2:
+# integral_0^100 A(hx, hy, 15) dz - integral_6^100 A(hx-4, hy-4, 11) dz - 4 drain holes pi*4^2*6.
+# Sharp corners (unchanged) are +3.3%, sharp inside only -3.3%, 15 mm inside +2.9%. A 24-segment
+# build of the corners shifts the total by ~0.13%; a bevel modifier on the slanted edges by less than 0.5%.
+[[checks]]
+type = "volume"
+object = "Planter"
+mm3 = 291628
+rel_tol = 0.01
+
+# Corner probes run horizontally along the 45-degree diagonal through the arc centre, so the
+# segment count moves the hit by at most the sagitta (15*(1-cos(7.5 deg)) = 0.13 mm at 24 segments).
+[[checks]]
+type = "ray_probe"
+label = "probe_outside_corners"
+tol = 0.0003
+probes = [
+  { name = "outside corner +X+Y at z 50", origin = [0.09, 0.06, 0.05], dir = [-1, -1, 0], hit = 0.01328427 },
+  { name = "outside corner -X+Y at z 50", origin = [-0.09, 0.06, 0.05], dir = [1, -1, 0], hit = 0.01328427 },
+  { name = "outside corner -X-Y at z 50", origin = [-0.09, -0.06, 0.05], dir = [1, 1, 0], hit = 0.01328427 },
+  { name = "outside corner +X-Y at z 50", origin = [0.09, -0.06, 0.05], dir = [-1, 1, 0], hit = 0.01328427 },
+  { name = "outside corner +X+Y at z 15", origin = [0.0865, 0.0565, 0.015], dir = [-1, -1, 0], hit = 0.01328427 },
+  { name = "outside corner -X-Y at z 90", origin = [-0.094, -0.064, 0.09], dir = [1, 1, 0], hit = 0.01328427 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_inside_corners"
+tol = 0.0003
+probes = [
+  { name = "inside corner +X+Y at z 50", origin = [0.06, 0.03, 0.05], dir = [1, 1, 0], hit = 0.02514214 },
+  { name = "inside corner -X+Y at z 50", origin = [-0.06, 0.03, 0.05], dir = [-1, 1, 0], hit = 0.02514214 },
+  { name = "inside corner -X-Y at z 50", origin = [-0.06, -0.03, 0.05], dir = [-1, -1, 0], hit = 0.02514214 },
+  { name = "inside corner +X-Y at z 50", origin = [0.06, -0.03, 0.05], dir = [1, -1, 0], hit = 0.02514214 },
+  { name = "inside corner -X+Y at z 20", origin = [-0.057, 0.027, 0.02], dir = [-1, 1, 0], hit = 0.02514214 },
+  { name = "inside corner +X-Y at z 90", origin = [0.064, -0.034, 0.09], dir = [1, -1, 0], hit = 0.02514214 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_body"
+tol = 0.0003
+probes = [
+  { name = "outside +X wall at z 50", origin = [0.1, 0.0, 0.05], dir = [-1, 0, 0], hit = 0.015 },
+  { name = "outside -Y wall at z 50", origin = [0.0, -0.07, 0.05], dir = [0, 1, 0], hit = 0.015 },
+  { name = "outside +X wall at z 5", origin = [0.1, 0.0, 0.005], dir = [-1, 0, 0], hit = 0.0195 },
+  { name = "outside +X wall at z 95", origin = [0.1, 0.0, 0.095], dir = [-1, 0, 0], hit = 0.0105 },
+  { name = "outside +Y wall at z 95", origin = [0.0, 0.07, 0.095], dir = [0, -1, 0], hit = 0.0105 },
+  { name = "inside +X wall at z 50", origin = [0.0, 0.0, 0.05], dir = [1, 0, 0], hit = 0.081 },
+  { name = "inside -Y wall at z 50", origin = [0.0, 0.0, 0.05], dir = [0, -1, 0], hit = 0.051 },
+  { name = "inside -X wall at z 90", origin = [0.0, 0.0, 0.09], dir = [-1, 0, 0], hit = 0.085 },
+  { name = "floor top at centre", origin = [0.0, 0.0, 0.05], dir = [0, 0, -1], hit = 0.044 },
+  { name = "floor top near +X wall", origin = [0.06, 0.0, 0.05], dir = [0, 0, -1], hit = 0.044 },
+  { name = "underside", origin = [0.02, 0.0, -0.01], dir = [0, 0, 1], hit = 0.01 },
+  { name = "rim top, +Y side", origin = [0.0, 0.058, 0.12], dir = [0, 0, -1], hit = 0.02 },
+  { name = "drain +X+Y open", origin = [0.04, 0.02, 0.05], dir = [0, 0, -1], hit = false },
+  { name = "drain -X+Y open", origin = [-0.04, 0.02, 0.05], dir = [0, 0, -1], hit = false },
+  { name = "drain -X-Y open", origin = [-0.04, -0.02, 0.05], dir = [0, 0, -1], hit = false },
+  { name = "drain +X-Y open", origin = [0.04, -0.02, 0.05], dir = [0, 0, -1], hit = false },
+  { name = "drain +X+Y open at r 3.6", origin = [0.0436, 0.02, 0.05], dir = [0, 0, -1], hit = false },
+  { name = "drain +X+Y solid at r 4.5", origin = [0.0445, 0.02, 0.05], dir = [0, 0, -1], hit = 0.044 },
+]
+
+[variants]
+good = []
+coarse = []
+unchanged = ["volume", "probe_outside_corners", "probe_inside_corners"]
+outer_only = ["volume", "probe_outside_corners", "probe_inside_corners"]
+same_radius_in = ["volume", "probe_inside_corners"]
+radius_10 = ["volume", "probe_outside_corners", "probe_inside_corners"]
+taper_lost = ["bbox", "volume", "probe_outside_corners", "probe_inside_corners", "probe_body"]
+holes_lost = ["probe_body"]

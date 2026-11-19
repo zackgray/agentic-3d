@@ -1,0 +1,202 @@
+id = "x03-step-riser"
+title = "Two-step display riser with jars and a turned carton"
+group = "layout"
+starting_scene = "empty"
+
+prompt = """
+Lay out a product shot in the open Blender scene: a two-step display riser with three hypothetical products on it, as four mesh objects. Units are metres (1 Blender unit = 1 m). The riser stands on the ground plane, centred on the world Z axis in X; the front of the scene faces -Y.
+
+Riser (mesh object "Riser"), one solid block with a step, all edges sharp, its sides parallel to the world axes:
+- Low step: x from -80 mm to +80 mm, y from -50 mm to 0, from the ground (z = 0) to a flat top at z = 30 mm.
+- High step: x from -80 mm to +80 mm, y from 0 to +60 mm, from the ground to a flat top at z = 60 mm.
+- The two steps are one fused piece: seen from the side (along X) the riser's profile is an L, with a vertical face at y = 0 between z = 30 mm and z = 60 mm.
+
+Jars (mesh objects "Jar_L" and "Jar_R"), two identical solids of revolution, axes vertical:
+- Each is a cylindrical body 40 mm in diameter and 40 mm tall, topped by a lid 44 mm in diameter and 10 mm tall (the lid overhangs the body by 2 mm all round). Flat bottom, flat lid top, all edges sharp. 50 mm tall overall.
+- Both stand on the low step, their bottoms 0.5 mm above the step top (at z = 30.5 mm), with their axes on the line y = -25 mm.
+- "Jar_L" is on the -X side and "Jar_R" on the +X side. The gap between their bodies is 30 mm, measured surface to surface along X, and the pair is centred on x = 0.
+
+Carton (mesh object "Carton"), a solid rectangular block with sharp edges:
+- 60 mm long, 30 mm deep and 90 mm tall. Its bottom is 0.5 mm above the high step top (at z = 60.5 mm) and its vertical axis passes through (x, y) = (0, +30 mm).
+- It is turned 30 degrees about its vertical axis, counter-clockwise seen from above (looking down -Z): starting from its 60 mm side along X, the end that was at +X swings towards +Y.
+
+Every object:
+- A single closed (watertight) mesh, one connected piece, with consistent outward normals and no self-intersections. No two objects touch or intersect.
+- Transforms applied: location at the origin, no rotation, scale 1, so the mesh data holds world coordinates.
+- At most 5,000 faces each.
+- No other mesh objects in the scene.
+
+Mesh hygiene: no duplicate or coincident vertices, no zero-length edges and no zero-area faces. Merge any coincident vertices before you finish.
+
+Tell me when you're done.
+"""
+
+[[checks]]
+type = "objects"
+expected = ["Carton", "Jar_L", "Jar_R", "Riser"]
+
+[[checks]]
+type = "transforms_applied"
+objects = ["Carton", "Jar_L", "Jar_R", "Riser"]
+
+[[checks]]
+type = "watertight"
+objects = ["Carton", "Jar_L", "Jar_R", "Riser"]
+
+[[checks]]
+type = "shells"
+objects = ["Carton", "Jar_L", "Jar_R", "Riser"]
+
+[[checks]]
+type = "self_intersection"
+objects = ["Carton", "Jar_L", "Jar_R", "Riser"]
+
+[[checks]]
+type = "topology"
+objects = ["Carton", "Jar_L", "Jar_R", "Riser"]
+
+[[checks]]
+type = "face_budget"
+objects = ["Carton", "Jar_L", "Jar_R", "Riser"]
+max = 5000
+
+[[checks]]
+type = "bbox"
+label = "bbox_riser"
+object = "Riser"
+min = [-0.08, -0.05, 0.0]
+max = [0.08, 0.06, 0.06]
+tol = 0.0003
+
+[[checks]]
+type = "bbox"
+label = "bbox_jar_l"
+object = "Jar_L"
+min = [-0.057, -0.047, 0.0305]
+max = [-0.013, -0.003, 0.0805]
+tol = 0.0003
+
+[[checks]]
+type = "bbox"
+label = "bbox_jar_r"
+object = "Jar_R"
+min = [0.013, -0.047, 0.0305]
+max = [0.057, -0.003, 0.0805]
+tol = 0.0003
+
+# corners of a 60 x 30 rectangle turned 30 deg: half-extents 30cos30 + 15sin30 = 33.481, 30sin30 + 15cos30 = 27.990
+[[checks]]
+type = "bbox"
+label = "bbox_carton"
+object = "Carton"
+min = [-0.033481, 0.00201, 0.0605]
+max = [0.033481, 0.05799, 0.1505]
+tol = 0.0003
+
+[[checks]]
+type = "no_overlap"
+label = "no_overlap_riser_jar_l"
+a = "Riser"
+b = "Jar_L"
+
+[[checks]]
+type = "no_overlap"
+label = "no_overlap_riser_jar_r"
+a = "Riser"
+b = "Jar_R"
+
+[[checks]]
+type = "no_overlap"
+label = "no_overlap_riser_carton"
+a = "Riser"
+b = "Carton"
+
+[[checks]]
+type = "no_overlap"
+label = "no_overlap_jars"
+a = "Jar_L"
+b = "Jar_R"
+
+# 160*50*30 + 160*60*60
+[[checks]]
+type = "volume"
+label = "volume_riser"
+object = "Riser"
+mm3 = 816000
+rel_tol = 0.005
+
+# pi*(20^2*40 + 22^2*10)
+[[checks]]
+type = "volume"
+label = "volume_jar_l"
+object = "Jar_L"
+mm3 = 65471
+rel_tol = 0.01
+
+# pi*(20^2*40 + 22^2*10)
+[[checks]]
+type = "volume"
+label = "volume_jar_r"
+object = "Jar_R"
+mm3 = 65471
+rel_tol = 0.01
+
+# 60*30*90
+[[checks]]
+type = "volume"
+label = "volume_carton"
+object = "Carton"
+mm3 = 162000
+rel_tol = 0.005
+
+[[checks]]
+type = "ray_probe"
+label = "probe_riser"
+objects = ["Riser"]
+tol = 0.0003
+probes = [
+  { name = "low step top", origin = [0.0, -0.025, 0.2], dir = [0, 0, -1], hit = 0.17 },
+  { name = "high step top", origin = [0.0, 0.03, 0.2], dir = [0, 0, -1], hit = 0.14 },
+  { name = "front face", origin = [0.0, -0.1, 0.015], dir = [0, 1, 0], hit = 0.05 },
+  { name = "step face at y=0", origin = [0.0, -0.1, 0.045], dir = [0, 1, 0], hit = 0.1 },
+  { name = "back face", origin = [0.0, 0.1, 0.03], dir = [0, -1, 0], hit = 0.04 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_jars"
+tol = 0.0003
+probes = [
+  { name = "lid top L", origin = [-0.035, -0.025, 0.2], dir = [0, 0, -1], hit = 0.1195, objects = ["Jar_L"] },
+  { name = "lid overhang L", origin = [-0.014, -0.025, 0.05], dir = [0, 0, 1], hit = 0.0205, objects = ["Jar_L"] },
+  { name = "body side L", origin = [0.0, -0.025, 0.05], dir = [-1, 0, 0], hit = 0.015, objects = ["Jar_L"] },
+  { name = "bottom L", origin = [-0.035, -0.025, 0.0], dir = [0, 0, 1], hit = 0.0305, objects = ["Jar_L"] },
+  { name = "lid top R", origin = [0.035, -0.025, 0.2], dir = [0, 0, -1], hit = 0.1195, objects = ["Jar_R"] },
+  { name = "lid overhang R", origin = [0.014, -0.025, 0.05], dir = [0, 0, 1], hit = 0.0205, objects = ["Jar_R"] },
+  { name = "body side R", origin = [0.0, -0.025, 0.05], dir = [1, 0, 0], hit = 0.015, objects = ["Jar_R"] },
+  { name = "bottom R", origin = [0.035, -0.025, 0.0], dir = [0, 0, 1], hit = 0.0305, objects = ["Jar_R"] },
+]
+
+# The top probe at (25, 42) is inside the carton turned +30 deg and outside it turned -30 deg.
+# Face probes fire 50 mm along the inward normal of the +X end face and the -Y long face.
+[[checks]]
+type = "ray_probe"
+label = "probe_carton"
+objects = ["Carton"]
+tol = 0.0003
+probes = [
+  { name = "top, turn direction", origin = [0.025, 0.042, 0.2], dir = [0, 0, -1], hit = 0.0495 },
+  { name = "end face +X turned", origin = [0.069282, 0.07, 0.1055], dir = [-0.866025, -0.5, 0], hit = 0.05 },
+  { name = "long face -Y turned", origin = [0.0325, -0.026293, 0.1055], dir = [-0.5, 0.866025, 0], hit = 0.05 },
+  { name = "underside", origin = [0.0, 0.03, 0.0], dir = [0, 0, 1], hit = 0.0605 },
+]
+
+[variants]
+good = []
+resting = ["bbox_jar_l", "bbox_jar_r", "bbox_carton", "no_overlap_riser_jar_l", "no_overlap_riser_jar_r", "no_overlap_riser_carton", "probe_jars", "probe_carton"]
+wrong_way = ["probe_carton"]
+unrotated = ["bbox_carton", "probe_carton"]
+jar_pitch = ["bbox_jar_l", "bbox_jar_r", "no_overlap_jars", "probe_jars"]
+no_lids = ["bbox_jar_l", "bbox_jar_r", "volume_jar_l", "volume_jar_r", "probe_jars"]
+one_step = ["volume_riser", "probe_riser", "no_overlap_riser_jar_l", "no_overlap_riser_jar_r"]
+box_short = ["bbox_carton", "volume_carton", "probe_carton"]

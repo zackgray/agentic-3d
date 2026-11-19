@@ -1,0 +1,247 @@
+id = "z04-swatch-fan"
+title = "Colour-swatch fan: five blades turned about an off-centre pivot pin, stacked with clearances"
+group = "layout"
+starting_scene = "empty"
+
+prompt = """
+Lay out a product shot in the open Blender scene: a hypothetical colour-swatch fan deck, opened out, as six mesh objects: five flat swatch blades fanned about a pivot pin. Units are metres (1 Blender unit = 1 m). The pin stands on the ground plane with its axis on the world Z axis, which is the pivot of the fan.
+
+Pin (mesh object "Pin"), one solid part, three coaxial cylinders on the world Z axis with flat ends and sharp edges, fused: a bottom head 12 mm in diameter from z = 0 to z = 2 mm, a shaft 5 mm in diameter from z = 2 mm to z = 20 mm, and a top head 12 mm in diameter from z = 20 mm to z = 22 mm.
+
+Blades (mesh objects "Blade_1" to "Blade_5"), five identical flat plates, each 3 mm thick with flat top and bottom faces. Describe one blade in its own frame first, before it is turned: seen from above it is a rectangle 160 mm long along +X and 40 mm wide in Y, whose four vertical corners are rounded with a 6 mm radius, running from x = -12 mm to x = +148 mm and from y = -20 mm to y = +20 mm, so its long axis lies on the X axis. It has one round pivot hole straight through it, 6 mm in diameter, centred at (x, y) = (0, 0), that is 12 mm from its near end. All edges other than the corner roundings are sharp.
+
+Arrangement:
+- Every blade's pivot hole is centred on the world Z axis, around the pin's shaft (0.5 mm clearance all round).
+- Each blade is turned about the world Z axis (the pivot), counter-clockwise seen from above (+Z): "Blade_1" is not turned (its long axis points along +X), "Blade_2" is turned 15 degrees, "Blade_3" 30 degrees, "Blade_4" 45 degrees and "Blade_5" 60 degrees.
+- The blades are stacked bottom to top in order, with a 0.5 mm air gap between neighbours and above the bottom head: "Blade_1" from z = 2.5 mm to z = 5.5 mm, "Blade_2" from z = 6 mm to z = 9 mm, "Blade_3" from z = 9.5 mm to z = 12.5 mm, "Blade_4" from z = 13 mm to z = 16 mm and "Blade_5" from z = 16.5 mm to z = 19.5 mm (0.5 mm below the top head).
+
+Every object:
+- A single closed (watertight) mesh, one connected piece, with consistent outward normals and no self-intersections. No two objects touch or intersect.
+- Transforms applied: location at the origin, no rotation, scale 1, so the mesh data holds world coordinates.
+- At most 5,000 faces each.
+- No other mesh objects in the scene.
+
+Mesh hygiene: no duplicate or coincident vertices, no zero-length edges and no zero-area faces. Merge any coincident vertices before you finish.
+
+Tell me when you're done.
+"""
+
+[[checks]]
+type = "objects"
+expected = ["Blade_1", "Blade_2", "Blade_3", "Blade_4", "Blade_5", "Pin"]
+
+[[checks]]
+type = "transforms_applied"
+objects = ["Blade_1", "Blade_2", "Blade_3", "Blade_4", "Blade_5", "Pin"]
+
+[[checks]]
+type = "watertight"
+objects = ["Blade_1", "Blade_2", "Blade_3", "Blade_4", "Blade_5", "Pin"]
+
+[[checks]]
+type = "shells"
+objects = ["Blade_1", "Blade_2", "Blade_3", "Blade_4", "Blade_5", "Pin"]
+
+[[checks]]
+type = "self_intersection"
+objects = ["Blade_1", "Blade_2", "Blade_3", "Blade_4", "Blade_5", "Pin"]
+
+[[checks]]
+type = "topology"
+objects = ["Blade_1", "Blade_2", "Blade_3", "Blade_4", "Blade_5", "Pin"]
+
+[[checks]]
+type = "face_budget"
+objects = ["Blade_1", "Blade_2", "Blade_3", "Blade_4", "Blade_5", "Pin"]
+max = 5000
+
+# Blade bounds: the rotated rectangle of corner-arc centres (x -6..142, y -14..14) grown by the
+# 6 mm corner radius. A 24-segment corner falls short of the true extreme by at most 0.05 mm.
+[[checks]]
+type = "bbox"
+label = "bbox_blade_1"
+object = "Blade_1"
+min = [-0.012, -0.02, 0.0025]
+max = [0.148, 0.02, 0.0055]
+tol = 0.0003
+
+[[checks]]
+type = "bbox"
+label = "bbox_blade_2"
+object = "Blade_2"
+min = [-0.015419, -0.0210759, 0.006]
+max = [0.1467849, 0.0562753, 0.009]
+tol = 0.0003
+
+[[checks]]
+type = "bbox"
+label = "bbox_blade_3"
+object = "Blade_3"
+min = [-0.0181962, -0.0211244, 0.0095]
+max = [0.1359756, 0.0891244, 0.0125]
+tol = 0.0003
+
+[[checks]]
+type = "bbox"
+label = "bbox_blade_4"
+object = "Blade_4"
+min = [-0.0201421, -0.0201421, 0.013]
+max = [0.1163087, 0.1163087, 0.016]
+tol = 0.0003
+
+[[checks]]
+type = "bbox"
+label = "bbox_blade_5"
+object = "Blade_5"
+min = [-0.0211244, -0.0181962, 0.0165]
+max = [0.0891244, 0.1359756, 0.0195]
+tol = 0.0003
+
+[[checks]]
+type = "bbox"
+label = "bbox_pin"
+object = "Pin"
+min = [-0.006, -0.006, 0.0]
+max = [0.006, 0.006, 0.022]
+tol = 0.0003
+
+# (160*40 - (4-pi)*6^2) * 3 - pi*3^2*3; flat plate, curved area is a small share
+[[checks]]
+type = "volume"
+label = "volume_blade_1"
+object = "Blade_1"
+mm3 = 19022
+rel_tol = 0.01
+
+# same as Blade_1
+[[checks]]
+type = "volume"
+label = "volume_blade_4"
+object = "Blade_4"
+mm3 = 19022
+rel_tol = 0.01
+
+# 2 * pi*6^2*2 + pi*2.5^2*18; all curved, so 2% (a 24-segment build is 1.1% under)
+[[checks]]
+type = "volume"
+label = "volume_pin"
+object = "Pin"
+mm3 = 805.8
+rel_tol = 0.02
+
+[[checks]]
+type = "no_overlap"
+label = "no_overlap_pin_b1"
+a = "Pin"
+b = "Blade_1"
+
+[[checks]]
+type = "no_overlap"
+label = "no_overlap_pin_b2"
+a = "Pin"
+b = "Blade_2"
+
+[[checks]]
+type = "no_overlap"
+label = "no_overlap_pin_b3"
+a = "Pin"
+b = "Blade_3"
+
+[[checks]]
+type = "no_overlap"
+label = "no_overlap_pin_b4"
+a = "Pin"
+b = "Blade_4"
+
+[[checks]]
+type = "no_overlap"
+label = "no_overlap_pin_b5"
+a = "Pin"
+b = "Blade_5"
+
+[[checks]]
+type = "no_overlap"
+label = "no_overlap_b1_b2"
+a = "Blade_1"
+b = "Blade_2"
+
+[[checks]]
+type = "no_overlap"
+label = "no_overlap_b2_b3"
+a = "Blade_2"
+b = "Blade_3"
+
+[[checks]]
+type = "no_overlap"
+label = "no_overlap_b3_b4"
+a = "Blade_3"
+b = "Blade_4"
+
+[[checks]]
+type = "no_overlap"
+label = "no_overlap_b4_b5"
+a = "Blade_4"
+b = "Blade_5"
+
+# Straight down onto each blade's axis 130 mm from the pivot, where no higher blade covers it.
+[[checks]]
+type = "ray_probe"
+label = "probe_tops"
+tol = 0.0003
+probes = [
+  { name = "top 1, 130 mm out", origin = [0.13, 0.0, 0.05], dir = [0, 0, -1], hit = 0.0445 },
+  { name = "top 2, 130 mm out", origin = [0.1255704, 0.0336465, 0.05], dir = [0, 0, -1], hit = 0.041 },
+  { name = "top 3, 130 mm out", origin = [0.1125833, 0.065, 0.05], dir = [0, 0, -1], hit = 0.0375 },
+  { name = "top 4, 130 mm out", origin = [0.0919239, 0.0919239, 0.05], dir = [0, 0, -1], hit = 0.034 },
+  { name = "top 5, 130 mm out", origin = [0.065, 0.1125833, 0.05], dir = [0, 0, -1], hit = 0.0305 },
+]
+
+# Along each blade's axis at its mid-height, onto the flat end 148 mm from the pivot.
+[[checks]]
+type = "ray_probe"
+label = "probe_ends"
+tol = 0.0003
+probes = [
+  { name = "far end 1", origin = [0.2, 0.0, 0.004], dir = [-1, 0.0, 0.0], hit = 0.052 },
+  { name = "far end 2", origin = [0.1931852, 0.0517638, 0.0075], dir = [-0.9659258, -0.258819, 0.0], hit = 0.052 },
+  { name = "far end 3", origin = [0.1732051, 0.1, 0.011], dir = [-0.8660254, -0.5, 0.0], hit = 0.052 },
+  { name = "far end 4", origin = [0.1414214, 0.1414214, 0.0145], dir = [-0.7071068, -0.7071068, 0.0], hit = 0.052 },
+  { name = "far end 5", origin = [0.1, 0.1732051, 0.018], dir = [-0.5, -0.8660254, 0.0], hit = 0.052 },
+]
+
+# Square onto the long sides of blades 1, 3 and 5, 100 mm from the pivot, at mid-height.
+[[checks]]
+type = "ray_probe"
+label = "probe_sides"
+tol = 0.0003
+probes = [
+  { name = "left side 1", origin = [0.1, 0.06, 0.004], dir = [0.0, -1, 0.0], hit = 0.04 },
+  { name = "right side 1", origin = [0.1, -0.06, 0.004], dir = [0.0, 1, 0.0], hit = 0.04 },
+  { name = "left side 3", origin = [0.0566025, 0.1019615, 0.011], dir = [0.5, -0.8660254, 0.0], hit = 0.04 },
+  { name = "right side 3", origin = [0.1166025, -0.0019615, 0.011], dir = [-0.5, 0.8660254, 0.0], hit = 0.04 },
+  { name = "left side 5", origin = [-0.0019615, 0.1166025, 0.018], dir = [0.8660254, -0.5, 0.0], hit = 0.04 },
+  { name = "right side 5", origin = [0.1019615, 0.0566025, 0.018], dir = [-0.8660254, 0.5, 0.0], hit = 0.04 },
+]
+
+# The shaft is probed in the 0.5 mm gap between Blade_1 and Blade_2 (z = 5.75 mm).
+[[checks]]
+type = "ray_probe"
+label = "probe_pin"
+tol = 0.0003
+probes = [
+  { name = "top head", origin = [0.0, 0.0, 0.05], dir = [0, 0, -1], hit = 0.028 },
+  { name = "bottom head side", origin = [-0.1, 0.0, 0.001], dir = [1, 0, 0], hit = 0.094 },
+  { name = "shaft in the gap", origin = [-0.1, 0.0, 0.00575], dir = [1, 0, 0], hit = 0.0975 },
+]
+
+[variants]
+good = []
+centre_pivot = ["bbox_blade_2", "bbox_blade_3", "bbox_blade_4", "bbox_blade_5", "no_overlap_pin_b2", "probe_ends", "probe_sides", "probe_tops"]
+clockwise = ["bbox_blade_2", "bbox_blade_3", "bbox_blade_4", "bbox_blade_5", "probe_ends", "probe_sides", "probe_tops"]
+step_20 = ["bbox_blade_2", "bbox_blade_3", "bbox_blade_4", "bbox_blade_5", "probe_ends", "probe_sides", "probe_tops"]
+touching_stack = ["bbox_blade_2", "bbox_blade_3", "bbox_blade_4", "bbox_blade_5", "no_overlap_b1_b2", "no_overlap_b2_b3", "no_overlap_b3_b4", "no_overlap_b4_b5", "probe_ends", "probe_pin", "probe_sides", "probe_tops"]
+reversed_stack = ["bbox_blade_1", "bbox_blade_2", "bbox_blade_4", "bbox_blade_5", "probe_ends", "probe_sides", "probe_tops"]
+no_holes = ["no_overlap_pin_b1", "no_overlap_pin_b2", "no_overlap_pin_b3", "no_overlap_pin_b4", "no_overlap_pin_b5"]
+thick_pin = ["no_overlap_pin_b1", "no_overlap_pin_b2", "no_overlap_pin_b3", "no_overlap_pin_b4", "no_overlap_pin_b5", "probe_pin", "volume_pin"]
+short_pin = ["bbox_pin", "no_overlap_pin_b5", "probe_pin", "volume_pin"]
+short_blades = ["bbox_blade_1", "bbox_blade_2", "bbox_blade_3", "bbox_blade_4", "bbox_blade_5", "probe_ends", "volume_blade_1", "volume_blade_4"]

@@ -1,0 +1,103 @@
+id = "r08-thicker-wall"
+title = "Revision: thicken the liner wall inward to 3 mm"
+group = "revision"
+starting_scene = "start.py"
+
+prompt = """
+The open Blender scene holds an approved model of a hypothetical product part: a moulded planter liner, an open-top round cup with a drain hole in the centre of its floor (mesh object "Liner"). Units are metres (1 Blender unit = 1 m). The client has one revision:
+
+- The side wall is 2 mm thick. Make it 3 mm thick by thickening it inward, over its full height: the outside of the liner does not move at all, and the inside wall surface moves 1 mm towards the axis.
+- Nothing else changes: the outside diameter, the height, the floor thickness and floor position, and the drain hole all stay exactly as they are.
+
+The object keeps its name. It stays a single closed (watertight) mesh in one connected piece, with consistent outward normals and no self-intersections, transforms applied (location at the origin, no rotation, scale 1), and at most 20,000 faces. No other mesh objects in the scene.
+
+Mesh hygiene: no duplicate or coincident vertices, no zero-length edges and no zero-area faces. Merge any coincident vertices before you finish.
+
+Tell me when you're done.
+"""
+
+[[checks]]
+type = "objects"
+expected = ["Liner"]
+
+[[checks]]
+type = "transforms_applied"
+objects = ["Liner"]
+
+[[checks]]
+type = "bbox"
+object = "Liner"
+min = [-0.03, -0.03, 0.0]
+max = [0.03, 0.03, 0.09]
+tol = 0.0002
+
+[[checks]]
+type = "watertight"
+objects = ["Liner"]
+
+[[checks]]
+type = "shells"
+objects = ["Liner"]
+
+[[checks]]
+type = "self_intersection"
+objects = ["Liner"]
+
+[[checks]]
+type = "topology"
+objects = ["Liner"]
+
+[[checks]]
+type = "face_budget"
+object = "Liner"
+max = 20000
+
+# pi*30^2*90 - pi*27^2*88 - drain hole pi*4^2*2; the 2 mm wall it replaces gives 37624 (-29%)
+[[checks]]
+type = "volume"
+object = "Liner"
+mm3 = 52829
+rel_tol = 0.01
+
+[[checks]]
+type = "ray_probe"
+label = "probe_outside"
+tol = 0.0003
+probes = [
+  { name = "outer wall +X at z 45", origin = [0.05, 0.0, 0.045], dir = [-1, 0, 0], hit = 0.02 },
+  { name = "outer wall -Y at z 45", origin = [0.0, -0.05, 0.045], dir = [0, 1, 0], hit = 0.02 },
+  { name = "outer wall +X at z 88", origin = [0.05, 0.0, 0.088], dir = [-1, 0, 0], hit = 0.02 },
+  { name = "underside", origin = [0.015, 0.0, -0.01], dir = [0, 0, 1], hit = 0.01 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_wall"
+tol = 0.0003
+probes = [
+  { name = "inner wall +X at z 45", origin = [0.0, 0.0, 0.045], dir = [1, 0, 0], hit = 0.027 },
+  { name = "inner wall -Y at z 45", origin = [0.0, 0.0, 0.045], dir = [0, -1, 0], hit = 0.027 },
+  { name = "inner wall -X at z 4", origin = [0.0, 0.0, 0.004], dir = [-1, 0, 0], hit = 0.027 },
+  { name = "inner wall +Y at z 88", origin = [0.0, 0.0, 0.088], dir = [0, 1, 0], hit = 0.027 },
+  { name = "rim top at r 27.5", origin = [0.0275, 0.0, 0.1], dir = [0, 0, -1], hit = 0.01 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_floor"
+tol = 0.0003
+probes = [
+  { name = "floor top at r 15", origin = [0.015, 0.0, 0.1], dir = [0, 0, -1], hit = 0.098 },
+  { name = "floor top at r 26", origin = [0.0, -0.026, 0.1], dir = [0, 0, -1], hit = 0.098 },
+  { name = "drain hole open at centre", origin = [0.0, 0.0, 0.1], dir = [0, 0, -1], hit = false },
+  { name = "drain hole open at r 3.6", origin = [0.0036, 0.0, 0.1], dir = [0, 0, -1], hit = false },
+  { name = "floor solid at r 4.4", origin = [-0.0044, 0.0, 0.1], dir = [0, 0, -1], hit = 0.098 },
+]
+
+[variants]
+good = []
+unchanged = ["volume", "probe_wall"]
+outward = ["bbox", "volume", "probe_outside", "probe_wall"]
+centred = ["bbox", "volume", "probe_outside", "probe_wall"]
+floor_thickened = ["volume", "probe_floor"]
+no_drain = ["probe_floor"]

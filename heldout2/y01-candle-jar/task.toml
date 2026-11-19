@@ -1,0 +1,128 @@
+id = "y01-candle-jar"
+title = "Candle jar: open cylindrical jar and plug lid"
+group = "hard-surface"
+starting_scene = "empty"
+
+prompt = """
+Model a hypothetical product in the open Blender scene: a candle jar with its lid on, as two mesh objects. Units are metres (1 Blender unit = 1 m). The jar stands on the ground plane, centred on the world Z axis, and the lid sits on it on the same axis.
+
+Jar (mesh object "Jar"), an open-top cylindrical cup, one solid of revolution about the Z axis:
+- Outside: a cylinder 80 mm in diameter (radius 40 mm) from a flat underside at z = 0 to a flat rim at z = 90 mm.
+- Inside: a cylinder 72 mm in diameter (radius 36 mm, so the wall is a uniform 4 mm thick), from a flat floor at z = 6 mm up through the open top. All edges sharp.
+
+Lid (mesh object "Lid"), one solid of revolution about the Z axis:
+- Top disc: a cylinder 80 mm in diameter (radius 40 mm) from a flat underside at z = 90.4 mm (0.4 mm above the jar rim) to a flat top at z = 96 mm.
+- Plug: a solid cylinder 71.2 mm in diameter (radius 35.6 mm, so 0.4 mm clear of the jar's inside wall all round), hanging from the underside of the disc down to a flat bottom at z = 80 mm, fused to the disc. All edges sharp.
+
+Both objects:
+- Each is a single closed (watertight) mesh in one connected piece, with consistent outward normals and no self-intersections. Surfaces are smooth enough for close-up product renders.
+- The jar and lid do not touch or intersect.
+- Transforms applied: location at the origin, no rotation, scale 1, so the mesh data holds world coordinates.
+- At most 20,000 faces each.
+- No other mesh objects in the scene.
+
+Mesh hygiene: no duplicate or coincident vertices, no zero-length edges and no zero-area faces. Merge any coincident vertices before you finish.
+
+Tell me when you're done.
+"""
+
+[[checks]]
+type = "objects"
+expected = ["Jar", "Lid"]
+
+[[checks]]
+type = "transforms_applied"
+objects = ["Jar", "Lid"]
+
+[[checks]]
+type = "bbox"
+label = "bbox_jar"
+object = "Jar"
+min = [-0.04, -0.04, 0.0]
+max = [0.04, 0.04, 0.09]
+tol = 0.0003
+
+[[checks]]
+type = "bbox"
+label = "bbox_lid"
+object = "Lid"
+min = [-0.04, -0.04, 0.08]
+max = [0.04, 0.04, 0.096]
+tol = 0.0003
+
+[[checks]]
+type = "watertight"
+objects = ["Jar", "Lid"]
+
+[[checks]]
+type = "shells"
+objects = ["Jar", "Lid"]
+
+[[checks]]
+type = "self_intersection"
+objects = ["Jar", "Lid"]
+
+[[checks]]
+type = "topology"
+objects = ["Jar", "Lid"]
+
+[[checks]]
+type = "face_budget"
+objects = ["Jar", "Lid"]
+max = 20000
+
+[[checks]]
+type = "no_overlap"
+a = "Jar"
+b = "Lid"
+
+# pi*40^2*90 - pi*36^2*84
+[[checks]]
+type = "volume"
+label = "volume_jar"
+object = "Jar"
+mm3 = 110383
+rel_tol = 0.01
+
+# disc pi*40^2*5.6 + plug pi*35.6^2*10.4
+[[checks]]
+type = "volume"
+label = "volume_lid"
+object = "Lid"
+mm3 = 69557
+rel_tol = 0.01
+
+[[checks]]
+type = "ray_probe"
+label = "probe_jar"
+objects = ["Jar"]
+tol = 0.0003
+probes = [
+  { name = "outside +X", origin = [0.1, 0.0, 0.045], dir = [-1, 0, 0], hit = 0.06 },
+  { name = "outside -Y", origin = [0.0, -0.1, 0.045], dir = [0, 1, 0], hit = 0.06 },
+  { name = "inside wall", origin = [0.0, 0.0, 0.045], dir = [1, 0, 0], hit = 0.036 },
+  { name = "rim top", origin = [0.038, 0.0, 0.2], dir = [0, 0, -1], hit = 0.11 },
+  { name = "floor top", origin = [0.01, 0.0, 0.2], dir = [0, 0, -1], hit = 0.194 },
+  { name = "underside", origin = [0.0, 0.0, -0.01], dir = [0, 0, 1], hit = 0.01 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_lid"
+objects = ["Lid"]
+tol = 0.0003
+probes = [
+  { name = "lid top", origin = [0.0, 0.0, 0.2], dir = [0, 0, -1], hit = 0.104 },
+  { name = "disc side", origin = [0.1, 0.0, 0.093], dir = [-1, 0, 0], hit = 0.06 },
+  { name = "disc underside", origin = [0.038, 0.0, 0.05], dir = [0, 0, 1], hit = 0.0404 },
+  { name = "plug side", origin = [0.1, 0.0, 0.085], dir = [-1, 0, 0], hit = 0.0644 },
+  { name = "plug bottom", origin = [0.01, 0.0, 0.0], dir = [0, 0, 1], hit = 0.08 },
+]
+
+[variants]
+good = []
+solid_jar = ["volume_jar", "probe_jar", "no_overlap"]
+no_floor = ["volume_jar", "probe_jar"]
+lid_resting = ["bbox_lid", "no_overlap", "probe_lid"]
+no_plug = ["bbox_lid", "volume_lid", "probe_lid"]
+tight_plug = ["no_overlap", "probe_lid", "volume_lid"]

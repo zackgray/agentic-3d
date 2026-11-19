@@ -1,0 +1,120 @@
+id = "h08-soap-bar"
+title = "Pillow-shaped soap bar with a debossed logo recess"
+group = "hard-surface"
+starting_scene = "empty"
+
+prompt = """
+Model a hypothetical product in the open Blender scene: a bar of soap with a debossed logo panel, as one mesh object named "Bar". Units are metres (1 Blender unit = 1 m). The bar lies flat on the ground plane, centred on the world Z axis, its long side along X.
+
+- Plan: seen from above, a rounded rectangle 90 mm in X by 60 mm in Y (x from -45 mm to +45 mm, y from -30 mm to +30 mm) whose four vertical corners are rounded with a 15 mm radius.
+- Height: from a flat underside at z = 0 to a flat top at z = 28 mm.
+- Pillow edges: the top edge and the bottom edge all the way round are rounded with an 8 mm radius (a quarter-round blending the flat top or underside into the vertical sides). So the sides are vertical only from z = 8 mm to z = 20 mm, and the flat top and underside are inset 8 mm from the outline. Through each roundover the plan corner radius shrinks with the inset, as a rolling-ball fillet would make it.
+- Logo recess: a flat-bottomed pocket debossed into the top face, centred on the Z axis. Seen from above it is a rounded rectangle 40 mm in X by 16 mm in Y (x from -20 mm to +20 mm, y from -8 mm to +8 mm) with 3 mm corner radii. Its side walls are vertical and its floor is flat at z = 26.5 mm, so it is 1.5 mm deep. The recess's top edge stays sharp.
+
+The object:
+- A single closed (watertight) mesh, one connected piece, with consistent outward normals and no self-intersections. Surfaces are smooth enough for close-up product renders.
+- Transforms applied: location at the origin, no rotation, scale 1, so the mesh data holds world coordinates.
+- At most 20,000 faces.
+- No other mesh objects in the scene.
+
+Mesh hygiene: no duplicate or coincident vertices, no zero-length edges and no zero-area faces. Merge any coincident vertices before you finish.
+
+Tell me when you're done.
+"""
+
+[[checks]]
+type = "objects"
+expected = ["Bar"]
+
+[[checks]]
+type = "transforms_applied"
+objects = ["Bar"]
+
+[[checks]]
+type = "bbox"
+object = "Bar"
+min = [-0.045, -0.03, 0.0]
+max = [0.045, 0.03, 0.028]
+tol = 0.0003
+
+[[checks]]
+type = "watertight"
+objects = ["Bar"]
+
+[[checks]]
+type = "shells"
+objects = ["Bar"]
+
+[[checks]]
+type = "self_intersection"
+objects = ["Bar"]
+
+[[checks]]
+type = "topology"
+objects = ["Bar"]
+
+[[checks]]
+type = "face_budget"
+object = "Bar"
+max = 20000
+
+# A(i) = (90-2i)(60-2i) - (4-pi)(15-i)^2 is the plan area at inset i.
+# A(0)*(28-16) + 2 * integral_0^8 A(8 - sqrt(64 - s^2)) ds - recess (40*16 - (4-pi)*3^2)*1.5
+# = 64692.0 + 2*38042.4 - 948.4 (integrated numerically)
+[[checks]]
+type = "volume"
+object = "Bar"
+mm3 = 137619
+rel_tol = 0.01
+
+[[checks]]
+type = "ray_probe"
+label = "probe_faces"
+tol = 0.0003
+probes = [
+  { name = "side +X", origin = [0.06, 0.0, 0.014], dir = [-1, 0, 0], hit = 0.015 },
+  { name = "side -Y", origin = [0.0, -0.04, 0.014], dir = [0, 1, 0], hit = 0.01 },
+  { name = "top flat beside the recess", origin = [0.03, 0.0, 0.05], dir = [0, 0, -1], hit = 0.022 },
+  { name = "top flat above the recess", origin = [0.0, 0.015, 0.05], dir = [0, 0, -1], hit = 0.022 },
+  { name = "underside", origin = [0.0, 0.0, -0.01], dir = [0, 0, 1], hit = 0.01 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_corners"
+tol = 0.0003
+probes = [
+  { name = "plan corner radius 15", origin = [0.05, 0.035, 0.014], dir = [-1, -1, 0], hit = 0.013284 },
+  { name = "plan corner radius 15 (-X-Y)", origin = [-0.05, -0.035, 0.014], dir = [1, 1, 0], hit = 0.013284 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_edges"
+tol = 0.0003
+probes = [
+  { name = "top roundover +Y", origin = [0.0, 0.032, 0.03], dir = [0, -1, -1], hit = 0.006142 },
+  { name = "bottom roundover +Y", origin = [0.0, 0.032, -0.002], dir = [0, -1, 1], hit = 0.006142 },
+  { name = "top roundover +X", origin = [0.047, 0.0, 0.03], dir = [-1, 0, -1], hit = 0.006142 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_recess"
+tol = 0.0003
+probes = [
+  { name = "recess floor centre", origin = [0.0, 0.0, 0.05], dir = [0, 0, -1], hit = 0.0235 },
+  { name = "recess floor off-centre", origin = [0.015, 0.005, 0.05], dir = [0, 0, -1], hit = 0.0235 },
+  { name = "recess end wall +X", origin = [0.0, 0.0, 0.0275], dir = [1, 0, 0], hit = 0.02 },
+  { name = "recess side wall +Y", origin = [0.0, 0.0, 0.0275], dir = [0, 1, 0], hit = 0.008 },
+  { name = "recess corner radius 3", origin = [0.012, 0.0, 0.0275], dir = [1, 1, 0], hit = 0.010071 },
+]
+
+[variants]
+good = []
+no_recess = ["probe_recess"]
+deep_recess = ["probe_recess"]
+embossed = ["bbox", "probe_recess", "volume"]
+sharp_edges = ["volume", "probe_edges"]
+sharp_corners = ["volume", "probe_corners"]
+rotated = ["bbox", "probe_faces", "probe_corners", "probe_edges", "probe_recess"]

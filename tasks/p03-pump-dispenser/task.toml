@@ -1,0 +1,179 @@
+id = "p03-pump-dispenser"
+title = "Pump-dispenser bottle: hollow bottle, collar, actuator and dip tube"
+group = "hard-surface"
+starting_scene = "empty"
+
+prompt = """
+Model a hypothetical product in the open Blender scene: a lotion bottle with a pump dispenser, as four separate mesh objects. Units are metres (1 Blender unit = 1 m). Every part is centred on the world Z axis unless stated otherwise; the bottle stands on the ground plane.
+
+Bottle (mesh object "Bottle"), a hollow moulded bottle, open at the top:
+- Outside: a cylinder 50 mm in diameter from z = 0 to z = 120 mm; a shoulder tapering to the neck between z = 120 mm and z = 130 mm (shape your choice); a neck 24 mm in outer diameter from z = 130 mm up to its rim at z = 145 mm.
+- Wall: 1.5 mm thick on the body side, the base and the neck, so the inside of the body is 47 mm across with its floor at z = 1.5 mm, and the neck bore is 21 mm across. The inside of the shoulder is your choice, as long as the wall is at least 1 mm thick everywhere. The rim at z = 145 mm is a flat ring and the bottle is open there.
+
+Collar (mesh object "Collar"), the ring that holds the pump on the neck:
+- A cylinder 30 mm in outer diameter, from z = 132 mm to z = 147 mm, hollow from below: a bore 24.4 mm in diameter rising from its open bottom to z = 145.2 mm, and a top wall from z = 145.2 mm to z = 147 mm with a central hole 10 mm in diameter. It sits over the neck without touching it.
+
+Actuator (mesh object "Actuator"), the press-down pump head, one connected solid:
+- Stem: a cylinder 8 mm in diameter from z = 135 mm up to the head, passing through the collar hole and down into the neck without touching either.
+- Head: a cylinder 22 mm in diameter from z = 155 mm to z = 175 mm.
+- Nozzle: a cylinder 6 mm in diameter lying along the +X axis at z = 168 mm, from the head's axis out to its tip at x = +30 mm, fused to the head. An outlet bore 2 mm in diameter runs into the nozzle tip along its axis, 10 mm deep (to x = +20 mm), with a flat bottom.
+
+Dip tube (mesh object "DipTube"):
+- A tube 6 mm in outer diameter and 4 mm in inner diameter, open at both ends, from z = 3 mm to z = 134.5 mm, so it hangs 0.5 mm below the stem without touching it.
+
+All four objects:
+- Each is a single closed (watertight) mesh in one connected piece, with consistent outward normals and no self-intersections. Thin-walled parts are solid walls with real thickness, not single-sided surfaces.
+- No two objects touch or intersect.
+- Transforms applied: location at the origin, no rotation, scale 1, so the mesh data holds world coordinates.
+- At most 20,000 faces per object.
+- No other mesh objects in the scene.
+
+Mesh hygiene: no duplicate or coincident vertices, no zero-length edges and no zero-area faces. Merge any coincident vertices before you finish.
+
+Tell me when you're done.
+"""
+
+[[checks]]
+type = "objects"
+expected = ["Actuator", "Bottle", "Collar", "DipTube"]
+
+[[checks]]
+type = "transforms_applied"
+objects = ["Actuator", "Bottle", "Collar", "DipTube"]
+
+[[checks]]
+type = "bbox"
+label = "bbox_bottle"
+object = "Bottle"
+min = [-0.025, -0.025, 0.0]
+max = [0.025, 0.025, 0.145]
+tol = 0.0005
+
+[[checks]]
+type = "bbox"
+label = "bbox_collar"
+object = "Collar"
+min = [-0.015, -0.015, 0.132]
+max = [0.015, 0.015, 0.147]
+tol = 0.0003
+
+[[checks]]
+type = "bbox"
+label = "bbox_actuator"
+object = "Actuator"
+min = [-0.011, -0.011, 0.135]
+max = [0.03, 0.011, 0.175]
+tol = 0.0005
+
+[[checks]]
+type = "bbox"
+label = "bbox_tube"
+object = "DipTube"
+min = [-0.003, -0.003, 0.003]
+max = [0.003, 0.003, 0.1345]
+tol = 0.0003
+
+[[checks]]
+type = "watertight"
+objects = ["Actuator", "Bottle", "Collar", "DipTube"]
+
+[[checks]]
+type = "shells"
+objects = ["Actuator", "Bottle", "Collar", "DipTube"]
+
+[[checks]]
+type = "self_intersection"
+objects = ["Actuator", "Bottle", "Collar", "DipTube"]
+
+[[checks]]
+type = "topology"
+objects = ["Actuator", "Bottle", "Collar", "DipTube"]
+
+[[checks]]
+type = "face_budget"
+objects = ["Actuator", "Bottle", "Collar", "DipTube"]
+max = 20000
+
+[[checks]]
+type = "no_overlap"
+label = "no_overlap_bottle_collar"
+a = "Bottle"
+b = "Collar"
+
+[[checks]]
+type = "no_overlap"
+label = "no_overlap_bottle_actuator"
+a = "Bottle"
+b = "Actuator"
+
+[[checks]]
+type = "no_overlap"
+label = "no_overlap_bottle_tube"
+a = "Bottle"
+b = "DipTube"
+
+[[checks]]
+type = "no_overlap"
+label = "no_overlap_collar_actuator"
+a = "Collar"
+b = "Actuator"
+
+[[checks]]
+type = "no_overlap"
+label = "no_overlap_tube_actuator"
+a = "DipTube"
+b = "Actuator"
+
+[[checks]]
+type = "ray_probe"
+label = "probe_bottle"
+tol = 0.0003
+probes = [
+  { name = "outer body wall", origin = [0.04, 0.0, 0.06], dir = [-1, 0, 0], hit = 0.015 },
+  { name = "inner body wall", origin = [0.01, 0.0, 0.06], dir = [1, 0, 0], hit = 0.0135 },
+  { name = "inner floor", origin = [0.01, 0.0, 0.06], dir = [0, 0, -1], hit = 0.0585 },
+  { name = "underside", origin = [0.01, 0.0, -0.01], dir = [0, 0, 1], hit = 0.01 },
+  { name = "neck bore", origin = [0.007, 0.0, 0.14], dir = [1, 0, 0], hit = 0.0035 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_collar"
+tol = 0.0003
+probes = [
+  { name = "collar top", origin = [0.01, 0.0, 0.15], dir = [0, 0, -1], hit = 0.003 },
+  { name = "collar outer wall", origin = [0.03, 0.0, 0.14], dir = [-1, 0, 0], hit = 0.015 },
+  { name = "through the collar hole to the bottle floor", origin = [0.0045, 0.0, 0.15], dir = [0, 0, -1], hit = 0.1485 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_actuator"
+tol = 0.0003
+probes = [
+  { name = "outlet bore bottom", origin = [0.05, 0.0, 0.168], dir = [-1, 0, 0], hit = 0.03 },
+  { name = "nozzle top", origin = [0.025, 0.0, 0.18], dir = [0, 0, -1], hit = 0.009 },
+  { name = "head side below the nozzle", origin = [0.05, 0.0, 0.16], dir = [-1, 0, 0], hit = 0.039 },
+  { name = "head top", origin = [0.0, 0.0, 0.18], dir = [0, 0, -1], hit = 0.005 },
+  { name = "stem", origin = [0.05, 0.0, 0.15], dir = [-1, 0, 0], hit = 0.046 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_tube"
+tol = 0.0003
+probes = [
+  { name = "down the bore to the bottle floor", origin = [0.0, 0.0, 0.13], dir = [0, 0, -1], hit = 0.1285 },
+  { name = "tube outer wall", origin = [0.01, 0.0, 0.06], dir = [-1, 0, 0], hit = 0.007 },
+  { name = "gap between tube top and stem", origin = [0.008, 0.0, 0.1347], dir = [-1, 0, 0], hit = 0.0185 },
+]
+
+[variants]
+good = []
+solid_bottle = ["probe_bottle", "probe_collar", "probe_tube", "no_overlap_bottle_actuator", "no_overlap_bottle_tube"]
+collar_low = ["bbox_collar", "no_overlap_bottle_collar", "probe_collar"]
+nozzle_left = ["bbox_actuator", "probe_actuator"]
+no_bore = ["probe_actuator"]
+solid_tube = ["probe_tube"]
+long_tube = ["bbox_tube", "no_overlap_tube_actuator", "probe_tube"]
+loose_nozzle = ["shells"]

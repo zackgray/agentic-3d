@@ -1,0 +1,126 @@
+id = "x08-ice-tray"
+title = "Ice-cube tray: rounded block with twelve tapered pockets and two end tabs"
+group = "hard-surface"
+starting_scene = "empty"
+
+prompt = """
+Model a hypothetical product part in the open Blender scene: a moulded ice-cube tray, as one mesh object named "Tray". Units are metres (1 Blender unit = 1 m). The tray sits on the ground plane, centred on the world Z axis, its long side along X.
+
+- Block: a solid block 210 mm in X by 76 mm in Y (x from -105 mm to +105 mm, y from -38 mm to +38 mm), from a flat underside at z = 0 to a flat top at z = 35 mm. The four vertical corners are rounded with a 6 mm radius.
+- Pockets: twelve square pockets in the top, in two rows of six. Their centres are at x = -85, -51, -17, +17, +51 and +85 mm, in the rows y = -17 mm and y = +17 mm. Each pocket's sides are parallel to the X and Y axes. Each opening is 30 mm by 30 mm at the top face (z = 35 mm), and the four side walls taper straight inward to a flat square floor 26 mm by 26 mm at z = 7 mm. The pocket corners are sharp.
+- End tabs: two flat rectangular finger tabs, one on each end. The +X tab runs from the end face at x = +105 mm out to x = +120 mm, the -X tab from x = -105 mm out to x = -120 mm; each is 40 mm wide in Y (y from -20 mm to +20 mm) and 3 mm thick, from z = 32 mm to z = 35 mm, so its top is flush with the tray top. Each is fused to the block.
+- All edges other than the four rounded corners are sharp.
+
+The object:
+- A single closed (watertight) mesh, one connected piece, with consistent outward normals and no self-intersections.
+- Transforms applied: location at the origin, no rotation, scale 1, so the mesh data holds world coordinates.
+- At most 20,000 faces.
+- No other mesh objects in the scene.
+
+Mesh hygiene: no duplicate or coincident vertices, no zero-length edges and no zero-area faces. Merge any coincident vertices before you finish.
+
+Tell me when you're done.
+"""
+
+[[checks]]
+type = "objects"
+expected = ["Tray"]
+
+[[checks]]
+type = "transforms_applied"
+objects = ["Tray"]
+
+[[checks]]
+type = "bbox"
+object = "Tray"
+min = [-0.12, -0.038, 0.0]
+max = [0.12, 0.038, 0.035]
+tol = 0.0003
+
+[[checks]]
+type = "watertight"
+objects = ["Tray"]
+
+[[checks]]
+type = "shells"
+objects = ["Tray"]
+
+[[checks]]
+type = "self_intersection"
+objects = ["Tray"]
+
+[[checks]]
+type = "topology"
+objects = ["Tray"]
+
+[[checks]]
+type = "face_budget"
+objects = ["Tray"]
+max = 20000
+
+# block 35*(210*76 - (4-pi)*6^2) + tabs 2*15*40*3 - pockets 12 * 28/3*(30^2 + 26^2 + 30*26)
+[[checks]]
+type = "volume"
+object = "Tray"
+mm3 = 297246
+rel_tol = 0.01
+
+[[checks]]
+type = "ray_probe"
+label = "probe_body"
+tol = 0.0003
+probes = [
+  { name = "side +X beside the tab", origin = [0.15, 0.03, 0.02], dir = [-1, 0, 0], hit = 0.045 },
+  { name = "side -Y", origin = [0.0, -0.08, 0.02], dir = [0, 1, 0], hit = 0.042 },
+  { name = "underside", origin = [0.0, 0.0, -0.01], dir = [0, 0, 1], hit = 0.01 },
+  { name = "corner radius 6", origin = [0.11, 0.043, 0.02], dir = [-1, -1, 0], hit = 0.009556 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_pockets"
+tol = 0.0003
+probes = [
+  { name = "floor (+85, +17)", origin = [0.085, 0.017, 0.04], dir = [0, 0, -1], hit = 0.033 },
+  { name = "floor (-85, -17)", origin = [-0.085, -0.017, 0.04], dir = [0, 0, -1], hit = 0.033 },
+  { name = "floor (+51, -17)", origin = [0.051, -0.017, 0.04], dir = [0, 0, -1], hit = 0.033 },
+  { name = "floor (-51, +17)", origin = [-0.051, 0.017, 0.04], dir = [0, 0, -1], hit = 0.033 },
+  { name = "floor (+17, -17)", origin = [0.017, -0.017, 0.04], dir = [0, 0, -1], hit = 0.033 },
+  { name = "floor (-17, +17)", origin = [-0.017, 0.017, 0.04], dir = [0, 0, -1], hit = 0.033 },
+  { name = "tapered wall at mid-depth +X", origin = [0.017, 0.017, 0.021], dir = [1, 0, 0], hit = 0.014 },
+  { name = "tapered wall at mid-depth -Y", origin = [-0.085, -0.017, 0.021], dir = [0, -1, 0], hit = 0.014 },
+  { name = "tapered wall at mid-depth +Y", origin = [0.051, -0.017, 0.021], dir = [0, 1, 0], hit = 0.014 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_lands"
+tol = 0.0003
+probes = [
+  { name = "land x=0", origin = [0.0, 0.017, 0.04], dir = [0, 0, -1], hit = 0.005 },
+  { name = "land x=+34", origin = [0.034, -0.017, 0.04], dir = [0, 0, -1], hit = 0.005 },
+  { name = "land x=-68", origin = [-0.068, 0.017, 0.04], dir = [0, 0, -1], hit = 0.005 },
+  { name = "land between rows", origin = [0.017, 0.0, 0.04], dir = [0, 0, -1], hit = 0.005 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_tabs"
+tol = 0.0003
+probes = [
+  { name = "+X tab top", origin = [0.112, 0.0, 0.04], dir = [0, 0, -1], hit = 0.005 },
+  { name = "+X tab end", origin = [0.15, 0.0, 0.0335], dir = [-1, 0, 0], hit = 0.03 },
+  { name = "+X tab underside", origin = [0.112, 0.0, 0.0], dir = [0, 0, 1], hit = 0.032 },
+  { name = "+X tab side", origin = [0.112, 0.05, 0.0335], dir = [0, -1, 0], hit = 0.03 },
+  { name = "-X tab top", origin = [-0.112, 0.01, 0.04], dir = [0, 0, -1], hit = 0.005 },
+  { name = "-X tab end", origin = [-0.15, 0.0, 0.0335], dir = [1, 0, 0], hit = 0.03 },
+]
+
+[variants]
+good = []
+straight_pockets = ["volume", "probe_pockets"]
+ten_pockets = ["volume", "probe_pockets", "probe_lands"]
+shallow_pockets = ["volume", "probe_pockets"]
+no_tabs = ["bbox", "volume", "probe_tabs"]
+loose_tabs = ["shells"]
+sharp_corners = ["probe_body"]

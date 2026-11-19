@@ -1,0 +1,106 @@
+id = "w06-vase-lower-shoulder"
+title = "Revision: drop the shoulder of a turned bud vase 20 mm, same width"
+group = "revision"
+starting_scene = "start.py"
+
+prompt = """
+The open Blender scene holds an approved model of a hypothetical product: a turned bud vase, a solid body of revolution about the world Z axis with a foot ring, a body that widens in a straight cone up to a shoulder and narrows in a straight cone to a slim neck, a rounded lip, and a narrow bore for a single stem (mesh object "Vase"). It stands on the ground plane. Units are metres (1 Blender unit = 1 m). The client finds it top-heavy and has one revision:
+
+- Lower the shoulder, the widest point of the body, by 20 mm. Its diameter stays exactly the same.
+- The body stays two straight cones meeting at the shoulder: one from the top of the step above the foot ring up to the shoulder, and one from the shoulder up to where the neck begins. Both of those end points stay where they are now.
+- Everything else stays exactly as it is: the foot ring and the step above it, the neck (its diameter and the height where it begins), the rounded lip, the overall height, and the bore (its diameter and depth).
+
+The object keeps its name. It stays a single closed (watertight) mesh in one connected piece, with consistent outward normals and no self-intersections, transforms applied (location at the origin, no rotation, scale 1), and at most 20,000 faces. No other mesh objects in the scene.
+
+Mesh hygiene: no duplicate or coincident vertices, no zero-length edges and no zero-area faces. Merge any coincident vertices before you finish.
+
+Tell me when you're done.
+"""
+
+[[checks]]
+type = "objects"
+expected = ["Vase"]
+
+[[checks]]
+type = "transforms_applied"
+objects = ["Vase"]
+
+[[checks]]
+type = "bbox"
+object = "Vase"
+min = [-0.036, -0.036, 0.0]
+max = [0.036, 0.036, 0.15]
+tol = 0.0002
+
+[[checks]]
+type = "watertight"
+objects = ["Vase"]
+
+[[checks]]
+type = "shells"
+objects = ["Vase"]
+
+[[checks]]
+type = "self_intersection"
+objects = ["Vase"]
+
+[[checks]]
+type = "topology"
+objects = ["Vase"]
+
+[[checks]]
+type = "face_budget"
+object = "Vase"
+max = 20000
+
+# With F(h, R, r) = pi*h/3*(R^2 + R*r + r^2): foot pi*30^2*8 + F(32, 24, 36) + F(70, 36, 12) + neck
+# pi*12^2*40 - lip round 2*pi*(12 - 0.2234*1.5)*1.5^2*(1 - pi/4) - bore pi*6^2*110. The unchanged
+# shoulder is +7.0%, a 10 mm drop +3.5%, the bore 4.8%; a 24-segment build loses 1.1%.
+[[checks]]
+type = "volume"
+object = "Vase"
+mm3 = 257148
+rel_tol = 0.015
+
+# Profile probes run horizontally along the axes, where every lathe has a vertex column, at heights
+# on the two cones: lower cone r(z) = 24 + 12*(z-8)/32, upper cone r(z) = 36 - 24*(z-40)/70.
+[[checks]]
+type = "ray_probe"
+label = "probe_profile"
+tol = 0.0003
+probes = [
+  { name = "shoulder r 36 at z 40, +X", origin = [0.06, 0.0, 0.04], dir = [-1, 0, 0], hit = 0.024 },
+  { name = "shoulder r 36 at z 40, -Y", origin = [0.0, -0.06, 0.04], dir = [0, 1, 0], hit = 0.024 },
+  { name = "lower cone r 30.375 at z 25", origin = [0.06, 0.0, 0.025], dir = [-1, 0, 0], hit = 0.029625 },
+  { name = "lower cone r 26.625 at z 15", origin = [-0.06, 0.0, 0.015], dir = [1, 0, 0], hit = 0.033375 },
+  { name = "upper cone r 29.143 at z 60", origin = [0.06, 0.0, 0.06], dir = [-1, 0, 0], hit = 0.0308571 },
+  { name = "upper cone r 18.857 at z 90", origin = [0.0, 0.06, 0.09], dir = [0, -1, 0], hit = 0.0411429 },
+  { name = "upper cone r 14.057 at z 104", origin = [-0.06, 0.0, 0.104], dir = [1, 0, 0], hit = 0.0459429 },
+]
+
+# The lip probe aims along the 45-degree normal through the lip round's centre (r 10.5, z 148.5).
+[[checks]]
+type = "ray_probe"
+label = "probe_body"
+tol = 0.0003
+probes = [
+  { name = "foot ring r 30", origin = [0.06, 0.0, 0.004], dir = [-1, 0, 0], hit = 0.03 },
+  { name = "underside", origin = [0.01, 0.01, -0.01], dir = [0, 0, 1], hit = 0.01 },
+  { name = "neck r 12 at z 115", origin = [0.06, 0.0, 0.115], dir = [-1, 0, 0], hit = 0.048 },
+  { name = "neck r 12 at z 140", origin = [0.0, -0.06, 0.14], dir = [0, 1, 0], hit = 0.048 },
+  { name = "top face at r 8", origin = [0.008, 0.0, 0.2], dir = [0, 0, -1], hit = 0.05 },
+  { name = "lip round at 45 deg", origin = [0.0155, 0.0, 0.1535], dir = [-1, 0, -1], hit = 0.0055711 },
+  { name = "bore floor", origin = [0.0, 0.0, 0.2], dir = [0, 0, -1], hit = 0.16 },
+  { name = "bore wall r 6", origin = [0.0, 0.0, 0.1], dir = [1, 0, 0], hit = 0.006 },
+]
+
+[variants]
+good = []
+coarse = []
+natural = []
+unchanged = ["volume", "probe_profile"]
+lower_10 = ["volume", "probe_profile"]
+slope_kept = ["volume", "probe_profile"]
+neck_dropped = ["bbox", "volume", "probe_profile", "probe_body"]
+bore_lost = ["volume", "probe_body"]
+lip_sharp = ["probe_body"]

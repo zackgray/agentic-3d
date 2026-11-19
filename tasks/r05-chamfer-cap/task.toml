@@ -1,0 +1,97 @@
+id = "r05-chamfer-cap"
+title = "Revision: chamfer the top edge of the jar cap"
+group = "revision"
+starting_scene = "start.py"
+
+prompt = """
+The open Blender scene holds an approved model of a hypothetical product part: the screw cap of a cosmetic jar, a hollow cap open at the bottom (mesh object "Cap"). Units are metres (1 Blender unit = 1 m). The client has one revision:
+
+- Add a 45-degree chamfer to the top outer edge, where the flat top meets the outer side wall: 1.5 mm measured along the top and 1.5 mm measured down the side, all the way round.
+- Nothing else changes: the outer diameter, the height, the wall and top thicknesses, the inside and the bottom rim all stay exactly as they are, and every other edge stays sharp.
+
+The object keeps its name. It stays a single closed (watertight) mesh in one connected piece, with consistent outward normals and no self-intersections, transforms applied (location at the origin, no rotation, scale 1), and at most 20,000 faces. No other mesh objects in the scene.
+
+Mesh hygiene: no duplicate or coincident vertices, no zero-length edges and no zero-area faces. Merge any coincident vertices before you finish.
+
+Tell me when you're done.
+"""
+
+[[checks]]
+type = "objects"
+expected = ["Cap"]
+
+[[checks]]
+type = "transforms_applied"
+objects = ["Cap"]
+
+[[checks]]
+type = "bbox"
+object = "Cap"
+min = [-0.025, -0.025, 0.0]
+max = [0.025, 0.025, 0.018]
+tol = 0.0002
+
+[[checks]]
+type = "watertight"
+objects = ["Cap"]
+
+[[checks]]
+type = "shells"
+objects = ["Cap"]
+
+[[checks]]
+type = "self_intersection"
+objects = ["Cap"]
+
+[[checks]]
+type = "topology"
+objects = ["Cap"]
+
+[[checks]]
+type = "face_budget"
+object = "Cap"
+max = 20000
+
+# pi*25^2*18 - pi*23^2*15.5 - chamfer ring 2*pi*24.5*(1.5^2/2) (triangle centroid at r 24.5);
+# the chamfer is 173 mm3 = 1.8%. A 32-segment cap reads ~0.6% low, inside the tolerance.
+[[checks]]
+type = "volume"
+object = "Cap"
+mm3 = 9410
+rel_tol = 0.012
+
+[[checks]]
+type = "ray_probe"
+label = "probe_chamfer"
+tol = 0.0003
+probes = [
+  { name = "chamfer face at 45 deg, +X", origin = [0.03425, 0.0, 0.02725], dir = [-1, 0, -1], hit = 0.0141421 },
+  { name = "chamfer face at 45 deg, +Y", origin = [0.0, 0.03425, 0.02725], dir = [0, -1, -1], hit = 0.0141421 },
+  { name = "chamfer height at r 24, +X", origin = [0.024, 0.0, 0.03], dir = [0, 0, -1], hit = 0.0125 },
+  { name = "chamfer height at r 24, -X", origin = [-0.024, 0.0, 0.03], dir = [0, 0, -1], hit = 0.0125 },
+  { name = "chamfer depth at z 17, +X", origin = [0.04, 0.0, 0.017], dir = [-1, 0, 0], hit = 0.0155 },
+  { name = "chamfer depth at z 17, -Y", origin = [0.0, -0.04, 0.017], dir = [0, 1, 0], hit = 0.0155 },
+  { name = "top still flat at r 23", origin = [0.023, 0.0, 0.03], dir = [0, 0, -1], hit = 0.012 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_cap"
+tol = 0.0003
+probes = [
+  { name = "top near centre", origin = [0.005, 0.003, 0.03], dir = [0, 0, -1], hit = 0.012 },
+  { name = "side wall at z 9", origin = [0.04, 0.0, 0.009], dir = [-1, 0, 0], hit = 0.015 },
+  { name = "side wall at z 0.5", origin = [0.04, 0.0, 0.0005], dir = [-1, 0, 0], hit = 0.015 },
+  { name = "side wall at z 0.5, -Y", origin = [0.0, -0.04, 0.0005], dir = [0, 1, 0], hit = 0.015 },
+  { name = "inner wall", origin = [0.0, 0.0, 0.008], dir = [1, 0, 0], hit = 0.023 },
+  { name = "ceiling", origin = [0.005, 0.0, 0.005], dir = [0, 0, 1], hit = 0.0105 },
+  { name = "bottom rim", origin = [0.024, 0.0, -0.01], dir = [0, 0, 1], hit = 0.01 },
+]
+
+[variants]
+good = []
+unchanged = ["volume", "probe_chamfer"]
+too_big = ["volume", "probe_chamfer"]
+fillet = ["probe_chamfer"]
+bottom_edge = ["probe_chamfer", "probe_cap"]
+tapered = ["volume", "probe_chamfer", "probe_cap"]

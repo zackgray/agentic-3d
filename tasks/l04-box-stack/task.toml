@@ -1,0 +1,173 @@
+id = "l04-box-stack"
+title = "Pyramid of shipping boxes"
+group = "layout"
+starting_scene = "empty"
+
+prompt = """
+Lay out a product shot in the open Blender scene: six identical hypothetical shipping boxes stacked as a small three-layer pyramid, as six mesh objects. Units are metres (1 Blender unit = 1 m). The stack stands on the ground plane, centred on the world Z axis.
+
+Each box (mesh objects "Box_1" to "Box_6") is a solid rectangular block 100 mm in X, 80 mm in Y and 60 mm in Z, with sharp edges, its sides parallel to the world axes (no rotation). Every box is centred on y = 0.
+
+- Bottom layer: "Box_1", "Box_2" and "Box_3" stand on the ground (bottoms at z = 0) in a row along X, numbered from -X to +X, with a 10 mm gap between neighbouring boxes. The row is centred on the origin in X.
+- Middle layer: "Box_4" (on the -X side) and "Box_5" (on the +X side). Each is centred in X over the gap between the two bottom boxes beneath it, and its bottom is 0.5 mm above the tops of the bottom layer.
+- Top layer: "Box_6", centred in X over the gap between "Box_4" and "Box_5", its bottom 0.5 mm above the tops of the middle layer.
+
+Every object:
+- A single closed (watertight) mesh, one connected piece, with consistent outward normals and no self-intersections. No two boxes touch or intersect.
+- Transforms applied: location at the origin, no rotation, scale 1, so the mesh data holds world coordinates.
+- At most 1,000 faces each.
+- No other mesh objects in the scene.
+
+Mesh hygiene: no duplicate or coincident vertices, no zero-length edges and no zero-area faces. Merge any coincident vertices before you finish.
+
+Tell me when you're done.
+"""
+
+[[checks]]
+type = "objects"
+expected = ["Box_1", "Box_2", "Box_3", "Box_4", "Box_5", "Box_6"]
+
+[[checks]]
+type = "transforms_applied"
+objects = ["Box_1", "Box_2", "Box_3", "Box_4", "Box_5", "Box_6"]
+
+[[checks]]
+type = "watertight"
+objects = ["Box_1", "Box_2", "Box_3", "Box_4", "Box_5", "Box_6"]
+
+[[checks]]
+type = "shells"
+objects = ["Box_1", "Box_2", "Box_3", "Box_4", "Box_5", "Box_6"]
+
+[[checks]]
+type = "self_intersection"
+objects = ["Box_1", "Box_2", "Box_3", "Box_4", "Box_5", "Box_6"]
+
+[[checks]]
+type = "topology"
+objects = ["Box_1", "Box_2", "Box_3", "Box_4", "Box_5", "Box_6"]
+
+[[checks]]
+type = "face_budget"
+objects = ["Box_1", "Box_2", "Box_3", "Box_4", "Box_5", "Box_6"]
+max = 1000
+
+[[checks]]
+type = "bbox"
+label = "bbox_box_1"
+object = "Box_1"
+min = [-0.16, -0.04, 0.0]
+max = [-0.06, 0.04, 0.06]
+tol = 0.0002
+
+[[checks]]
+type = "bbox"
+label = "bbox_box_2"
+object = "Box_2"
+min = [-0.05, -0.04, 0.0]
+max = [0.05, 0.04, 0.06]
+tol = 0.0002
+
+[[checks]]
+type = "bbox"
+label = "bbox_box_3"
+object = "Box_3"
+min = [0.06, -0.04, 0.0]
+max = [0.16, 0.04, 0.06]
+tol = 0.0002
+
+[[checks]]
+type = "bbox"
+label = "bbox_box_4"
+object = "Box_4"
+min = [-0.105, -0.04, 0.0605]
+max = [-0.005, 0.04, 0.1205]
+tol = 0.0002
+
+[[checks]]
+type = "bbox"
+label = "bbox_box_5"
+object = "Box_5"
+min = [0.005, -0.04, 0.0605]
+max = [0.105, 0.04, 0.1205]
+tol = 0.0002
+
+[[checks]]
+type = "bbox"
+label = "bbox_box_6"
+object = "Box_6"
+min = [-0.05, -0.04, 0.121]
+max = [0.05, 0.04, 0.181]
+tol = 0.0002
+
+[[checks]]
+type = "no_overlap"
+label = "no_overlap_1_2"
+a = "Box_1"
+b = "Box_2"
+
+[[checks]]
+type = "no_overlap"
+label = "no_overlap_2_3"
+a = "Box_2"
+b = "Box_3"
+
+[[checks]]
+type = "no_overlap"
+label = "no_overlap_4_5"
+a = "Box_4"
+b = "Box_5"
+
+[[checks]]
+type = "no_overlap"
+label = "no_overlap_1_4"
+a = "Box_1"
+b = "Box_4"
+
+[[checks]]
+type = "no_overlap"
+label = "no_overlap_2_4"
+a = "Box_2"
+b = "Box_4"
+
+[[checks]]
+type = "no_overlap"
+label = "no_overlap_2_5"
+a = "Box_2"
+b = "Box_5"
+
+[[checks]]
+type = "no_overlap"
+label = "no_overlap_3_5"
+a = "Box_3"
+b = "Box_5"
+
+[[checks]]
+type = "no_overlap"
+label = "no_overlap_4_6"
+a = "Box_4"
+b = "Box_6"
+
+[[checks]]
+type = "no_overlap"
+label = "no_overlap_5_6"
+a = "Box_5"
+b = "Box_6"
+
+# 100 * 80 * 60
+[[checks]]
+type = "volume"
+label = "volume_box_6"
+object = "Box_6"
+mm3 = 480000
+rel_tol = 0.005
+
+[variants]
+good = []
+touching_layers = ["bbox_box_4", "bbox_box_5", "bbox_box_6", "no_overlap_1_4", "no_overlap_2_4", "no_overlap_2_5", "no_overlap_3_5", "no_overlap_4_6", "no_overlap_5_6"]
+sunk_layers = ["bbox_box_4", "bbox_box_5", "bbox_box_6", "no_overlap_1_4", "no_overlap_2_4", "no_overlap_2_5", "no_overlap_3_5", "no_overlap_4_6", "no_overlap_5_6"]
+packed = ["bbox_box_1", "bbox_box_3", "bbox_box_4", "bbox_box_5", "no_overlap_1_2", "no_overlap_2_3", "no_overlap_4_5"]
+off_centre = ["bbox_box_1", "bbox_box_2", "bbox_box_3", "bbox_box_4", "bbox_box_5", "bbox_box_6"]
+missing_top = ["objects", "bbox_box_6", "volume_box_6", "no_overlap_4_6", "no_overlap_5_6", "transforms_applied", "watertight", "shells", "self_intersection", "topology", "face_budget"]
+turned_top = ["bbox_box_6"]
+open_top = ["volume_box_6"]

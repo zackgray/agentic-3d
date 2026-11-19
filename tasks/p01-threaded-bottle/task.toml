@@ -1,0 +1,102 @@
+id = "p01-threaded-bottle"
+title = "Bottle with a threaded neck and a screw cap"
+group = "hard-surface"
+starting_scene = "empty"
+
+prompt = """
+Model a hypothetical product in the open Blender scene: a cylindrical bottle with a threaded neck, and a screw cap screwed fully onto it. Units are metres (1 Blender unit = 1 m). The bottle's axis is the world Z axis.
+
+Bottle (one mesh object named "Bottle"):
+- Body: a cylinder 70 mm in diameter, from z = 0 (the base, resting on the ground plane) up to z = 160 mm.
+- Shoulder: tapers from the body to the neck between z = 160 mm and z = 175 mm. The shape of the taper is your choice.
+- Neck: 28 mm in diameter, from z = 175 mm to the top at z = 195 mm. The top is closed (the bottle may be solid; no interior is needed).
+- Thread: an external helical screw thread on the neck between z = 178 mm and z = 192 mm. Pitch 3 mm, depth 1.2 mm, so the crest diameter is 30.4 mm. Either hand is fine.
+
+Cap (one mesh object named "Cap"):
+- A hollow cylinder closed at the top: outer diameter 34 mm, height 22 mm, side wall 1.5 mm thick, top wall 2 mm thick. Open at the bottom. No internal thread is needed.
+- Screwed fully on: the underside of its top wall sits 0.5 mm above the neck top, so the cap spans z = 175.5 mm to z = 197.5 mm.
+- The cap must not touch or intersect the bottle.
+
+Both objects:
+- Each is a single closed (watertight) mesh with consistent outward normals and no self-intersections, suitable for close-up product renders.
+- Transforms applied: location at the origin, no rotation, scale 1, so the mesh data holds world coordinates.
+- At most 20,000 faces for the bottle and 5,000 for the cap.
+- No other mesh objects in the scene.
+
+Mesh hygiene: no duplicate or coincident vertices, no zero-length edges and no zero-area faces. Merge any coincident vertices before you finish.
+
+Tell me when you're done.
+"""
+
+[[checks]]
+type = "objects"
+expected = ["Bottle", "Cap"]
+
+[[checks]]
+type = "transforms_applied"
+objects = ["Bottle", "Cap"]
+
+[[checks]]
+type = "bbox"
+label = "bbox_bottle"
+object = "Bottle"
+min = [-0.035, -0.035, 0.0]
+max = [0.035, 0.035, 0.195]
+tol = 0.0005
+
+[[checks]]
+type = "bbox"
+label = "bbox_cap"
+object = "Cap"
+min = [-0.017, -0.017, 0.1755]
+max = [0.017, 0.017, 0.1975]
+tol = 0.0005
+
+[[checks]]
+type = "helical_thread"
+object = "Bottle"
+z_min = 0.178
+z_max = 0.192
+root_radius = 0.014
+depth = 0.0012
+pitch = 0.003
+
+[[checks]]
+type = "watertight"
+objects = ["Bottle", "Cap"]
+
+[[checks]]
+type = "self_intersection"
+objects = ["Bottle", "Cap"]
+
+[[checks]]
+type = "no_overlap"
+a = "Bottle"
+b = "Cap"
+
+[[checks]]
+type = "topology"
+objects = ["Bottle", "Cap"]
+
+[[checks]]
+type = "face_budget"
+label = "face_budget_bottle"
+object = "Bottle"
+max = 20000
+
+[[checks]]
+type = "face_budget"
+label = "face_budget_cap"
+object = "Cap"
+max = 5000
+
+# Reference variants for verify_checks: each must fail exactly these checks.
+[variants]
+good = []
+flat_crest = []  # any thread profile is allowed; this one fooled the first thread check
+no_thread = ["helical_thread"]
+rings = ["helical_thread"]
+tight_cap = ["no_overlap"]
+unapplied = ["transforms_applied"]
+open = ["watertight"]
+poke = ["self_intersection"]

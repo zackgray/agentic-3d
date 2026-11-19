@@ -1,0 +1,128 @@
+id = "r07-more-ribs"
+title = "Revision: 16 grip ribs instead of 12"
+group = "revision"
+starting_scene = "start.py"
+
+prompt = """
+The open Blender scene holds an approved model of a hypothetical product part: a round tool grip with straight ribs running along its length, all one solid (mesh object "Grip"). Units are metres (1 Blender unit = 1 m). The grip stands on the ground plane with its axis on the world Z axis. The client has one revision:
+
+- The grip currently has 12 ribs. Change it to 16 ribs, evenly spaced around the grip (every 22.5 degrees).
+- Every rib keeps exactly the current rib profile (width, height and flat top) and the current rib length and end positions. Keep the rib that is centred on the +X axis where it is; the others are spaced evenly from it.
+- The ribs are fused to the grip body. Nothing else changes: the body's diameter, height and position stay exactly as they are.
+
+The object keeps its name. It stays a single closed (watertight) mesh in one connected piece, with consistent outward normals and no self-intersections, transforms applied (location at the origin, no rotation, scale 1), and at most 20,000 faces. No other mesh objects in the scene.
+
+Mesh hygiene: no duplicate or coincident vertices, no zero-length edges and no zero-area faces. Merge any coincident vertices before you finish.
+
+Tell me when you're done.
+"""
+
+[[checks]]
+type = "objects"
+expected = ["Grip"]
+
+[[checks]]
+type = "transforms_applied"
+objects = ["Grip"]
+
+[[checks]]
+type = "bbox"
+object = "Grip"
+min = [-0.0135, -0.0135, 0.0]
+max = [0.0135, 0.0135, 0.08]
+tol = 0.0002
+
+[[checks]]
+type = "watertight"
+objects = ["Grip"]
+
+[[checks]]
+type = "shells"
+objects = ["Grip"]
+
+[[checks]]
+type = "self_intersection"
+objects = ["Grip"]
+
+[[checks]]
+type = "topology"
+objects = ["Grip"]
+
+[[checks]]
+type = "face_budget"
+object = "Grip"
+max = 20000
+
+# body pi*12^2*80 + 16 ribs * 60 * A, with A the rib section outside the body:
+# A = 2*13.5 - integral_{-1}^{1} sqrt(12^2 - y^2) dy = 27 - (sqrt(143) + 144*asin(1/12)) = 3.028.
+# 4 more ribs add 727 mm3 = 1.9%.
+[[checks]]
+type = "volume"
+object = "Grip"
+mm3 = 39098
+rel_tol = 0.01
+
+[[checks]]
+type = "ray_probe"
+label = "probe_ribs"
+tol = 0.0003
+probes = [
+  { name = "rib top at 0 deg", origin = [0.030000, 0.000000, 0.04], dir = [-1.000000, -0.000000, 0], hit = 0.0165 },
+  { name = "rib top at 22.5 deg", origin = [0.027716, 0.011481, 0.04], dir = [-0.923880, -0.382683, 0], hit = 0.0165 },
+  { name = "rib top at 45 deg", origin = [0.021213, 0.021213, 0.04], dir = [-0.707107, -0.707107, 0], hit = 0.0165 },
+  { name = "rib top at 67.5 deg", origin = [0.011481, 0.027716, 0.04], dir = [-0.382683, -0.923880, 0], hit = 0.0165 },
+  { name = "rib top at 90 deg", origin = [0.000000, 0.030000, 0.04], dir = [-0.000000, -1.000000, 0], hit = 0.0165 },
+  { name = "rib top at 112.5 deg", origin = [-0.011481, 0.027716, 0.04], dir = [0.382683, -0.923880, 0], hit = 0.0165 },
+  { name = "rib top at 135 deg", origin = [-0.021213, 0.021213, 0.04], dir = [0.707107, -0.707107, 0], hit = 0.0165 },
+  { name = "rib top at 157.5 deg", origin = [-0.027716, 0.011481, 0.04], dir = [0.923880, -0.382683, 0], hit = 0.0165 },
+  { name = "rib top at 180 deg", origin = [-0.030000, 0.000000, 0.04], dir = [1.000000, -0.000000, 0], hit = 0.0165 },
+  { name = "rib top at 202.5 deg", origin = [-0.027716, -0.011481, 0.04], dir = [0.923880, 0.382683, 0], hit = 0.0165 },
+  { name = "rib top at 225 deg", origin = [-0.021213, -0.021213, 0.04], dir = [0.707107, 0.707107, 0], hit = 0.0165 },
+  { name = "rib top at 247.5 deg", origin = [-0.011481, -0.027716, 0.04], dir = [0.382683, 0.923880, 0], hit = 0.0165 },
+  { name = "rib top at 270 deg", origin = [-0.000000, -0.030000, 0.04], dir = [0.000000, 1.000000, 0], hit = 0.0165 },
+  { name = "rib top at 292.5 deg", origin = [0.011481, -0.027716, 0.04], dir = [-0.382683, 0.923880, 0], hit = 0.0165 },
+  { name = "rib top at 315 deg", origin = [0.021213, -0.021213, 0.04], dir = [-0.707107, 0.707107, 0], hit = 0.0165 },
+  { name = "rib top at 337.5 deg", origin = [0.027716, -0.011481, 0.04], dir = [-0.923880, 0.382683, 0], hit = 0.0165 },
+  { name = "gap at 11.25 deg", origin = [0.029424, 0.005853, 0.04], dir = [-0.980785, -0.195090, 0], hit = 0.018 },
+  { name = "gap at 33.75 deg", origin = [0.024944, 0.016667, 0.04], dir = [-0.831470, -0.555570, 0], hit = 0.018 },
+  { name = "gap at 56.25 deg", origin = [0.016667, 0.024944, 0.04], dir = [-0.555570, -0.831470, 0], hit = 0.018 },
+  { name = "gap at 78.75 deg", origin = [0.005853, 0.029424, 0.04], dir = [-0.195090, -0.980785, 0], hit = 0.018 },
+  { name = "gap at 101.25 deg", origin = [-0.005853, 0.029424, 0.04], dir = [0.195090, -0.980785, 0], hit = 0.018 },
+  { name = "gap at 123.75 deg", origin = [-0.016667, 0.024944, 0.04], dir = [0.555570, -0.831470, 0], hit = 0.018 },
+  { name = "gap at 146.25 deg", origin = [-0.024944, 0.016667, 0.04], dir = [0.831470, -0.555570, 0], hit = 0.018 },
+  { name = "gap at 168.75 deg", origin = [-0.029424, 0.005853, 0.04], dir = [0.980785, -0.195090, 0], hit = 0.018 },
+  { name = "gap at 191.25 deg", origin = [-0.029424, -0.005853, 0.04], dir = [0.980785, 0.195090, 0], hit = 0.018 },
+  { name = "gap at 213.75 deg", origin = [-0.024944, -0.016667, 0.04], dir = [0.831470, 0.555570, 0], hit = 0.018 },
+  { name = "gap at 236.25 deg", origin = [-0.016667, -0.024944, 0.04], dir = [0.555570, 0.831470, 0], hit = 0.018 },
+  { name = "gap at 258.75 deg", origin = [-0.005853, -0.029424, 0.04], dir = [0.195090, 0.980785, 0], hit = 0.018 },
+  { name = "gap at 281.25 deg", origin = [0.005853, -0.029424, 0.04], dir = [-0.195090, 0.980785, 0], hit = 0.018 },
+  { name = "gap at 303.75 deg", origin = [0.016667, -0.024944, 0.04], dir = [-0.555570, 0.831470, 0], hit = 0.018 },
+  { name = "gap at 326.25 deg", origin = [0.024944, -0.016667, 0.04], dir = [-0.831470, 0.555570, 0], hit = 0.018 },
+  { name = "gap at 348.75 deg", origin = [0.029424, -0.005853, 0.04], dir = [-0.980785, 0.195090, 0], hit = 0.018 },
+  { name = "+X rib reaches y=+0.8", origin = [0.03, 0.0008, 0.04], dir = [-1, 0, 0], hit = 0.0165 },
+  { name = "+X rib reaches y=-0.8", origin = [0.03, -0.0008, 0.04], dir = [-1, 0, 0], hit = 0.0165 },
+  { name = "+X rib ends before y=+1.2", origin = [0.03, 0.0012, 0.04], dir = [-1, 0, 0], hit = 0.01806 },
+  { name = "+X rib ends before y=-1.2", origin = [0.03, -0.0012, 0.04], dir = [-1, 0, 0], hit = 0.01806 },
+  { name = "+X rib top end at z=70", origin = [0.013, 0.0, 0.1], dir = [0, 0, -1], hit = 0.03 },
+  { name = "+X rib bottom end at z=10", origin = [0.013, 0.0, -0.01], dir = [0, 0, 1], hit = 0.02 },
+  { name = "22.5 deg rib top end at z=70", origin = [0.012011, 0.004975, 0.1], dir = [0, 0, -1], hit = 0.03 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_body"
+tol = 0.0003
+probes = [
+  { name = "top", origin = [0.005, 0.002, 0.1], dir = [0, 0, -1], hit = 0.02 },
+  { name = "bottom", origin = [0.005, 0.002, -0.01], dir = [0, 0, 1], hit = 0.01 },
+  { name = "body r 12 below the ribs", origin = [0.03, 0.0, 0.005], dir = [-1, 0, 0], hit = 0.018 },
+  { name = "body r 12 above the ribs", origin = [0.0, -0.03, 0.075], dir = [0, 1, 0], hit = 0.018 },
+]
+
+[variants]
+good = []
+unchanged = ["volume", "probe_ribs"]
+added_four = ["probe_ribs"]
+rotated = ["probe_ribs"]
+thin_ribs = ["volume", "probe_ribs"]
+rebuilt_centred = ["bbox", "probe_ribs", "probe_body"]

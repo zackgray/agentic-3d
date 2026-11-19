@@ -1,0 +1,255 @@
+id = "w08-moka-pot"
+title = "Stovetop espresso pot: octagonal tapered boiler with valve boss, hex valve, hollow octagonal jug with handle, chamfered lid with filleted knob"
+group = "multi-step"
+starting_scene = "empty"
+
+prompt = """
+Model a hypothetical product in the open Blender scene: a stovetop espresso pot, as four separate mesh objects stacked on the world Z axis. Units are metres (1 Blender unit = 1 m). The boiler stands on the ground plane and every part is centred on the world Z axis (except where a position is given); the handle points towards -X.
+
+An "octagon F" below is a regular octagon centred on the Z axis, F mm across its flats, with one flat facing each of +X, -X, +Y and -Y (and the other four facing the diagonals), so it reaches x = +-F/2 and y = +-F/2. An "octagonal frustum" is a solid whose horizontal sections are octagons whose size changes linearly with height (flat sides, straight edges between the corners).
+
+Boiler (mesh object "Boiler"), one solid part:
+- Body: an octagonal frustum from a flat bottom at z = 0, octagon 96, narrowing to a flat top at z = 72 mm, octagon 80. All edges are sharp.
+- Valve boss: a round cylinder 12 mm in diameter lying along X, its axis at (y, z) = (0, 36) mm, fused to the +X side face and sticking out to a flat end at x = +50 mm.
+
+Valve (mesh object "Valve"): a hexagonal prism lying along X on the boss axis ((y, z) = (0, 36) mm), 14 mm across its flats, with two of its flats horizontal (facing up and down), from a flat face at x = +50.5 mm (0.5 mm clear of the boss end) to a flat face at x = +56 mm. All edges are sharp.
+
+Jug (mesh object "Jug"), one solid part:
+- Body: an octagonal frustum that widens upwards, from a flat bottom at z = 72.5 mm (0.5 mm above the boiler top), octagon 80, to its top rim at z = 150 mm, octagon 92.
+- Cavity: open at the top, an octagonal frustum pocket (same orientation) from a flat floor at z = 76.5 mm, octagon 74, widening to octagon 86 where it meets the top rim at z = 150 mm. So the rim is a flat octagonal ring at z = 150 mm, 3 mm wide.
+- Handle: a straight bar of square-cornered rectangular section, y from -7 mm to +7 mm and z from 112 mm to 124 mm, fused to the outside of the -X wall (it must not break into the cavity) and running out horizontally to a flat end at x = -105 mm.
+All edges are sharp.
+
+Lid (mesh object "Lid"), one solid part:
+- Plate: octagon 92 with vertical sides from a flat underside at z = 150.5 mm (0.5 mm above the jug rim) up to z = 154 mm. Its top edge all the way round is a 2 mm by 2 mm 45-degree chamfer, so the flat top face at z = 156 mm is octagon 88.
+- Knob, turned about the Z axis and fused to the plate: a stem 10 mm in diameter from the plate top up to z = 162 mm, then a cap 24 mm in diameter from z = 162 mm to a flat top at z = 170 mm. The cap's top circular edge is rounded with a 3 mm radius fillet (a quarter-round blending its side into its top face); the cap's bottom edge is sharp.
+
+All four objects:
+- Each is a single closed (watertight) mesh in one connected piece, with consistent outward normals and no self-intersections.
+- No two objects touch or intersect.
+- Transforms applied: location at the origin, no rotation, scale 1, so the mesh data holds world coordinates.
+- At most 20,000 faces per object.
+- No other mesh objects in the scene.
+
+Mesh hygiene: no duplicate or coincident vertices, no zero-length edges and no zero-area faces. Merge any coincident vertices before you finish.
+
+Tell me when you're done.
+"""
+
+[[checks]]
+type = "objects"
+expected = ["Boiler", "Jug", "Lid", "Valve"]
+
+[[checks]]
+type = "transforms_applied"
+objects = ["Boiler", "Jug", "Lid", "Valve"]
+
+[[checks]]
+type = "bbox"
+label = "bbox_boiler"
+object = "Boiler"
+min = [-0.048, -0.048, 0.0]
+max = [0.05, 0.048, 0.072]
+tol = 0.0003
+
+# Hexagon corners at y = +-7/cos(30 deg)
+[[checks]]
+type = "bbox"
+label = "bbox_valve"
+object = "Valve"
+min = [0.0505, -0.008083, 0.029]
+max = [0.056, 0.008083, 0.043]
+tol = 0.0003
+
+[[checks]]
+type = "bbox"
+label = "bbox_jug"
+object = "Jug"
+min = [-0.105, -0.046, 0.0725]
+max = [0.046, 0.046, 0.15]
+tol = 0.0003
+
+[[checks]]
+type = "bbox"
+label = "bbox_lid"
+object = "Lid"
+min = [-0.046, -0.046, 0.1505]
+max = [0.046, 0.046, 0.17]
+tol = 0.0003
+
+[[checks]]
+type = "watertight"
+objects = ["Boiler", "Jug", "Lid", "Valve"]
+
+[[checks]]
+type = "shells"
+objects = ["Boiler", "Jug", "Lid", "Valve"]
+
+[[checks]]
+type = "self_intersection"
+objects = ["Boiler", "Jug", "Lid", "Valve"]
+
+[[checks]]
+type = "topology"
+objects = ["Boiler", "Jug", "Lid", "Valve"]
+
+[[checks]]
+type = "face_budget"
+objects = ["Boiler", "Jug", "Lid", "Valve"]
+max = 20000
+
+[[checks]]
+type = "no_overlap"
+label = "no_overlap_boiler_valve"
+a = "Boiler"
+b = "Valve"
+
+[[checks]]
+type = "no_overlap"
+label = "no_overlap_boiler_jug"
+a = "Boiler"
+b = "Jug"
+
+[[checks]]
+type = "no_overlap"
+label = "no_overlap_jug_lid"
+a = "Jug"
+b = "Lid"
+
+# O(F) = 2*(sqrt(2) - 1)*F^2 is the octagon's area; frustum h/3*(O1 + O2 + sqrt(O1*O2)).
+# 72/3*(O(96) + O(80) + sqrt(O(96)*O(80))) + boss pi*6^2*(50 - 44), the +X face being at x 44 on the boss axis
+[[checks]]
+type = "volume"
+label = "volume_boiler"
+object = "Boiler"
+mm3 = 463856
+rel_tol = 0.01
+
+# (sqrt(3)/2)*14^2*5.5
+[[checks]]
+type = "volume"
+label = "volume_valve"
+object = "Valve"
+mm3 = 933.6
+rel_tol = 0.01
+
+# frustum 77.5 (O(80) to O(92)) - cavity frustum 73.5 (O(74) to O(86))
+# + handle 14*12*(105 - 43.5226), the -X face being at x -(40 + 6*(118 - 72.5)/77.5) at mid-height z 118
+[[checks]]
+type = "volume"
+label = "volume_jug"
+object = "Jug"
+mm3 = 95522
+rel_tol = 0.01
+
+# O(92)*3.5 + chamfer frustum 2 (O(92) to O(88)) + stem pi*5^2*6 + cap pi*12^2*8
+# - fillet ring by Pappus: (1 - pi/4)*3^2 at radius 12 - 3*(10 - 3*pi)/(3*(4 - pi))
+[[checks]]
+type = "volume"
+label = "volume_lid"
+object = "Lid"
+mm3 = 41917
+rel_tol = 0.01
+
+[[checks]]
+type = "ray_probe"
+label = "probe_boiler"
+objects = ["Boiler"]
+tol = 0.0003
+probes = [
+  { name = "+X face at z 10 (x 46.89)", origin = [0.1, 0.0, 0.01], dir = [-1, 0, 0], hit = 0.053111 },
+  { name = "-Y face at z 60 (y -41.33)", origin = [0.0, -0.1, 0.06], dir = [0, 1, 0], hit = 0.058667 },
+  { name = "diagonal face at z 36 (44 out)", origin = [0.05, 0.05, 0.036], dir = [-1, -1, 0], hit = 0.026711 },
+  { name = "diagonal face at z 36, back left", origin = [-0.05, 0.05, 0.036], dir = [1, -1, 0], hit = 0.026711 },
+  { name = "top", origin = [0.01, 0.01, 0.1], dir = [0, 0, -1], hit = 0.028 },
+  { name = "bottom", origin = [0.0, 0.0, -0.05], dir = [0, 0, 1], hit = 0.05 },
+  { name = "boss end", origin = [0.1, 0.0, 0.036], dir = [-1, 0, 0], hit = 0.05 },
+  { name = "boss top", origin = [0.047, 0.0, 0.1], dir = [0, 0, -1], hit = 0.058 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_valve"
+objects = ["Valve"]
+tol = 0.0003
+probes = [
+  { name = "outer face", origin = [0.1, 0.0, 0.036], dir = [-1, 0, 0], hit = 0.044 },
+  { name = "inner face", origin = [0.0, 0.002, 0.036], dir = [1, 0, 0], hit = 0.0505 },
+  { name = "top flat", origin = [0.053, 0.0, 0.1], dir = [0, 0, -1], hit = 0.057 },
+  { name = "bottom flat", origin = [0.053, 0.002, 0.0], dir = [0, 0, 1], hit = 0.029 },
+  { name = "upper flat towards +Y", origin = [0.053, 0.043301, 0.061], dir = [0, -0.866025, -0.5], hit = 0.043 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_jug"
+objects = ["Jug"]
+tol = 0.0003
+probes = [
+  { name = "+X face at z 80 (x 40.58)", origin = [0.1, 0.0, 0.08], dir = [-1, 0, 0], hit = 0.059419 },
+  { name = "+Y face at z 140 (y 45.23)", origin = [0.0, 0.1, 0.14], dir = [0, -1, 0], hit = 0.054774 },
+  { name = "diagonal face at z 100 (42.13 out)", origin = [0.05, -0.05, 0.1], dir = [-1, 1, 0], hit = 0.028582 },
+  { name = "underside", origin = [0.0, 0.0, 0.05], dir = [0, 0, 1], hit = 0.0225 },
+  { name = "cavity floor", origin = [0.0, 0.0, 0.2], dir = [0, 0, -1], hit = 0.1235 },
+  { name = "rim at x 44.5", origin = [0.0445, 0.0, 0.2], dir = [0, 0, -1], hit = 0.05 },
+  { name = "cavity wall +X at z 140 (x 42.18)", origin = [0.0, 0.0, 0.14], dir = [1, 0, 0], hit = 0.042184 },
+  { name = "handle end", origin = [-0.2, 0.0, 0.118], dir = [1, 0, 0], hit = 0.095 },
+  { name = "handle top", origin = [-0.08, 0.0, 0.2], dir = [0, 0, -1], hit = 0.076 },
+  { name = "handle underside", origin = [-0.08, 0.003, 0.0], dir = [0, 0, 1], hit = 0.112 },
+  { name = "handle side", origin = [-0.08, -0.1, 0.118], dir = [0, 1, 0], hit = 0.093 },
+  { name = "-Y face at z 118 (y -43.52)", origin = [0.0, -0.1, 0.118], dir = [0, 1, 0], hit = 0.056477 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_lid"
+objects = ["Lid"]
+tol = 0.0003
+probes = [
+  { name = "side +X at z 152", origin = [0.1, 0.0, 0.152], dir = [-1, 0, 0], hit = 0.054 },
+  { name = "chamfer from the side at z 155", origin = [0.1, 0.0, 0.155], dir = [-1, 0, 0], hit = 0.055 },
+  { name = "chamfer from above at x 45.5", origin = [0.0455, 0.0, 0.2], dir = [0, 0, -1], hit = 0.0455 },
+  { name = "top face at x 30", origin = [0.03, 0.0, 0.2], dir = [0, 0, -1], hit = 0.044 },
+  { name = "diagonal side at z 152", origin = [-0.05, -0.05, 0.152], dir = [1, 1, 0], hit = 0.024711 },
+  { name = "underside", origin = [0.02, 0.0, 0.1], dir = [0, 0, 1], hit = 0.0505 },
+  { name = "stem", origin = [0.1, 0.0, 0.159], dir = [-1, 0, 0], hit = 0.095 },
+  { name = "cap side", origin = [0.1, 0.0, 0.164], dir = [-1, 0, 0], hit = 0.088 },
+  { name = "cap underside", origin = [0.009, 0.0, 0.158], dir = [0, 0, 1], hit = 0.004 },
+  { name = "cap top", origin = [0.0, 0.0, 0.2], dir = [0, 0, -1], hit = 0.03 },
+]
+
+# On the fillet surface, so a wider tolerance: radius 3 gives z = 167 + sqrt(3^2 - 2.5^2) at r 11.5;
+# a sharp edge would be 1.34 mm higher.
+[[checks]]
+type = "ray_probe"
+label = "probe_lid_fillet"
+objects = ["Lid"]
+tol = 0.001
+probes = [
+  { name = "fillet at r 11.5", origin = [0.0115, 0.0, 0.2], dir = [0, 0, -1], hit = 0.031342 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_fit"
+tol = 0.0003
+probes = [
+  { name = "gap between boiler and jug", origin = [0.1, 0.0, 0.07225], dir = [-1, 0, 0], hit = false },
+  { name = "gap between jug and lid", origin = [0.1, 0.0, 0.15025], dir = [-1, 0, 0], hit = false },
+  { name = "gap between boss and valve", origin = [0.05025, 0.0, 0.1], dir = [0, 0, -1], hit = false },
+]
+
+[variants]
+good = []
+coarse24 = []
+oct_rotated = ["bbox_boiler", "probe_boiler", "probe_fit"]
+straight_boiler = ["volume_boiler", "probe_boiler"]
+no_boss = ["bbox_boiler", "probe_boiler"]
+valve_on_boss = ["bbox_valve", "volume_valve", "no_overlap_boiler_valve", "probe_valve", "probe_fit"]
+valve_rotated = ["bbox_valve", "probe_valve"]
+jug_solid = ["volume_jug", "probe_jug"]
+handle_on_y = ["bbox_jug", "probe_jug"]
+jug_on_boiler = ["bbox_jug", "no_overlap_boiler_jug", "probe_jug", "probe_fit"]
+no_lid_chamfer = ["volume_lid", "probe_lid"]
+no_fillet = ["probe_lid_fillet"]
+lid_on_jug = ["bbox_lid", "volume_lid", "no_overlap_jug_lid", "probe_lid", "probe_fit"]

@@ -1,0 +1,126 @@
+id = "p05-earbud-case"
+title = "Earbud charging case: rounded base with pockets, and lid"
+group = "hard-surface"
+starting_scene = "empty"
+
+prompt = """
+Model a hypothetical product in the open Blender scene: a wireless-earbud charging case shown closed, as two mesh objects. Units are metres (1 Blender unit = 1 m). The case lies flat on the ground plane, centred on the world Z axis, its long side along X.
+
+Overall form: seen from above, the case is a rounded rectangle 60 mm in X by 30 mm in Y (x from -30 mm to +30 mm, y from -15 mm to +15 mm) whose four vertical corners are rounded with a 12 mm radius. It is split horizontally into a base and a lid.
+
+Base (mesh object "Base"):
+- From z = 0 to a flat top at z = 24 mm.
+- The bottom edge all the way round is rounded with a 4 mm radius (a quarter-round blending the flat underside into the vertical sides). Its top edge at z = 24 mm stays sharp.
+- Two earbud pockets: vertical cylindrical holes 12 mm in diameter, centred at (x, y) = (+14, 0) mm and (-14, 0) mm, from the top face down to flat bottoms at z = 9 mm.
+
+Lid (mesh object "Lid"):
+- From a flat underside at z = 24.3 mm (a 0.3 mm gap above the base) to z = 36 mm, solid.
+- The top edge all the way round is rounded with a 4 mm radius. Its bottom edge stays sharp.
+
+Both objects:
+- Each is a single closed (watertight) mesh in one connected piece, with consistent outward normals and no self-intersections. Surfaces are smooth enough for close-up product renders.
+- The base and lid do not touch or intersect.
+- Transforms applied: location at the origin, no rotation, scale 1, so the mesh data holds world coordinates.
+- At most 20,000 faces each.
+- No other mesh objects in the scene.
+
+Mesh hygiene: no duplicate or coincident vertices, no zero-length edges and no zero-area faces. Merge any coincident vertices before you finish.
+
+Tell me when you're done.
+"""
+
+[[checks]]
+type = "objects"
+expected = ["Base", "Lid"]
+
+[[checks]]
+type = "transforms_applied"
+objects = ["Base", "Lid"]
+
+[[checks]]
+type = "bbox"
+label = "bbox_base"
+object = "Base"
+min = [-0.03, -0.015, 0.0]
+max = [0.03, 0.015, 0.024]
+tol = 0.0001
+
+[[checks]]
+type = "bbox"
+label = "bbox_lid"
+object = "Lid"
+min = [-0.03, -0.015, 0.0243]
+max = [0.03, 0.015, 0.036]
+tol = 0.0001
+
+[[checks]]
+type = "watertight"
+objects = ["Base", "Lid"]
+
+[[checks]]
+type = "shells"
+objects = ["Base", "Lid"]
+
+[[checks]]
+type = "self_intersection"
+objects = ["Base", "Lid"]
+
+[[checks]]
+type = "topology"
+objects = ["Base", "Lid"]
+
+[[checks]]
+type = "face_budget"
+objects = ["Base", "Lid"]
+max = 20000
+
+[[checks]]
+type = "no_overlap"
+a = "Base"
+b = "Lid"
+
+[[checks]]
+type = "volume"
+label = "volume_base"
+object = "Base"
+mm3 = 36312  # integrated from the spec: rounded-rect area through the 4 mm roundover, minus pockets
+rel_tol = 0.01
+
+[[checks]]
+type = "ray_probe"
+label = "probe_pockets"
+objects = ["Base"]
+tol = 0.0003
+probes = [
+  { name = "pocket floor +X", origin = [0.014, 0.0, 0.05], dir = [0, 0, -1], hit = 0.041 },
+  { name = "pocket floor -X", origin = [-0.014, 0.0, 0.05], dir = [0, 0, -1], hit = 0.041 },
+  { name = "top between pockets", origin = [0.0, 0.0, 0.05], dir = [0, 0, -1], hit = 0.026 },
+  { name = "pocket wall +X", origin = [0.014, 0.0, 0.015], dir = [1, 0, 0], hit = 0.006 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_corners"
+tol = 0.0003
+probes = [
+  { name = "base plan corner radius 12", objects = ["Base"], origin = [0.04, 0.025, 0.012], dir = [-1, -1, 0], hit = 0.019113 },
+  { name = "lid plan corner radius 12", objects = ["Lid"], origin = [-0.04, -0.025, 0.028], dir = [1, 1, 0], hit = 0.019113 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_edges"
+tol = 0.0003
+probes = [
+  { name = "base bottom roundover radius 4", origin = [0.0, 0.025, -0.01], dir = [0, -1, 1], hit = 0.015799 },
+  { name = "lid top roundover radius 4", origin = [0.0, -0.025, 0.046], dir = [0, 1, -1], hit = 0.015799 },
+  { name = "base side wall", origin = [0.0, 0.025, 0.015], dir = [0, -1, 0], hit = 0.01 },
+]
+
+[variants]
+good = []
+sharp_corners = ["probe_corners", "volume_base"]
+sharp_edges = ["probe_edges", "volume_base"]
+no_pockets = ["probe_pockets", "volume_base"]
+shallow_pockets = ["probe_pockets", "volume_base"]
+lid_touching = ["bbox_lid", "no_overlap"]

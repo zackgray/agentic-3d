@@ -1,0 +1,152 @@
+id = "x01-nail-polish"
+title = "Nail-polish bottle: rounded-square bottle with bore, and brush cap"
+group = "hard-surface"
+starting_scene = "empty"
+
+prompt = """
+Model a hypothetical product in the open Blender scene: a nail-polish bottle with its brush cap screwed on, as two mesh objects. Units are metres (1 Blender unit = 1 m). The bottle stands on the ground plane, centred on the world Z axis, and the cap sits on it on the same axis.
+
+Bottle (mesh object "Bottle"):
+- Body: a rounded-square block 36 mm by 36 mm (x and y from -18 mm to +18 mm), from a flat underside at z = 0 to a flat shoulder at z = 48 mm. The four vertical corners are rounded with a 6 mm radius. All other body edges are sharp.
+- Neck: a cylinder 16 mm in diameter (radius 8 mm), centred on the Z axis, rising from the shoulder to a flat top at z = 58 mm, fused to the body.
+- Bore: a centred blind hole 8 mm in diameter (radius 4 mm), from the neck top straight down to a flat bottom at z = 20 mm.
+
+Cap (mesh object "Cap"), one solid of revolution about the Z axis:
+- Outside: a cylinder 20 mm in diameter (radius 10 mm) from its bottom rim at z = 48.5 mm (0.5 mm above the shoulder) to a flat top at z = 88 mm. The top edge is rounded with a 3 mm radius (a quarter-round blending the flat top into the side). The bottom rim edges are sharp.
+- Cavity: a centred cylindrical recess open at the bottom, 16.8 mm in diameter (radius 8.4 mm, so 0.4 mm clear of the neck all round), from the rim up to a flat ceiling at z = 58.5 mm (0.5 mm above the neck top).
+- Brush stem: a solid rod 4 mm in diameter (radius 2 mm) on the Z axis, hanging from the cavity ceiling down to a flat end at z = 25 mm, fused to the ceiling. It sits inside the bore without touching it.
+
+Both objects:
+- Each is a single closed (watertight) mesh in one connected piece, with consistent outward normals and no self-intersections. Surfaces are smooth enough for close-up product renders.
+- The bottle and cap do not touch or intersect.
+- Transforms applied: location at the origin, no rotation, scale 1, so the mesh data holds world coordinates.
+- At most 20,000 faces each.
+- No other mesh objects in the scene.
+
+Mesh hygiene: no duplicate or coincident vertices, no zero-length edges and no zero-area faces. Merge any coincident vertices before you finish.
+
+Tell me when you're done.
+"""
+
+[[checks]]
+type = "objects"
+expected = ["Bottle", "Cap"]
+
+[[checks]]
+type = "transforms_applied"
+objects = ["Bottle", "Cap"]
+
+[[checks]]
+type = "bbox"
+label = "bbox_bottle"
+object = "Bottle"
+min = [-0.018, -0.018, 0.0]
+max = [0.018, 0.018, 0.058]
+tol = 0.0003
+
+[[checks]]
+type = "bbox"
+label = "bbox_cap"
+object = "Cap"
+min = [-0.01, -0.01, 0.025]
+max = [0.01, 0.01, 0.088]
+tol = 0.0003
+
+[[checks]]
+type = "watertight"
+objects = ["Bottle", "Cap"]
+
+[[checks]]
+type = "shells"
+objects = ["Bottle", "Cap"]
+
+[[checks]]
+type = "self_intersection"
+objects = ["Bottle", "Cap"]
+
+[[checks]]
+type = "topology"
+objects = ["Bottle", "Cap"]
+
+[[checks]]
+type = "face_budget"
+objects = ["Bottle", "Cap"]
+max = 20000
+
+[[checks]]
+type = "no_overlap"
+a = "Bottle"
+b = "Cap"
+
+# body 48*(36^2 - (4-pi)*6^2) + neck pi*8^2*10 - bore pi*4^2*38
+[[checks]]
+type = "volume"
+label = "volume_bottle"
+object = "Bottle"
+mm3 = 60825
+rel_tol = 0.01
+
+# pi*10^2*39.5 - fillet ring 2*pi*(7 + 3*(1/6)/(1-pi/4))*(1-pi/4)*3^2 - cavity pi*8.4^2*10 + stem pi*2^2*33.5
+[[checks]]
+type = "volume"
+label = "volume_cap"
+object = "Cap"
+mm3 = 10500
+rel_tol = 0.015
+
+[[checks]]
+type = "ray_probe"
+label = "probe_bottle"
+objects = ["Bottle"]
+tol = 0.0003
+probes = [
+  { name = "body side +X", origin = [0.05, 0.0, 0.024], dir = [-1, 0, 0], hit = 0.032 },
+  { name = "body side -Y", origin = [0.0, -0.05, 0.024], dir = [0, 1, 0], hit = 0.032 },
+  { name = "corner radius 6", origin = [0.025, 0.025, 0.024], dir = [-1, -1, 0], hit = 0.012385 },
+  { name = "shoulder top", origin = [0.014, 0.0, 0.1], dir = [0, 0, -1], hit = 0.052 },
+  { name = "neck side", origin = [0.05, 0.0, 0.053], dir = [-1, 0, 0], hit = 0.042 },
+  { name = "underside", origin = [0.0, 0.0, -0.01], dir = [0, 0, 1], hit = 0.01 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_bore"
+objects = ["Bottle"]
+tol = 0.0003
+probes = [
+  { name = "bore floor", origin = [0.003, 0.0, 0.1], dir = [0, 0, -1], hit = 0.08 },
+  { name = "bore wall", origin = [0.0, 0.0, 0.04], dir = [1, 0, 0], hit = 0.004 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_cap"
+objects = ["Cap"]
+tol = 0.0003
+probes = [
+  { name = "cap top", origin = [0.0, 0.0, 0.1], dir = [0, 0, -1], hit = 0.012 },
+  { name = "top fillet radius 3", origin = [0.0161924, 0.0, 0.0941924], dir = [-1, 0, -1], hit = 0.01 },
+  { name = "cap side", origin = [0.05, 0.0, 0.07], dir = [-1, 0, 0], hit = 0.04 },
+  { name = "cavity wall", origin = [0.005, 0.0, 0.053], dir = [1, 0, 0], hit = 0.0034 },
+  { name = "cavity ceiling", origin = [0.005, 0.0, 0.05], dir = [0, 0, 1], hit = 0.0085 },
+  { name = "rim underside", origin = [0.0092, 0.0, 0.04], dir = [0, 0, 1], hit = 0.0085 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_stem"
+objects = ["Cap"]
+tol = 0.0003
+probes = [
+  { name = "stem end", origin = [0.0, 0.0, 0.0], dir = [0, 0, 1], hit = 0.025 },
+  { name = "stem side", origin = [0.01, 0.0, 0.04], dir = [-1, 0, 0], hit = 0.008 },
+]
+
+[variants]
+good = []
+no_stem = ["bbox_cap", "volume_cap", "probe_stem"]
+sharp_cap = ["probe_cap"]
+cap_resting = ["bbox_cap", "no_overlap", "probe_cap", "probe_stem"]
+round_body = ["volume_bottle", "probe_bottle"]
+no_bore = ["volume_bottle", "probe_bore", "no_overlap"]
+solid_cap = ["bbox_cap", "volume_cap", "probe_cap", "probe_stem", "no_overlap"]

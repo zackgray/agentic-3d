@@ -1,0 +1,185 @@
+id = "l03-radial-display"
+title = "Ring of products around a plinth, flats facing out"
+group = "layout"
+starting_scene = "empty"
+
+prompt = """
+Lay out a product shot in the open Blender scene: eight identical hypothetical products standing in a ring around a central display plinth, each turned so its label flat faces outward, as nine mesh objects. Units are metres (1 Blender unit = 1 m). Everything stands on the ground plane (flat bottoms at z = 0), centred on the world Z axis.
+
+Plinth (mesh object "Plinth"): a solid vertical cylinder 120 mm in diameter, from z = 0 to a flat top at z = 100 mm, its axis on the world Z axis. All edges sharp.
+
+Products (mesh objects "Product_1" to "Product_8"): each is a solid vertical cylinder 40 mm in diameter and 80 mm tall (z = 0 to a flat top at z = 80 mm) with one flat label face cut along its full height: a vertical plane 15 mm from the product's own axis, so the flat is about 26.5 mm wide. All edges sharp.
+
+Arrangement:
+- The product axes stand on a circle of radius 120 mm centred on the world origin, spaced evenly at 45 degrees.
+- "Product_1" sits on the +X axis (at x = 120 mm, y = 0). Numbering continues counter-clockwise seen from above (+Z): "Product_2" at 45 degrees, "Product_3" on the +Y axis, and so on to "Product_8" at 315 degrees.
+- Each product is turned about its own vertical axis so its label flat faces directly outward, away from the plinth: the outward normal of the flat points radially away from the world Z axis through the product's axis.
+
+Every object:
+- A single closed (watertight) mesh, one connected piece, with consistent outward normals and no self-intersections. No two objects touch or intersect.
+- Transforms applied: location at the origin, no rotation, scale 1, so the mesh data holds world coordinates.
+- At most 5,000 faces each.
+- No other mesh objects in the scene.
+
+Mesh hygiene: no duplicate or coincident vertices, no zero-length edges and no zero-area faces. Merge any coincident vertices before you finish.
+
+Tell me when you're done.
+"""
+
+[[checks]]
+type = "objects"
+expected = ["Plinth", "Product_1", "Product_2", "Product_3", "Product_4", "Product_5", "Product_6", "Product_7", "Product_8"]
+
+[[checks]]
+type = "transforms_applied"
+objects = ["Plinth", "Product_1", "Product_2", "Product_3", "Product_4", "Product_5", "Product_6", "Product_7", "Product_8"]
+
+[[checks]]
+type = "watertight"
+objects = ["Plinth", "Product_1", "Product_2", "Product_3", "Product_4", "Product_5", "Product_6", "Product_7", "Product_8"]
+
+[[checks]]
+type = "shells"
+objects = ["Plinth", "Product_1", "Product_2", "Product_3", "Product_4", "Product_5", "Product_6", "Product_7", "Product_8"]
+
+[[checks]]
+type = "self_intersection"
+objects = ["Plinth", "Product_1", "Product_2", "Product_3", "Product_4", "Product_5", "Product_6", "Product_7", "Product_8"]
+
+[[checks]]
+type = "topology"
+objects = ["Plinth", "Product_1", "Product_2", "Product_3", "Product_4", "Product_5", "Product_6", "Product_7", "Product_8"]
+
+[[checks]]
+type = "face_budget"
+objects = ["Plinth", "Product_1", "Product_2", "Product_3", "Product_4", "Product_5", "Product_6", "Product_7", "Product_8"]
+max = 5000
+
+[[checks]]
+type = "bbox"
+label = "bbox_plinth"
+object = "Plinth"
+min = [-0.06, -0.06, 0.0]
+max = [0.06, 0.06, 0.1]
+tol = 0.0003
+
+[[checks]]
+type = "bbox"
+label = "bbox_product_1"
+object = "Product_1"
+min = [0.1, -0.02, 0]
+max = [0.135, 0.02, 0.08]
+tol = 0.0003
+
+[[checks]]
+type = "bbox"
+label = "bbox_product_3"
+object = "Product_3"
+min = [-0.02, 0.1, 0]
+max = [0.02, 0.135, 0.08]
+tol = 0.0003
+
+[[checks]]
+type = "bbox"
+label = "bbox_product_5"
+object = "Product_5"
+min = [-0.135, -0.02, 0]
+max = [-0.1, 0.02, 0.08]
+tol = 0.0003
+
+[[checks]]
+type = "bbox"
+label = "bbox_product_7"
+object = "Product_7"
+min = [-0.02, -0.135, 0]
+max = [0.02, -0.1, 0.08]
+tol = 0.0003
+
+# pi * 60^2 * 100
+[[checks]]
+type = "volume"
+label = "volume_plinth"
+object = "Plinth"
+mm3 = 1130973
+rel_tol = 0.01
+
+# (pi * 20^2 - segment) * 80, segment = 20^2 * acos(15/20) - 15 * sqrt(20^2 - 15^2)
+[[checks]]
+type = "volume"
+label = "volume_product_1"
+object = "Product_1"
+mm3 = 93278
+rel_tol = 0.01
+
+# same as Product_1
+[[checks]]
+type = "volume"
+label = "volume_product_6"
+object = "Product_6"
+mm3 = 93278
+rel_tol = 0.01
+
+[[checks]]
+type = "ray_probe"
+label = "probe_flats"
+tol = 0.0003
+probes = [
+  { name = "flat 1", origin = [0.18, 0.0, 0.04], dir = [-1.0, 0.0, 0], hit = 0.045 },
+  { name = "flat 2", origin = [0.1272792, 0.1272792, 0.04], dir = [-0.7071068, -0.7071068, 0], hit = 0.045 },
+  { name = "flat 3", origin = [0.0, 0.18, 0.04], dir = [0.0, -1.0, 0], hit = 0.045 },
+  { name = "flat 4", origin = [-0.1272792, 0.1272792, 0.04], dir = [0.7071068, -0.7071068, 0], hit = 0.045 },
+  { name = "flat 5", origin = [-0.18, 0.0, 0.04], dir = [1.0, 0.0, 0], hit = 0.045 },
+  { name = "flat 6", origin = [-0.1272792, -0.1272792, 0.04], dir = [0.7071068, 0.7071068, 0], hit = 0.045 },
+  { name = "flat 7", origin = [0.0, -0.18, 0.04], dir = [0.0, 1.0, 0], hit = 0.045 },
+  { name = "flat 8", origin = [0.1272792, -0.1272792, 0.04], dir = [-0.7071068, 0.7071068, 0], hit = 0.045 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_sides"
+tol = 0.0003
+probes = [
+  { name = "side 1", origin = [0.12, 0.06, 0.04], dir = [0.0, -1.0, 0], hit = 0.04 },
+  { name = "side 2", origin = [0.0424264, 0.1272792, 0.04], dir = [0.7071068, -0.7071068, 0], hit = 0.04 },
+  { name = "side 3", origin = [-0.06, 0.12, 0.04], dir = [1.0, 0.0, 0], hit = 0.04 },
+  { name = "side 4", origin = [-0.1272792, 0.0424264, 0.04], dir = [0.7071068, 0.7071068, 0], hit = 0.04 },
+  { name = "side 5", origin = [-0.12, -0.06, 0.04], dir = [0.0, 1.0, 0], hit = 0.04 },
+  { name = "side 6", origin = [-0.0424264, -0.1272792, 0.04], dir = [-0.7071068, 0.7071068, 0], hit = 0.04 },
+  { name = "side 7", origin = [0.06, -0.12, 0.04], dir = [-1.0, 0.0, 0], hit = 0.04 },
+  { name = "side 8", origin = [0.1272792, -0.0424264, 0.04], dir = [-0.7071068, -0.7071068, 0], hit = 0.04 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_tops"
+tol = 0.0003
+probes = [
+  { name = "top 1", origin = [0.12, 0.0, 0.2], dir = [0, 0, -1], hit = 0.12 },
+  { name = "top 2", origin = [0.0848528, 0.0848528, 0.2], dir = [0, 0, -1], hit = 0.12 },
+  { name = "top 3", origin = [0.0, 0.12, 0.2], dir = [0, 0, -1], hit = 0.12 },
+  { name = "top 4", origin = [-0.0848528, 0.0848528, 0.2], dir = [0, 0, -1], hit = 0.12 },
+  { name = "top 5", origin = [-0.12, 0.0, 0.2], dir = [0, 0, -1], hit = 0.12 },
+  { name = "top 6", origin = [-0.0848528, -0.0848528, 0.2], dir = [0, 0, -1], hit = 0.12 },
+  { name = "top 7", origin = [0.0, -0.12, 0.2], dir = [0, 0, -1], hit = 0.12 },
+  { name = "top 8", origin = [0.0848528, -0.0848528, 0.2], dir = [0, 0, -1], hit = 0.12 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_plinth"
+tol = 0.0003
+probes = [
+  { name = "plinth top", origin = [0.0, 0.0, 0.2], dir = [0, 0, -1], hit = 0.1 },
+  { name = "plinth side between products 1 and 2", origin = [0.2771639, 0.114805, 0.05], dir = [-0.9238795, -0.3826834, 0], hit = 0.24 },
+]
+
+[variants]
+good = []
+flats_inward = ["bbox_product_1", "bbox_product_3", "bbox_product_5", "bbox_product_7", "probe_flats"]
+flats_all_x = ["bbox_product_3", "bbox_product_5", "bbox_product_7", "probe_flats", "probe_sides"]
+no_flats = ["bbox_product_1", "bbox_product_3", "bbox_product_5", "bbox_product_7", "probe_flats", "volume_product_1", "volume_product_6"]
+wrong_radius = ["bbox_product_1", "bbox_product_3", "bbox_product_5", "bbox_product_7", "probe_flats", "probe_sides"]
+offset_angle = ["bbox_product_1", "bbox_product_3", "bbox_product_5", "bbox_product_7", "probe_flats", "probe_sides", "probe_tops", "probe_plinth"]
+missing_product = ["objects", "probe_flats", "probe_sides", "probe_tops", "transforms_applied", "watertight", "shells", "self_intersection", "topology", "face_budget"]
+short_products = ["bbox_product_1", "bbox_product_3", "bbox_product_5", "bbox_product_7", "probe_tops", "volume_product_1", "volume_product_6"]
+wide_plinth = ["bbox_plinth", "volume_plinth", "probe_plinth"]

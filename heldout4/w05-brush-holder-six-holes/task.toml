@@ -1,0 +1,150 @@
+id = "w05-brush-holder-six-holes"
+title = "Revision: six brush holes instead of four, evenly spaced on the same circle"
+group = "revision"
+starting_scene = "start.py"
+
+prompt = """
+The open Blender scene holds an approved model of a hypothetical product: a makeup-brush holder, a solid turned puck with a rounded top edge, a round well in the middle of its top and a ring of round brush holes around it (mesh object "Holder"). It stands on the ground plane, centred on the world Z axis. Units are metres (1 Blender unit = 1 m). The client has one revision:
+
+- The ring of four brush holes becomes a ring of six, evenly spaced (60 degrees apart) on the same circle as the current holes, with one hole still centred on the +X axis.
+- Every hole keeps exactly its current diameter and depth, with the same flat floor, and still runs straight down from the top face.
+- Any old hole that is not part of the new ring is filled flush with the top face: no trace of it remains.
+- Everything else stays exactly as it is: the puck's diameter and height, the rounded top edge, and the centre well.
+
+The object keeps its name. It stays a single closed (watertight) mesh in one connected piece, with consistent outward normals and no self-intersections, transforms applied (location at the origin, no rotation, scale 1), and at most 20,000 faces. No other mesh objects in the scene.
+
+Mesh hygiene: no duplicate or coincident vertices, no zero-length edges and no zero-area faces. Merge any coincident vertices before you finish.
+
+Tell me when you're done.
+"""
+
+[[checks]]
+type = "objects"
+expected = ["Holder"]
+
+[[checks]]
+type = "transforms_applied"
+objects = ["Holder"]
+
+[[checks]]
+type = "bbox"
+object = "Holder"
+min = [-0.045, -0.045, 0.0]
+max = [0.045, 0.045, 0.05]
+tol = 0.0002
+
+[[checks]]
+type = "watertight"
+objects = ["Holder"]
+
+[[checks]]
+type = "shells"
+objects = ["Holder"]
+
+[[checks]]
+type = "self_intersection"
+objects = ["Holder"]
+
+[[checks]]
+type = "topology"
+objects = ["Holder"]
+
+[[checks]]
+type = "face_budget"
+object = "Holder"
+max = 20000
+
+# pi*45^2*50 - top round 2*pi*(45 - xb)*r^2*(1 - pi/4) [r = 4, spandrel centroid xb = r*(10-3*pi)/(12-3*pi)
+# = 0.8935 from the corner] - centre well pi*10^2*38 - 6 holes pi*8^2*38. One hole is 7640 mm3 = 2.9%,
+# the centre well 4.6%. A 24-segment build of everything loses ~1.2% (the puck's outside dominates), so
+# the tolerance is 1.5% and the rounded edge (0.37%) is left to the probes.
+[[checks]]
+type = "volume"
+object = "Holder"
+mm3 = 259355
+rel_tol = 0.015
+
+# Hole probes fire straight down at the floor and at 7.5 mm (open) / 8.5 mm (solid) from each hole's
+# centre, radially out and in, so any segment count of 24 or more passes (24-gon inradius 7.93 mm).
+[[checks]]
+type = "ray_probe"
+label = "probe_holes"
+tol = 0.0003
+probes = [
+  { name = "hole 0 floor", origin = [0.028, 0.0, 0.06], dir = [0, 0, -1], hit = 0.048 },
+  { name = "hole 0 open 7.5 mm out", origin = [0.0355, 0.0, 0.06], dir = [0, 0, -1], hit = 0.048 },
+  { name = "hole 0 solid 8.5 mm out", origin = [0.0365, 0.0, 0.06], dir = [0, 0, -1], hit = 0.01 },
+  { name = "hole 0 open 7.5 mm in", origin = [0.0205, 0.0, 0.06], dir = [0, 0, -1], hit = 0.048 },
+  { name = "hole 0 solid 8.5 mm in", origin = [0.0195, 0.0, 0.06], dir = [0, 0, -1], hit = 0.01 },
+  { name = "hole 60 floor", origin = [0.014, 0.024249, 0.06], dir = [0, 0, -1], hit = 0.048 },
+  { name = "hole 60 open 7.5 mm out", origin = [0.01775, 0.030744, 0.06], dir = [0, 0, -1], hit = 0.048 },
+  { name = "hole 60 solid 8.5 mm out", origin = [0.01825, 0.03161, 0.06], dir = [0, 0, -1], hit = 0.01 },
+  { name = "hole 60 open 7.5 mm in", origin = [0.01025, 0.017754, 0.06], dir = [0, 0, -1], hit = 0.048 },
+  { name = "hole 60 solid 8.5 mm in", origin = [0.00975, 0.016887, 0.06], dir = [0, 0, -1], hit = 0.01 },
+  { name = "hole 120 floor", origin = [-0.014, 0.024249, 0.06], dir = [0, 0, -1], hit = 0.048 },
+  { name = "hole 120 open 7.5 mm out", origin = [-0.01775, 0.030744, 0.06], dir = [0, 0, -1], hit = 0.048 },
+  { name = "hole 120 solid 8.5 mm out", origin = [-0.01825, 0.03161, 0.06], dir = [0, 0, -1], hit = 0.01 },
+  { name = "hole 120 open 7.5 mm in", origin = [-0.01025, 0.017754, 0.06], dir = [0, 0, -1], hit = 0.048 },
+  { name = "hole 120 solid 8.5 mm in", origin = [-0.00975, 0.016887, 0.06], dir = [0, 0, -1], hit = 0.01 },
+  { name = "hole 180 floor", origin = [-0.028, 0.0, 0.06], dir = [0, 0, -1], hit = 0.048 },
+  { name = "hole 180 open 7.5 mm out", origin = [-0.0355, 0.0, 0.06], dir = [0, 0, -1], hit = 0.048 },
+  { name = "hole 180 solid 8.5 mm out", origin = [-0.0365, 0.0, 0.06], dir = [0, 0, -1], hit = 0.01 },
+  { name = "hole 180 open 7.5 mm in", origin = [-0.0205, 0.0, 0.06], dir = [0, 0, -1], hit = 0.048 },
+  { name = "hole 180 solid 8.5 mm in", origin = [-0.0195, 0.0, 0.06], dir = [0, 0, -1], hit = 0.01 },
+  { name = "hole 240 floor", origin = [-0.014, -0.024249, 0.06], dir = [0, 0, -1], hit = 0.048 },
+  { name = "hole 240 open 7.5 mm out", origin = [-0.01775, -0.030744, 0.06], dir = [0, 0, -1], hit = 0.048 },
+  { name = "hole 240 solid 8.5 mm out", origin = [-0.01825, -0.03161, 0.06], dir = [0, 0, -1], hit = 0.01 },
+  { name = "hole 240 open 7.5 mm in", origin = [-0.01025, -0.017754, 0.06], dir = [0, 0, -1], hit = 0.048 },
+  { name = "hole 240 solid 8.5 mm in", origin = [-0.00975, -0.016887, 0.06], dir = [0, 0, -1], hit = 0.01 },
+  { name = "hole 300 floor", origin = [0.014, -0.024249, 0.06], dir = [0, 0, -1], hit = 0.048 },
+  { name = "hole 300 open 7.5 mm out", origin = [0.01775, -0.030744, 0.06], dir = [0, 0, -1], hit = 0.048 },
+  { name = "hole 300 solid 8.5 mm out", origin = [0.01825, -0.03161, 0.06], dir = [0, 0, -1], hit = 0.01 },
+  { name = "hole 300 open 7.5 mm in", origin = [0.01025, -0.017754, 0.06], dir = [0, 0, -1], hit = 0.048 },
+  { name = "hole 300 solid 8.5 mm in", origin = [0.00975, -0.016887, 0.06], dir = [0, 0, -1], hit = 0.01 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_filled"
+tol = 0.0003
+probes = [
+  { name = "old hole 90 filled at its centre", origin = [0.0, 0.028, 0.06], dir = [0, 0, -1], hit = 0.01 },
+  { name = "old hole 90 filled 6 mm out", origin = [0.0, 0.034, 0.06], dir = [0, 0, -1], hit = 0.01 },
+  { name = "old hole 90 filled 6 mm in", origin = [0.0, 0.022, 0.06], dir = [0, 0, -1], hit = 0.01 },
+  { name = "old hole 270 filled at its centre", origin = [0.0, -0.028, 0.06], dir = [0, 0, -1], hit = 0.01 },
+  { name = "old hole 270 filled 6 mm out", origin = [0.0, -0.034, 0.06], dir = [0, 0, -1], hit = 0.01 },
+  { name = "old hole 270 filled 6 mm in", origin = [0.0, -0.022, 0.06], dir = [0, 0, -1], hit = 0.01 },
+]
+
+# The round probe aims along the 45-degree normal through the round's centre line (r 41, z 46) on
+# the +Y axis, where every lathe of 4k segments (the 24-segment build included) has a vertex column.
+[[checks]]
+type = "ray_probe"
+label = "probe_body"
+tol = 0.0003
+probes = [
+  { name = "top flat between holes", origin = [0.024249, 0.014, 0.06], dir = [0, 0, -1], hit = 0.01 },
+  { name = "top flat at r 40.5 on -X", origin = [-0.0405, 0.0, 0.06], dir = [0, 0, -1], hit = 0.01 },
+  { name = "side wall +X", origin = [0.06, 0.0, 0.025], dir = [-1, 0, 0], hit = 0.015 },
+  { name = "side wall -Y", origin = [0.0, -0.06, 0.025], dir = [0, 1, 0], hit = 0.015 },
+  { name = "underside", origin = [0.005, 0.005, -0.01], dir = [0, 0, 1], hit = 0.01 },
+  { name = "top round at 45 deg, +Y", origin = [0.0, 0.051, 0.056], dir = [0, -1, -1], hit = 0.0101421 },
+  { name = "top round 1 mm in from the edge, +X", origin = [0.044, 0.0, 0.06], dir = [0, 0, -1], hit = 0.0113542 },
+  { name = "centre well floor", origin = [0.0, 0.0, 0.06], dir = [0, 0, -1], hit = 0.048 },
+  { name = "centre well open at r 9.5", origin = [0.0, 0.0095, 0.06], dir = [0, 0, -1], hit = 0.048 },
+  { name = "centre well solid at r 10.5", origin = [0.0, -0.0105, 0.06], dir = [0, 0, -1], hit = 0.01 },
+]
+
+[variants]
+good = []
+coarse = []
+natural = []
+natural_plug = []
+unchanged = ["volume", "probe_holes", "probe_filled"]
+old_left_open = ["volume", "probe_filled"]
+rotated = ["probe_body", "probe_filled", "probe_holes"]
+wrong_circle = ["probe_holes"]
+hole_small = ["volume", "probe_holes"]
+through = ["volume", "probe_holes"]
+centre_lost = ["volume", "probe_body"]
+round_lost = ["probe_body"]

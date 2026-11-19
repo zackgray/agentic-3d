@@ -1,0 +1,146 @@
+id = "h03-perfume-flacon"
+title = "Perfume flacon: chamfered glass body, collar, and cap"
+group = "hard-surface"
+starting_scene = "empty"
+
+prompt = """
+Model a hypothetical product in the open Blender scene: a perfume flacon with its cap on, as two mesh objects. Units are metres (1 Blender unit = 1 m). The flacon stands on the ground plane, centred on the world Z axis, its wide side facing along Y.
+
+Bottle (mesh object "Bottle"), one solid glass piece made of a body and a collar:
+- Body: a rectangular block 50 mm in X by 30 mm in Y (x from -25 mm to +25 mm, y from -15 mm to +15 mm), from a flat underside at z = 0 to a flat top (the shoulder) at z = 70 mm.
+- The four vertical edges of the body are chamfered at 45 degrees, 5 mm along each face: for example the +X+Y corner is cut by a flat face running from (x, y) = (20, 15) mm to (25, 10) mm, the full height of the body. All other body edges are sharp.
+- Collar: a cylinder of radius 8 mm (16 mm diameter) on the Z axis, standing on the shoulder from z = 70 mm to a flat top at z = 80 mm, fused to the body.
+- Neck bore: a centred cylindrical hole of radius 3 mm from the collar top down to a flat bottom at z = 60 mm. The rest of the bottle is solid.
+
+Cap (mesh object "Cap"):
+- A cylinder of outer radius 12 mm on the Z axis, from an open bottom rim at z = 72 mm to a flat top at z = 95 mm.
+- It fits over the collar: its bore is a cylinder of radius 8.4 mm from the bottom rim up to a flat ceiling at z = 80.4 mm. That leaves a 0.4 mm gap all round the collar and above it, and a 2 mm gap between the cap rim and the shoulder. All edges are sharp.
+
+Both objects:
+- Each is a single closed (watertight) mesh in one connected piece, with consistent outward normals and no self-intersections. Curved surfaces are smooth enough for close-up product renders.
+- The bottle and cap do not touch or intersect.
+- Transforms applied: location at the origin, no rotation, scale 1, so the mesh data holds world coordinates.
+- At most 20,000 faces each.
+- No other mesh objects in the scene.
+
+Mesh hygiene: no duplicate or coincident vertices, no zero-length edges and no zero-area faces. Merge any coincident vertices before you finish.
+
+Tell me when you're done.
+"""
+
+[[checks]]
+type = "objects"
+expected = ["Bottle", "Cap"]
+
+[[checks]]
+type = "transforms_applied"
+objects = ["Bottle", "Cap"]
+
+[[checks]]
+type = "bbox"
+label = "bbox_bottle"
+object = "Bottle"
+min = [-0.025, -0.015, 0.0]
+max = [0.025, 0.015, 0.08]
+tol = 0.0001
+
+[[checks]]
+type = "bbox"
+label = "bbox_cap"
+object = "Cap"
+min = [-0.012, -0.012, 0.072]
+max = [0.012, 0.012, 0.095]
+tol = 0.0001
+
+[[checks]]
+type = "watertight"
+objects = ["Bottle", "Cap"]
+
+[[checks]]
+type = "shells"
+objects = ["Bottle", "Cap"]
+
+[[checks]]
+type = "self_intersection"
+objects = ["Bottle", "Cap"]
+
+[[checks]]
+type = "topology"
+objects = ["Bottle", "Cap"]
+
+[[checks]]
+type = "face_budget"
+objects = ["Bottle", "Cap"]
+max = 20000
+
+[[checks]]
+type = "no_overlap"
+a = "Bottle"
+b = "Cap"
+
+# body (50 * 30 - 4 * 5 * 5 / 2) * 70 + collar pi * 8^2 * 10 - bore pi * 3^2 * 20
+[[checks]]
+type = "volume"
+label = "volume_bottle"
+object = "Bottle"
+mm3 = 102945
+rel_tol = 0.012
+
+# pi * 12^2 * 23 - pi * 8.4^2 * 8.4
+[[checks]]
+type = "volume"
+label = "volume_cap"
+object = "Cap"
+mm3 = 8543
+rel_tol = 0.015
+
+# chamfer face x + y = 35 mm: from (40, 30) along (-1, -1) it lies 35 / sqrt(2) away
+[[checks]]
+type = "ray_probe"
+label = "probe_chamfers"
+objects = ["Bottle"]
+tol = 0.0003
+probes = [
+  { name = "chamfer +X+Y", origin = [0.04, 0.03, 0.035], dir = [-1, -1, 0], hit = 0.024749 },
+  { name = "chamfer -X+Y", origin = [-0.04, 0.03, 0.035], dir = [1, -1, 0], hit = 0.024749 },
+  { name = "chamfer -X-Y", origin = [-0.04, -0.03, 0.01], dir = [1, 1, 0], hit = 0.024749 },
+  { name = "chamfer +X-Y", origin = [0.04, -0.03, 0.06], dir = [-1, 1, 0], hit = 0.024749 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_bottle"
+objects = ["Bottle"]
+tol = 0.0003
+probes = [
+  { name = "body face +X", origin = [0.04, 0.0, 0.035], dir = [-1, 0, 0], hit = 0.015 },
+  { name = "body face -Y", origin = [0.0, -0.04, 0.035], dir = [0, 1, 0], hit = 0.025 },
+  { name = "shoulder", origin = [0.015, 0.0, 0.12], dir = [0, 0, -1], hit = 0.05 },
+  { name = "collar wall +Y", origin = [0.0, 0.02, 0.075], dir = [0, -1, 0], hit = 0.012 },
+  { name = "collar top", origin = [0.0055, 0.0, 0.12], dir = [0, 0, -1], hit = 0.04 },
+  { name = "neck bore floor", origin = [0.0, 0.0, 0.12], dir = [0, 0, -1], hit = 0.06 },
+  { name = "neck bore wall", origin = [0.0, 0.0, 0.065], dir = [1, 0, 0], hit = 0.003 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_cap"
+objects = ["Cap"]
+tol = 0.0003
+probes = [
+  { name = "cap outer wall", origin = [0.03, 0.0, 0.085], dir = [-1, 0, 0], hit = 0.018 },
+  { name = "cap top", origin = [0.0, 0.0, 0.11], dir = [0, 0, -1], hit = 0.015 },
+  { name = "cap bore ceiling", origin = [0.0, 0.0, 0.05], dir = [0, 0, 1], hit = 0.0304 },
+  { name = "cap bore wall", origin = [0.0, 0.0, 0.076], dir = [0, 1, 0], hit = 0.0084 },
+  { name = "cap rim", origin = [0.010, 0.0, 0.05], dir = [0, 0, 1], hit = 0.022 },
+]
+
+[variants]
+good = []
+no_chamfer = ["probe_chamfers", "volume_bottle"]
+round_edges = ["probe_chamfers", "volume_bottle"]
+no_neck_bore = ["probe_bottle"]
+collar_floating = ["shells"]
+cap_tight = ["no_overlap", "probe_cap", "volume_cap"]
+solid_cap = ["no_overlap", "probe_cap", "volume_cap"]
+cap_on_shoulder = ["bbox_cap", "no_overlap", "probe_cap", "volume_cap"]

@@ -1,0 +1,211 @@
+id = "y04-spice-rack"
+title = "Two-tier spice rack with four jars, each clear of its tier"
+group = "layout"
+starting_scene = "empty"
+
+prompt = """
+Lay out a product shot in the open Blender scene: a two-tier stepped spice rack with four identical hypothetical spice jars on it, as five mesh objects. Units are metres (1 Blender unit = 1 m). The rack stands on the ground plane, centred on the world Z axis in X; the front of the scene faces -Y.
+
+Rack (mesh object "Rack"), one solid stepped block, all edges sharp, its sides parallel to the world axes:
+- Front tier: x from -90 mm to +90 mm, y from -45 mm to 0, from the ground (z = 0) to a flat top at z = 25 mm.
+- Back tier: x from -90 mm to +90 mm, y from 0 to +45 mm, from the ground to a flat top at z = 60 mm.
+- The two tiers are one fused piece: seen from the side (along X) the rack's profile is an L, with a vertical face at y = 0 between z = 25 mm and z = 60 mm.
+
+Jars (mesh objects "Jar_FL", "Jar_FR", "Jar_BL" and "Jar_BR"), four identical closed cylinders, axes vertical:
+- Each is 36 mm in diameter and 72 mm tall, with a flat bottom, a flat top and sharp edges.
+- Every jar stands on its tier with its bottom 0.4 mm above the tier top, so no jar touches the rack.
+- Front tier, axes on the line y = -22.5 mm, bottoms at z = 25.4 mm: "Jar_FL" with its axis at x = -50 mm and "Jar_FR" at x = +50 mm.
+- Back tier, axes on the line y = +22.5 mm, bottoms at z = 60.4 mm: "Jar_BL" with its axis at x = -25 mm and "Jar_BR" at x = +25 mm (a 14 mm gap between the two back jars).
+
+Every object:
+- A single closed (watertight) mesh, one connected piece, with consistent outward normals and no self-intersections. No two objects touch or intersect.
+- Transforms applied: location at the origin, no rotation, scale 1, so the mesh data holds world coordinates.
+- At most 5,000 faces each.
+- No other mesh objects in the scene.
+
+Mesh hygiene: no duplicate or coincident vertices, no zero-length edges and no zero-area faces. Merge any coincident vertices before you finish.
+
+Tell me when you're done.
+"""
+
+[[checks]]
+type = "objects"
+expected = ["Jar_BL", "Jar_BR", "Jar_FL", "Jar_FR", "Rack"]
+
+[[checks]]
+type = "transforms_applied"
+objects = ["Jar_BL", "Jar_BR", "Jar_FL", "Jar_FR", "Rack"]
+
+[[checks]]
+type = "watertight"
+objects = ["Jar_BL", "Jar_BR", "Jar_FL", "Jar_FR", "Rack"]
+
+[[checks]]
+type = "shells"
+objects = ["Jar_BL", "Jar_BR", "Jar_FL", "Jar_FR", "Rack"]
+
+[[checks]]
+type = "self_intersection"
+objects = ["Jar_BL", "Jar_BR", "Jar_FL", "Jar_FR", "Rack"]
+
+[[checks]]
+type = "topology"
+objects = ["Jar_BL", "Jar_BR", "Jar_FL", "Jar_FR", "Rack"]
+
+[[checks]]
+type = "face_budget"
+objects = ["Jar_BL", "Jar_BR", "Jar_FL", "Jar_FR", "Rack"]
+max = 5000
+
+[[checks]]
+type = "bbox"
+label = "bbox_rack"
+object = "Rack"
+min = [-0.09, -0.045, 0.0]
+max = [0.09, 0.045, 0.06]
+tol = 0.0003
+
+[[checks]]
+type = "bbox"
+label = "bbox_fl"
+object = "Jar_FL"
+min = [-0.068, -0.0405, 0.0254]
+max = [-0.032, -0.0045, 0.0974]
+tol = 0.0003
+
+[[checks]]
+type = "bbox"
+label = "bbox_fr"
+object = "Jar_FR"
+min = [0.032, -0.0405, 0.0254]
+max = [0.068, -0.0045, 0.0974]
+tol = 0.0003
+
+[[checks]]
+type = "bbox"
+label = "bbox_bl"
+object = "Jar_BL"
+min = [-0.043, 0.0045, 0.0604]
+max = [-0.007, 0.0405, 0.1324]
+tol = 0.0003
+
+[[checks]]
+type = "bbox"
+label = "bbox_br"
+object = "Jar_BR"
+min = [0.007, 0.0045, 0.0604]
+max = [0.043, 0.0405, 0.1324]
+tol = 0.0003
+
+[[checks]]
+type = "no_overlap"
+label = "no_overlap_rack_fl"
+a = "Rack"
+b = "Jar_FL"
+
+[[checks]]
+type = "no_overlap"
+label = "no_overlap_rack_fr"
+a = "Rack"
+b = "Jar_FR"
+
+[[checks]]
+type = "no_overlap"
+label = "no_overlap_rack_bl"
+a = "Rack"
+b = "Jar_BL"
+
+[[checks]]
+type = "no_overlap"
+label = "no_overlap_rack_br"
+a = "Rack"
+b = "Jar_BR"
+
+[[checks]]
+type = "no_overlap"
+label = "no_overlap_jars_back"
+a = "Jar_BL"
+b = "Jar_BR"
+
+# 180*45*25 + 180*45*60
+[[checks]]
+type = "volume"
+label = "volume_rack"
+object = "Rack"
+mm3 = 688500
+rel_tol = 0.005
+
+# pi*18^2*72
+[[checks]]
+type = "volume"
+label = "volume_fl"
+object = "Jar_FL"
+mm3 = 73287
+rel_tol = 0.01
+
+# pi*18^2*72
+[[checks]]
+type = "volume"
+label = "volume_fr"
+object = "Jar_FR"
+mm3 = 73287
+rel_tol = 0.01
+
+# pi*18^2*72
+[[checks]]
+type = "volume"
+label = "volume_bl"
+object = "Jar_BL"
+mm3 = 73287
+rel_tol = 0.01
+
+# pi*18^2*72
+[[checks]]
+type = "volume"
+label = "volume_br"
+object = "Jar_BR"
+mm3 = 73287
+rel_tol = 0.01
+
+[[checks]]
+type = "ray_probe"
+label = "probe_rack"
+objects = ["Rack"]
+tol = 0.0003
+probes = [
+  { name = "front tier top", origin = [0.0, -0.0225, 0.2], dir = [0, 0, -1], hit = 0.175 },
+  { name = "back tier top", origin = [0.0, 0.0225, 0.2], dir = [0, 0, -1], hit = 0.14 },
+  { name = "front face", origin = [0.0, -0.1, 0.0125], dir = [0, 1, 0], hit = 0.055 },
+  { name = "step face at y=0", origin = [0.0, -0.1, 0.04], dir = [0, 1, 0], hit = 0.1 },
+  { name = "back face", origin = [0.0, 0.1, 0.03], dir = [0, -1, 0], hit = 0.055 },
+  { name = "side +X", origin = [0.15, -0.02, 0.01], dir = [-1, 0, 0], hit = 0.06 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_jars"
+tol = 0.0003
+probes = [
+  { name = "top FL", origin = [-0.05, -0.0225, 0.2], dir = [0, 0, -1], hit = 0.1026, objects = ["Jar_FL"] },
+  { name = "bottom FL", origin = [-0.05, -0.0225, 0.0], dir = [0, 0, 1], hit = 0.0254, objects = ["Jar_FL"] },
+  { name = "side FL", origin = [0.0, -0.0225, 0.06], dir = [-1, 0, 0], hit = 0.032, objects = ["Jar_FL"] },
+  { name = "top FR", origin = [0.05, -0.0225, 0.2], dir = [0, 0, -1], hit = 0.1026, objects = ["Jar_FR"] },
+  { name = "bottom FR", origin = [0.05, -0.0225, 0.0], dir = [0, 0, 1], hit = 0.0254, objects = ["Jar_FR"] },
+  { name = "side FR", origin = [0.0, -0.0225, 0.06], dir = [1, 0, 0], hit = 0.032, objects = ["Jar_FR"] },
+  { name = "top BL", origin = [-0.025, 0.0225, 0.2], dir = [0, 0, -1], hit = 0.0676, objects = ["Jar_BL"] },
+  { name = "bottom BL", origin = [-0.025, 0.0225, 0.0], dir = [0, 0, 1], hit = 0.0604, objects = ["Jar_BL"] },
+  { name = "side BL", origin = [0.0, 0.0225, 0.1], dir = [-1, 0, 0], hit = 0.007, objects = ["Jar_BL"] },
+  { name = "top BR", origin = [0.025, 0.0225, 0.2], dir = [0, 0, -1], hit = 0.0676, objects = ["Jar_BR"] },
+  { name = "bottom BR", origin = [0.025, 0.0225, 0.0], dir = [0, 0, 1], hit = 0.0604, objects = ["Jar_BR"] },
+  { name = "side BR", origin = [0.0, 0.0225, 0.1], dir = [1, 0, 0], hit = 0.007, objects = ["Jar_BR"] },
+]
+
+[variants]
+good = []
+resting = ["bbox_bl", "bbox_br", "bbox_fl", "bbox_fr", "no_overlap_rack_bl", "no_overlap_rack_br", "no_overlap_rack_fl", "no_overlap_rack_fr", "probe_jars"]
+one_tier = ["volume_rack", "probe_rack", "no_overlap_rack_fl", "no_overlap_rack_fr"]
+short_jars = ["bbox_bl", "bbox_br", "bbox_fl", "bbox_fr", "volume_bl", "volume_br", "volume_fl", "volume_fr", "probe_jars"]
+square_jars = ["volume_bl", "volume_br", "volume_fl", "volume_fr"]
+swapped_x = ["bbox_bl", "bbox_br", "bbox_fl", "bbox_fr", "probe_jars"]
+back_pitch = ["bbox_bl", "bbox_br", "no_overlap_jars_back", "probe_jars"]
+back_low = ["bbox_bl", "bbox_br", "no_overlap_rack_bl", "no_overlap_rack_br", "probe_jars"]

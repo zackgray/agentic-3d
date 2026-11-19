@@ -1,0 +1,146 @@
+id = "z05-hub-four-ports"
+title = "Revision: four front ports instead of three, same pitch, re-centred"
+group = "revision"
+starting_scene = "start.py"
+
+prompt = """
+The open Blender scene holds an approved model of a hypothetical product: the solid body of a desktop charging hub, a rounded slab with a row of port recesses in its front face and a round button recess on top (mesh object "Hub"). The front is the face that looks towards -Y. Units are metres (1 Blender unit = 1 m). The client has one revision:
+
+- The row of three port recesses in the front face becomes a row of four.
+- Every port keeps exactly the current recess shape: the same width, height and corner radii, the same depth, and the same height above the ground. Each still opens in the front face and runs straight in along +Y.
+- The centre-to-centre spacing between neighbouring ports stays exactly what it is now. The row of four is centred left to right on the front face (symmetric about the plane x = 0).
+- Any old port opening that is not part of the new row is filled flush with the front face: no trace of it remains.
+- Everything else stays exactly as it is: the body's outline, height and plan corner radii, the rounded top edge, and the button recess on top.
+
+The object keeps its name. It stays a single closed (watertight) mesh in one connected piece, with consistent outward normals and no self-intersections, transforms applied (location at the origin, no rotation, scale 1), and at most 20,000 faces. No other mesh objects in the scene.
+
+Mesh hygiene: no duplicate or coincident vertices, no zero-length edges and no zero-area faces. Merge any coincident vertices before you finish.
+
+Tell me when you're done.
+"""
+
+[[checks]]
+type = "objects"
+expected = ["Hub"]
+
+[[checks]]
+type = "transforms_applied"
+objects = ["Hub"]
+
+[[checks]]
+type = "bbox"
+object = "Hub"
+min = [-0.07, -0.035, 0.0]
+max = [0.07, 0.035, 0.028]
+tol = 0.0002
+
+[[checks]]
+type = "watertight"
+objects = ["Hub"]
+
+[[checks]]
+type = "shells"
+objects = ["Hub"]
+
+[[checks]]
+type = "self_intersection"
+objects = ["Hub"]
+
+[[checks]]
+type = "topology"
+objects = ["Hub"]
+
+[[checks]]
+type = "face_budget"
+object = "Hub"
+max = 20000
+
+# 28*(140*70 - (4-pi)*10^2) - fillet [P*r^2*(1-pi/4) - pi*r^3*(5/3-pi/2), r = 4, P = 2*(140+70) - 8*10 + 2*pi*10]
+# - 4 ports * 15*(14*7 - (4-pi)*1.5^2) - button pi*6^2*1. One port is 1441 mm3 = 0.54%, the fillet
+# 1364 mm3 = 0.52%; a 24-segment build of the corners and button loses ~0.04%.
+[[checks]]
+type = "volume"
+object = "Hub"
+mm3 = 264755
+rel_tol = 0.0025
+
+[[checks]]
+type = "ray_probe"
+label = "probe_ports"
+tol = 0.0003
+probes = [
+  { name = "port x-45 back wall", origin = [-0.045, -0.05, 0.012], dir = [0, 1, 0], hit = 0.03 },
+  { name = "port x-45 open 6.4 mm left", origin = [-0.0514, -0.05, 0.012], dir = [0, 1, 0], hit = 0.03 },
+  { name = "port x-45 open 6.4 mm right", origin = [-0.0386, -0.05, 0.012], dir = [0, 1, 0], hit = 0.03 },
+  { name = "port x-45 solid 7.6 mm left", origin = [-0.0526, -0.05, 0.012], dir = [0, 1, 0], hit = 0.015 },
+  { name = "port x-45 solid 7.6 mm right", origin = [-0.0374, -0.05, 0.012], dir = [0, 1, 0], hit = 0.015 },
+  { name = "port x-15 back wall", origin = [-0.015, -0.05, 0.012], dir = [0, 1, 0], hit = 0.03 },
+  { name = "port x-15 open 6.4 mm left", origin = [-0.0214, -0.05, 0.012], dir = [0, 1, 0], hit = 0.03 },
+  { name = "port x-15 open 6.4 mm right", origin = [-0.0086, -0.05, 0.012], dir = [0, 1, 0], hit = 0.03 },
+  { name = "port x-15 solid 7.6 mm left", origin = [-0.0226, -0.05, 0.012], dir = [0, 1, 0], hit = 0.015 },
+  { name = "port x-15 solid 7.6 mm right", origin = [-0.0074, -0.05, 0.012], dir = [0, 1, 0], hit = 0.015 },
+  { name = "port x+15 back wall", origin = [0.015, -0.05, 0.012], dir = [0, 1, 0], hit = 0.03 },
+  { name = "port x+15 open 6.4 mm left", origin = [0.0086, -0.05, 0.012], dir = [0, 1, 0], hit = 0.03 },
+  { name = "port x+15 open 6.4 mm right", origin = [0.0214, -0.05, 0.012], dir = [0, 1, 0], hit = 0.03 },
+  { name = "port x+15 solid 7.6 mm left", origin = [0.0074, -0.05, 0.012], dir = [0, 1, 0], hit = 0.015 },
+  { name = "port x+15 solid 7.6 mm right", origin = [0.0226, -0.05, 0.012], dir = [0, 1, 0], hit = 0.015 },
+  { name = "port x+45 back wall", origin = [0.045, -0.05, 0.012], dir = [0, 1, 0], hit = 0.03 },
+  { name = "port x+45 open 6.4 mm left", origin = [0.0386, -0.05, 0.012], dir = [0, 1, 0], hit = 0.03 },
+  { name = "port x+45 open 6.4 mm right", origin = [0.0514, -0.05, 0.012], dir = [0, 1, 0], hit = 0.03 },
+  { name = "port x+45 solid 7.6 mm left", origin = [0.0374, -0.05, 0.012], dir = [0, 1, 0], hit = 0.015 },
+  { name = "port x+45 solid 7.6 mm right", origin = [0.0526, -0.05, 0.012], dir = [0, 1, 0], hit = 0.015 },
+  { name = "port x-45 open at z 15.0", origin = [-0.045, -0.05, 0.015], dir = [0, 1, 0], hit = 0.03 },
+  { name = "port x-45 solid at z 16.1", origin = [-0.045, -0.05, 0.0161], dir = [0, 1, 0], hit = 0.015 },
+  { name = "port x-45 open at z 9.0", origin = [-0.045, -0.05, 0.009], dir = [0, 1, 0], hit = 0.03 },
+  { name = "port x-45 solid at z 7.9", origin = [-0.045, -0.05, 0.0079], dir = [0, 1, 0], hit = 0.015 },
+  { name = "port x+45 open at z 15.0", origin = [0.045, -0.05, 0.015], dir = [0, 1, 0], hit = 0.03 },
+  { name = "port x+45 solid at z 16.1", origin = [0.045, -0.05, 0.0161], dir = [0, 1, 0], hit = 0.015 },
+  { name = "port x+45 open at z 9.0", origin = [0.045, -0.05, 0.009], dir = [0, 1, 0], hit = 0.03 },
+  { name = "port x+45 solid at z 7.9", origin = [0.045, -0.05, 0.0079], dir = [0, 1, 0], hit = 0.015 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_old_filled"
+tol = 0.0003
+probes = [
+  { name = "old port x-30 filled", origin = [-0.03, -0.05, 0.012], dir = [0, 1, 0], hit = 0.015 },
+  { name = "old port x0 filled", origin = [0.0, -0.05, 0.012], dir = [0, 1, 0], hit = 0.015 },
+  { name = "old port x+30 filled", origin = [0.03, -0.05, 0.012], dir = [0, 1, 0], hit = 0.015 },
+]
+
+# Fillet probes aim along the 45-degree normal through the fillet's centre line (x = 66, z = 24 on
+# the +X side), so a different segment count changes the hit by < 0.04 mm.
+[[checks]]
+type = "ray_probe"
+label = "probe_body"
+tol = 0.0003
+probes = [
+  { name = "top at centre", origin = [0.0, 0.0, 0.04], dir = [0, 0, -1], hit = 0.012 },
+  { name = "underside", origin = [0.02, 0.0, -0.01], dir = [0, 0, 1], hit = 0.01 },
+  { name = "outer wall +X", origin = [0.08, 0.0, 0.012], dir = [-1, 0, 0], hit = 0.01 },
+  { name = "outer wall -X", origin = [-0.08, 0.0, 0.012], dir = [1, 0, 0], hit = 0.01 },
+  { name = "back wall +Y", origin = [0.0, 0.05, 0.012], dir = [0, -1, 0], hit = 0.015 },
+  { name = "front face below the ports", origin = [0.0, -0.05, 0.004], dir = [0, 1, 0], hit = 0.015 },
+  { name = "plan corner radius 10", origin = [0.075, 0.04, 0.012], dir = [-1, -1, 0], hit = 0.0112132 },
+  { name = "top fillet at 45 deg, +X side", origin = [0.08, 0.0, 0.038], dir = [-1, 0, -1], hit = 0.0157990 },
+  { name = "top fillet at 45 deg, -X side", origin = [-0.08, 0.0, 0.038], dir = [1, 0, -1], hit = 0.0157990 },
+  { name = "top fillet at 45 deg, +Y side", origin = [0.0, 0.045, 0.038], dir = [0, -1, -1], hit = 0.0157990 },
+  { name = "top fillet at 45 deg, -Y side", origin = [0.0, -0.045, 0.038], dir = [0, 1, -1], hit = 0.0157990 },
+  { name = "top fillet height 1 mm in from +X", origin = [0.069, 0.0, 0.04], dir = [0, 0, -1], hit = 0.0133542 },
+  { name = "top still flat at x=65.5", origin = [0.0655, 0.0, 0.04], dir = [0, 0, -1], hit = 0.012 },
+  { name = "button recess floor", origin = [0.045, 0.0, 0.04], dir = [0, 0, -1], hit = 0.013 },
+  { name = "button open at r 5.5", origin = [0.0505, 0.0, 0.04], dir = [0, 0, -1], hit = 0.013 },
+  { name = "button solid at r 6.6", origin = [0.0516, 0.0, 0.04], dir = [0, 0, -1], hit = 0.012 },
+]
+
+[variants]
+good = []
+coarse = []
+unchanged = ["volume", "probe_ports", "probe_old_filled"]
+appended = ["probe_ports", "probe_old_filled"]
+squeezed = ["probe_ports", "probe_old_filled"]
+old_left_open = ["volume", "probe_old_filled"]
+port_resized = ["volume", "probe_ports"]
+fillet_lost = ["volume", "probe_body"]
+button_lost = ["probe_body"]

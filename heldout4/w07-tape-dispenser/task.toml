@@ -1,0 +1,248 @@
+id = "w07-tape-dispenser"
+title = "Tape dispenser: chamfered body with cylindrical cradle and blade slot, tape roll, flanged hub with bore, serrated blade"
+group = "multi-step"
+starting_scene = "empty"
+
+prompt = """
+Model a hypothetical product in the open Blender scene: a desk tape dispenser holding a roll of tape, as four separate mesh objects. Units are metres (1 Blender unit = 1 m). The body stands on the ground plane, centred on the world Z axis in X; the front of the dispenser faces -Y. The tape roll's axis is horizontal, along the world X axis at (y, z) = (+5, 48) mm.
+
+Body (mesh object "Body"), one solid part:
+- Block: seen from above, a rectangle 50 mm in X by 115 mm in Y (x from -25 mm to +25 mm, y from -65 mm to +50 mm) whose four vertical corners are rounded with an 8 mm radius, with vertical sides from z = 2 mm up to a flat top face at z = 40 mm.
+- Chamfer: the bottom edge all the way round is a 2 mm by 2 mm 45-degree chamfer, so the flat bottom face at z = 0 is 46 mm by 111 mm with 6 mm corner radii. The top edge is sharp.
+- Cradle: a cylindrical trough cut into the top, radius 36.5 mm, its axis on the tape axis (along X at (y, z) = (+5, 48) mm), running right through the body from x = -25 mm to +25 mm. Its lowest point is at z = 11.5 mm. Its edges are sharp.
+- Blade slot: a rectangular pocket in the top face in front of the cradle, from x = -20.5 mm to +20.5 mm and y = -60.5 mm to -57.5 mm, with vertical walls from the top face down to a flat floor at z = 30 mm.
+
+Tape (mesh object "Tape"), one solid part: a tube (a thick ring) on the tape axis, outer radius 36 mm, bore radius 19 mm, from a flat end face at x = -12 mm to a flat end face at x = +12 mm. All edges are sharp. Its outside clears the cradle by 0.5 mm.
+
+Hub (mesh object "Hub"), one solid part, turned about the tape axis:
+- Core: radius 18.5 mm (0.5 mm inside the tape's bore), from x = -12.5 mm to +12.5 mm.
+- Flanges: two discs of radius 24 mm, one from x = -14 mm to -12.5 mm and one from x = +12.5 mm to +14 mm, fused to the ends of the core. Each clears the tape's end face by 0.5 mm.
+- Bore: a round axle hole 8 mm in diameter on the tape axis, right through from x = -14 mm to +14 mm.
+All edges are sharp.
+
+Blade (mesh object "Blade"), one solid part: a flat plate standing in the blade slot, from x = -20 mm to +20 mm and y = -60 mm to -58 mm (2 mm thick), with a flat bottom at z = 30.5 mm (0.5 mm above the slot floor, clearing the slot walls by 0.5 mm all round). Its top edge is serrated: seen from the front it is a zigzag of straight segments through valleys at z = 46 mm at x = -20, -16, -12, -8, -4, 0, +4, +8, +12, +16 and +20 mm and points (peaks) at z = 48 mm at x = -18, -14, -10, -6, -2, +2, +6, +10, +14 and +18 mm. Its ends and faces are flat.
+
+All four objects:
+- Each is a single closed (watertight) mesh in one connected piece, with consistent outward normals and no self-intersections.
+- No two objects touch or intersect.
+- Transforms applied: location at the origin, no rotation, scale 1, so the mesh data holds world coordinates.
+- At most 20,000 faces per object.
+- No other mesh objects in the scene.
+
+Mesh hygiene: no duplicate or coincident vertices, no zero-length edges and no zero-area faces. Merge any coincident vertices before you finish.
+
+Tell me when you're done.
+"""
+
+[[checks]]
+type = "objects"
+expected = ["Blade", "Body", "Hub", "Tape"]
+
+[[checks]]
+type = "transforms_applied"
+objects = ["Blade", "Body", "Hub", "Tape"]
+
+[[checks]]
+type = "bbox"
+label = "bbox_body"
+object = "Body"
+min = [-0.025, -0.065, 0.0]
+max = [0.025, 0.05, 0.04]
+tol = 0.0003
+
+# Radius 36 sets four of the extents, and a 24-segment ring with flats there sits 0.31 mm inside; hence 0.4 mm.
+[[checks]]
+type = "bbox"
+label = "bbox_tape"
+object = "Tape"
+min = [-0.012, -0.031, 0.012]
+max = [0.012, 0.041, 0.084]
+tol = 0.0004
+
+[[checks]]
+type = "bbox"
+label = "bbox_hub"
+object = "Hub"
+min = [-0.014, -0.019, 0.024]
+max = [0.014, 0.029, 0.072]
+tol = 0.0003
+
+[[checks]]
+type = "bbox"
+label = "bbox_blade"
+object = "Blade"
+min = [-0.02, -0.06, 0.0305]
+max = [0.02, -0.058, 0.048]
+tol = 0.0003
+
+[[checks]]
+type = "watertight"
+objects = ["Blade", "Body", "Hub", "Tape"]
+
+[[checks]]
+type = "shells"
+objects = ["Blade", "Body", "Hub", "Tape"]
+
+[[checks]]
+type = "self_intersection"
+objects = ["Blade", "Body", "Hub", "Tape"]
+
+[[checks]]
+type = "topology"
+objects = ["Blade", "Body", "Hub", "Tape"]
+
+[[checks]]
+type = "face_budget"
+objects = ["Blade", "Body", "Hub", "Tape"]
+max = 20000
+
+[[checks]]
+type = "no_overlap"
+label = "no_overlap_body_tape"
+a = "Body"
+b = "Tape"
+
+[[checks]]
+type = "no_overlap"
+label = "no_overlap_tape_hub"
+a = "Tape"
+b = "Hub"
+
+[[checks]]
+type = "no_overlap"
+label = "no_overlap_body_blade"
+a = "Body"
+b = "Blade"
+
+# A(W,D,r) = W*D - (4-pi)*r^2. 38*A(50,115,8) + chamfer band 2/6*(A(46,111,6) + 4*A(48,113,7) + A(50,115,8))
+# - cradle 50 * circular segment (r 36.5, chord 8 below the axis: r^2*acos(8/r) - 8*sqrt(r^2 - 8^2)) - slot 41*3*10
+[[checks]]
+type = "volume"
+label = "volume_body"
+object = "Body"
+mm3 = 150278
+rel_tol = 0.01
+
+# pi*(36^2 - 19^2)*24; round, so 2%
+[[checks]]
+type = "volume"
+label = "volume_tape"
+object = "Tape"
+mm3 = 70497
+rel_tol = 0.02
+
+# pi*18.5^2*25 + 2*pi*24^2*1.5 - bore pi*4^2*28; round, so 2%
+[[checks]]
+type = "volume"
+label = "volume_hub"
+object = "Hub"
+mm3 = 30901
+rel_tol = 0.02
+
+# 40*2*15.5 below the valleys + 10 teeth * (4*2/2)*2
+[[checks]]
+type = "volume"
+label = "volume_blade"
+object = "Blade"
+mm3 = 1320
+rel_tol = 0.01
+
+[[checks]]
+type = "ray_probe"
+label = "probe_body"
+objects = ["Body"]
+tol = 0.0003
+probes = [
+  { name = "end face +X", origin = [0.06, -0.045, 0.02], dir = [-1, 0, 0], hit = 0.035 },
+  { name = "front face", origin = [0.0, -0.1, 0.02], dir = [0, 1, 0], hit = 0.035 },
+  { name = "back face", origin = [0.0, 0.1, 0.02], dir = [0, -1, 0], hit = 0.05 },
+  { name = "plan corner radius 8", origin = [0.03, 0.055, 0.02], dir = [-1, -1, 0], hit = 0.010385 },
+  { name = "chamfer from the side at z 1", origin = [0.06, -0.045, 0.001], dir = [-1, 0, 0], hit = 0.036 },
+  { name = "chamfer from below at x 24.5", origin = [0.0245, -0.045, -0.05], dir = [0, 0, 1], hit = 0.0515 },
+  { name = "bottom face", origin = [0.0, -0.045, -0.05], dir = [0, 0, 1], hit = 0.05 },
+  { name = "top face in front", origin = [0.0, -0.045, 0.1], dir = [0, 0, -1], hit = 0.06 },
+  { name = "top face behind the cradle", origin = [0.0, 0.046, 0.1], dir = [0, 0, -1], hit = 0.06 },
+  { name = "blade slot floor", origin = [0.0, -0.059, 0.1], dir = [0, 0, -1], hit = 0.07 },
+  { name = "blade slot end wall", origin = [0.0, -0.059, 0.035], dir = [1, 0, 0], hit = 0.0205 },
+]
+
+# Radial probes from the tape axis, so faceting shows as at most the 24-segment sagitta
+# (36.5 * (1 - cos 7.5 deg) = 0.31 mm); hence 0.4 mm.
+[[checks]]
+type = "ray_probe"
+label = "probe_cradle"
+objects = ["Body"]
+tol = 0.0004
+probes = [
+  { name = "cradle straight down", origin = [0.0, 0.005, 0.048], dir = [0, 0, -1], hit = 0.0365 },
+  { name = "cradle 45 deg back", origin = [0.01, 0.005, 0.048], dir = [0, 0.707107, -0.707107], hit = 0.0365 },
+  { name = "cradle 45 deg front", origin = [-0.01, 0.005, 0.048], dir = [0, -0.707107, -0.707107], hit = 0.0365 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_tape"
+objects = ["Tape"]
+tol = 0.0004
+probes = [
+  { name = "outside, top", origin = [0.0, 0.005, 0.2], dir = [0, 0, -1], hit = 0.116 },
+  { name = "outside, front", origin = [0.005, -0.1, 0.048], dir = [0, 1, 0], hit = 0.069 },
+  { name = "bore from the axis, down", origin = [0.0, 0.005, 0.048], dir = [0, 0, -1], hit = 0.019 },
+  { name = "bore from the axis, back", origin = [0.0, 0.005, 0.048], dir = [0, 1, 0], hit = 0.019 },
+  { name = "end face +X", origin = [0.1, 0.033, 0.048], dir = [-1, 0, 0], hit = 0.088 },
+  { name = "end face -X", origin = [-0.1, 0.005, 0.076], dir = [1, 0, 0], hit = 0.088 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_hub"
+objects = ["Hub"]
+tol = 0.0003
+probes = [
+  { name = "flange outer face +X", origin = [0.1, 0.026, 0.048], dir = [-1, 0, 0], hit = 0.086 },
+  { name = "flange outer face -X", origin = [-0.1, 0.005, 0.027], dir = [1, 0, 0], hit = 0.086 },
+  { name = "flange rim, top", origin = [0.01325, 0.005, 0.1], dir = [0, 0, -1], hit = 0.028 },
+  { name = "core, top", origin = [0.0, 0.005, 0.1], dir = [0, 0, -1], hit = 0.0335 },
+  { name = "flange inner face", origin = [0.0, 0.026, 0.048], dir = [1, 0, 0], hit = 0.0125 },
+  { name = "bore from the axis, up", origin = [0.0, 0.005, 0.048], dir = [0, 0, 1], hit = 0.004 },
+  { name = "bore from the axis, front", origin = [0.0, 0.005, 0.048], dir = [0, -1, 0], hit = 0.004 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_blade"
+objects = ["Blade"]
+tol = 0.0003
+probes = [
+  { name = "tooth flank at x -18.5", origin = [-0.0185, -0.059, 0.1], dir = [0, 0, -1], hit = 0.0525 },
+  { name = "tooth flank at x 0.5", origin = [0.0005, -0.059, 0.1], dir = [0, 0, -1], hit = 0.0535 },
+  { name = "tooth flank at x 17.5", origin = [0.0175, -0.059, 0.1], dir = [0, 0, -1], hit = 0.0525 },
+  { name = "tooth flank at x -9", origin = [-0.009, -0.059, 0.1], dir = [0, 0, -1], hit = 0.053 },
+  { name = "front face", origin = [0.0, -0.1, 0.04], dir = [0, 1, 0], hit = 0.04 },
+  { name = "end face +X", origin = [0.05, -0.059, 0.04], dir = [-1, 0, 0], hit = 0.03 },
+  { name = "bottom", origin = [0.0, -0.059, 0.0], dir = [0, 0, 1], hit = 0.0305 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_fit"
+tol = 0.0003
+probes = [
+  { name = "under the blade, to the slot end wall", origin = [0.0, -0.059, 0.03025], dir = [1, 0, 0], hit = 0.0205 },
+  { name = "beside the blade end, to the slot floor", origin = [0.02025, -0.059, 0.1], dir = [0, 0, -1], hit = 0.07 },
+  { name = "down the gap between tape end and flange, to the hub core", origin = [0.01225, 0.005, 0.2], dir = [0, 0, -1], hit = 0.1335 },
+]
+
+[variants]
+good = []
+coarse24 = []
+no_chamfer = ["probe_body"]
+cradle_tight = ["volume_body", "no_overlap_body_tape", "probe_cradle"]
+roll_low = ["bbox_tape", "bbox_hub", "no_overlap_body_tape", "probe_tape", "probe_hub", "probe_fit"]
+tape_no_bore = ["volume_tape", "no_overlap_tape_hub", "probe_tape"]
+tape_wide = ["bbox_tape", "volume_tape", "no_overlap_tape_hub", "probe_tape", "probe_fit"]
+hub_no_bore = ["volume_hub", "probe_hub"]
+hub_no_flanges = ["bbox_hub", "volume_hub", "probe_hub"]
+blade_no_teeth = ["volume_blade", "probe_blade"]
+teeth_shifted = ["probe_blade"]
+blade_on_floor = ["bbox_blade", "volume_blade", "no_overlap_body_blade", "probe_blade", "probe_fit"]

@@ -1,0 +1,149 @@
+id = "h06-cream-tube"
+title = "Cream tube: round-to-flat body, crimped end, flip cap"
+group = "hard-surface"
+starting_scene = "empty"
+
+prompt = """
+Model a hypothetical product in the open Blender scene: a squeeze tube of hand cream standing on its cap, as two mesh objects stacked on the world Z axis. Units are metres (1 Blender unit = 1 m). The cap stands on the ground plane and both parts are centred on the world Z axis.
+
+Cap (mesh object "Cap"), a closed flip cap modelled as one solid:
+- A solid cylinder of radius 15 mm (30 mm diameter) from a flat underside at z = 0 to a flat top at z = 20 mm. Its edges are sharp.
+- Lid split line: a groove round the outside, 1 mm tall (from z = 14 mm to z = 15 mm) and 0.8 mm deep, so the cylinder's radius there is 14.2 mm. The groove's edges are sharp.
+
+Tube (mesh object "Tube"), one solid piece (no interior cavity) in three sections, bottom to top:
+- Round section: a cylinder of radius 15 mm from a flat bottom at z = 20.4 mm (a 0.4 mm gap above the cap) up to z = 40 mm.
+- Transition: from z = 40 mm to z = 128 mm every horizontal cross-section is an ellipse centred on the Z axis, whose semi-axis along X grows linearly from 15 mm (at z = 40 mm) to 23 mm (at z = 128 mm) while its semi-axis along Y shrinks linearly from 15 mm to 2 mm. At z = 40 mm it meets the round section exactly; the tube flattens in Y and widens in X as it rises.
+- Crimp: a flat rectangular band from z = 128 mm to a flat top at z = 140 mm, 48 mm in X (x from -24 mm to +24 mm) by 4 mm in Y (y from -2 mm to +2 mm). It sits on the end of the transition (whose end section is the 46 mm by 4 mm ellipse) and is fused to it. Its edges are sharp.
+
+Both objects:
+- Each is a single closed (watertight) mesh in one connected piece, with consistent outward normals and no self-intersections. Curved surfaces are smooth enough for close-up product renders.
+- The cap and tube do not touch or intersect.
+- Transforms applied: location at the origin, no rotation, scale 1, so the mesh data holds world coordinates.
+- At most 20,000 faces each.
+- No other mesh objects in the scene.
+
+Mesh hygiene: no duplicate or coincident vertices, no zero-length edges and no zero-area faces. Merge any coincident vertices before you finish.
+
+Tell me when you're done.
+"""
+
+[[checks]]
+type = "objects"
+expected = ["Cap", "Tube"]
+
+[[checks]]
+type = "transforms_applied"
+objects = ["Cap", "Tube"]
+
+[[checks]]
+type = "bbox"
+label = "bbox_cap"
+object = "Cap"
+min = [-0.015, -0.015, 0.0]
+max = [0.015, 0.015, 0.02]
+tol = 0.0001
+
+[[checks]]
+type = "bbox"
+label = "bbox_tube"
+object = "Tube"
+min = [-0.024, -0.015, 0.0204]
+max = [0.024, 0.015, 0.14]
+tol = 0.0001
+
+[[checks]]
+type = "watertight"
+objects = ["Cap", "Tube"]
+
+[[checks]]
+type = "shells"
+objects = ["Cap", "Tube"]
+
+[[checks]]
+type = "self_intersection"
+objects = ["Cap", "Tube"]
+
+[[checks]]
+type = "topology"
+objects = ["Cap", "Tube"]
+
+[[checks]]
+type = "face_budget"
+objects = ["Cap", "Tube"]
+max = 20000
+
+[[checks]]
+type = "no_overlap"
+a = "Cap"
+b = "Tube"
+
+# round pi * 15^2 * 19.6 + transition 88 * pi * (a0 b0 + (a0 db + b0 da) / 2 + da db / 3) with
+# a0 = b0 = 15, da = 8, db = -13 (area pi a b, a and b linear in z) + crimp 48 * 4 * 12
+[[checks]]
+type = "volume"
+label = "volume_tube"
+object = "Tube"
+mm3 = 58411
+rel_tol = 0.015
+
+# section a(z) = 15 + 8 (z - 40) / 88, b(z) = 15 - 13 (z - 40) / 88; rays from 40 mm out
+[[checks]]
+type = "ray_probe"
+label = "probe_transition"
+objects = ["Tube"]
+tol = 0.0003
+probes = [
+  { name = "z 62: a = 17", origin = [0.04, 0.0, 0.062], dir = [-1, 0, 0], hit = 0.023 },
+  { name = "z 62: b = 11.75", origin = [0.0, 0.04, 0.062], dir = [0, -1, 0], hit = 0.02825 },
+  { name = "z 84: a = 19", origin = [-0.04, 0.0, 0.084], dir = [1, 0, 0], hit = 0.021 },
+  { name = "z 84: b = 8.5", origin = [0.0, -0.04, 0.084], dir = [0, 1, 0], hit = 0.0315 },
+  { name = "z 106: a = 21", origin = [0.04, 0.0, 0.106], dir = [-1, 0, 0], hit = 0.019 },
+  { name = "z 106: b = 5.25", origin = [0.0, 0.04, 0.106], dir = [0, -1, 0], hit = 0.03475 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_round"
+objects = ["Tube"]
+tol = 0.0003
+probes = [
+  { name = "round section +X at z 30", origin = [0.04, 0.0, 0.03], dir = [-1, 0, 0], hit = 0.025 },
+  { name = "round section -Y at z 38", origin = [0.0, -0.04, 0.038], dir = [0, 1, 0], hit = 0.025 },
+  { name = "tube bottom", origin = [0.0, 0.0, 0.0], dir = [0, 0, 1], hit = 0.0204 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_crimp"
+objects = ["Tube"]
+tol = 0.0003
+probes = [
+  { name = "crimp top", origin = [0.01, 0.0, 0.16], dir = [0, 0, -1], hit = 0.02 },
+  { name = "crimp end +X", origin = [0.04, 0.0, 0.134], dir = [-1, 0, 0], hit = 0.016 },
+  { name = "crimp face +Y", origin = [0.012, 0.04, 0.134], dir = [0, -1, 0], hit = 0.038 },
+  { name = "crimp face -Y", origin = [-0.012, -0.04, 0.134], dir = [0, 1, 0], hit = 0.038 },
+  { name = "crimp underside overhang", origin = [0.0235, 0.0, 0.11], dir = [0, 0, 1], hit = 0.018 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_cap"
+objects = ["Cap"]
+tol = 0.0003
+probes = [
+  { name = "groove floor +X", origin = [0.03, 0.0, 0.0145], dir = [-1, 0, 0], hit = 0.0158 },
+  { name = "groove floor -Y", origin = [0.0, -0.03, 0.0145], dir = [0, 1, 0], hit = 0.0158 },
+  { name = "cap wall below groove", origin = [0.03, 0.0, 0.007], dir = [-1, 0, 0], hit = 0.015 },
+  { name = "cap wall above groove", origin = [0.03, 0.0, 0.0175], dir = [-1, 0, 0], hit = 0.015 },
+  { name = "cap top", origin = [0.0, 0.0, 0.03], dir = [0, 0, -1], hit = 0.01 },
+]
+
+[variants]
+good = []
+crimp_wrong_axis = ["bbox_tube", "probe_transition", "probe_crimp"]
+no_crimp = ["bbox_tube", "probe_crimp", "volume_tube"]
+no_round_section = ["probe_round", "probe_transition", "volume_tube"]
+eased_transition = ["probe_transition", "volume_tube"]
+no_groove = ["probe_cap"]
+tube_on_cap = ["bbox_tube", "no_overlap", "probe_round"]
+thin_crimp = ["probe_crimp"]

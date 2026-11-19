@@ -1,0 +1,140 @@
+id = "z01-tablet-stand"
+title = "Tablet stand: filleted rounded block with a leaning slot and foot recesses"
+group = "hard-surface"
+starting_scene = "empty"
+
+prompt = """
+Model a hypothetical product part in the open Blender scene: a desk stand for a tablet, a solid block with a slot the tablet leans back in, as one mesh object named "Stand". Units are metres (1 Blender unit = 1 m). The stand sits on the ground plane, centred on the world Z axis. The front of the stand faces -Y; the tablet leans back towards +Y.
+
+- Block: 80 mm in X by 70 mm in Y (x from -40 mm to +40 mm, y from -35 mm to +35 mm), from its flat underside at z = 0 to a flat top at z = 20 mm. The four vertical corners are rounded with an 8 mm radius.
+- Top edge: the whole top outside perimeter edge, where the top meets the side walls, is rounded with a 3 mm radius fillet, tangent to both the top and the side walls and following the rounded vertical corners. All other edges of the block are sharp.
+- Slot: a slot is cut down into the top, running in X from x = -30 mm to x = +30 mm, with flat vertical end walls at x = -30 mm and x = +30 mm. Its front and back walls are flat, parallel, and lean back 15 degrees from vertical: where they meet the top face (z = 20 mm), the front wall is at y = -10 mm and the back wall at y = 0 mm, and going down each wall moves towards -Y by tan(15 degrees) mm per mm of depth. The slot has a flat horizontal floor at z = 8 mm. So at the floor the front wall is at y = -13.215 mm and the back wall at y = -3.215 mm. The slot edges are sharp.
+- Foot recesses: four round recesses in the underside for rubber feet, each 10 mm in diameter and 1.5 mm deep (flat bottom at z = 1.5 mm), centred at (x, y) = (+30, +25), (-30, +25), (-30, -25) and (+30, -25) mm.
+
+The object:
+- A single closed (watertight) mesh, one connected piece, with consistent outward normals and no self-intersections.
+- Transforms applied: location at the origin, no rotation, scale 1, so the mesh data holds world coordinates.
+- At most 20,000 faces.
+- No other mesh objects in the scene.
+
+Mesh hygiene: no duplicate or coincident vertices, no zero-length edges and no zero-area faces. Merge any coincident vertices before you finish.
+
+Tell me when you're done.
+"""
+
+[[checks]]
+type = "objects"
+expected = ["Stand"]
+
+[[checks]]
+type = "transforms_applied"
+objects = ["Stand"]
+
+[[checks]]
+type = "bbox"
+object = "Stand"
+min = [-0.04, -0.035, 0.0]
+max = [0.04, 0.035, 0.02]
+tol = 0.0005
+
+[[checks]]
+type = "watertight"
+objects = ["Stand"]
+
+[[checks]]
+type = "shells"
+objects = ["Stand"]
+
+[[checks]]
+type = "self_intersection"
+objects = ["Stand"]
+
+[[checks]]
+type = "topology"
+objects = ["Stand"]
+
+[[checks]]
+type = "face_budget"
+object = "Stand"
+max = 20000
+
+# block 20*(80*70 - (4-pi)*8^2) - fillet P*r^2*(1-pi/4) + pi*r^3*(5/3-pi/2) with r = 3 and
+# P = 2*(80+70) - 8*8 + 2*pi*8 (as r03) - slot 10*12*60 (parallelogram: horizontal width x height)
+# - recesses 4*pi*5^2*1.5 = 110901 - 553 + 8 - 7200 - 471 = 102685. A 24-segment build of the
+# corners and recesses, or a 3-segment fillet, moves this by under 0.2%.
+[[checks]]
+type = "volume"
+object = "Stand"
+mm3 = 102685
+rel_tol = 0.01
+
+[[checks]]
+type = "ray_probe"
+label = "probe_body"
+tol = 0.0003
+probes = [
+  { name = "outer wall +X", origin = [0.06, 0.0, 0.01], dir = [-1, 0, 0], hit = 0.02 },
+  { name = "outer wall -Y", origin = [0.0, -0.05, 0.01], dir = [0, 1, 0], hit = 0.015 },
+  { name = "outer wall +Y", origin = [0.0, 0.05, 0.01], dir = [0, -1, 0], hit = 0.015 },
+  { name = "vertical corner radius 8", origin = [0.042, 0.037, 0.01], dir = [-1, -1, 0], hit = 0.0061421 },
+  { name = "top behind the slot", origin = [0.0, 0.02, 0.03], dir = [0, 0, -1], hit = 0.01 },
+  { name = "top in front of the slot", origin = [0.0, -0.025, 0.03], dir = [0, 0, -1], hit = 0.01 },
+  { name = "underside centre", origin = [0.0, 0.0, -0.01], dir = [0, 0, 1], hit = 0.01 },
+]
+
+# fillet centre line 3 mm in from the side and 3 mm under the top; the 45-degree rays hit the arc
+# at its midpoint (13*sqrt(2) - 3 mm), as r03
+[[checks]]
+type = "ray_probe"
+label = "probe_fillet"
+tol = 0.0003
+probes = [
+  { name = "fillet at 45 deg, +X side", origin = [0.05, 0.02, 0.03], dir = [-1, 0, -1], hit = 0.0153848 },
+  { name = "fillet at 45 deg, -X side", origin = [-0.05, 0.0, 0.03], dir = [1, 0, -1], hit = 0.0153848 },
+  { name = "fillet at 45 deg, -Y side", origin = [0.01, -0.045, 0.03], dir = [0, 1, -1], hit = 0.0153848 },
+  { name = "fillet at 45 deg, +Y side", origin = [-0.01, 0.045, 0.03], dir = [0, -1, -1], hit = 0.0153848 },
+  { name = "fillet height 1 mm in from the +X side", origin = [0.039, 0.02, 0.03], dir = [0, 0, -1], hit = 0.0107639 },
+]
+
+# walls at y = -10 - (20 - z)*tan15 and y = -(20 - z)*tan15; each ray starts midway between them
+[[checks]]
+type = "ray_probe"
+label = "probe_slot"
+tol = 0.0003
+probes = [
+  { name = "back wall at z=19", origin = [0.0, -0.0052679, 0.019], dir = [0, 1, 0], hit = 0.005 },
+  { name = "front wall at z=19", origin = [0.0, -0.0052679, 0.019], dir = [0, -1, 0], hit = 0.005 },
+  { name = "back wall at z=14", origin = [0.0, -0.0066077, 0.014], dir = [0, 1, 0], hit = 0.005 },
+  { name = "front wall at z=14", origin = [0.0, -0.0066077, 0.014], dir = [0, -1, 0], hit = 0.005 },
+  { name = "back wall at z=9", origin = [0.0, -0.0079474, 0.009], dir = [0, 1, 0], hit = 0.005 },
+  { name = "front wall at z=9", origin = [0.0, -0.0079474, 0.009], dir = [0, -1, 0], hit = 0.005 },
+  { name = "floor at z=8", origin = [0.0, -0.0066077, 0.03], dir = [0, 0, -1], hit = 0.022 },
+  { name = "end wall +X", origin = [0.0, -0.0066077, 0.014], dir = [1, 0, 0], hit = 0.03 },
+  { name = "end wall -X", origin = [0.0, -0.0066077, 0.014], dir = [-1, 0, 0], hit = 0.03 },
+  { name = "top beyond the +X end", origin = [0.035, -0.005, 0.03], dir = [0, 0, -1], hit = 0.01 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_feet"
+tol = 0.0003
+probes = [
+  { name = "recess +X+Y", origin = [0.03, 0.025, -0.01], dir = [0, 0, 1], hit = 0.0115 },
+  { name = "recess -X+Y", origin = [-0.03, 0.025, -0.01], dir = [0, 0, 1], hit = 0.0115 },
+  { name = "recess -X-Y", origin = [-0.03, -0.025, -0.01], dir = [0, 0, 1], hit = 0.0115 },
+  { name = "recess +X-Y", origin = [0.03, -0.025, -0.01], dir = [0, 0, 1], hit = 0.0115 },
+  { name = "recess wall +X+Y, inboard side", origin = [0.03, 0.025, 0.0007], dir = [-1, 0, 0], hit = 0.005 },
+]
+
+[variants]
+good = []
+no_fillet = ["probe_fillet"]
+chamfer_edge = ["probe_fillet"]
+small_corners = ["probe_body"]
+no_slot = ["volume", "probe_slot"]
+vertical_slot = ["probe_slot"]
+lean_wrong_way = ["probe_slot"]
+slot_too_deep = ["volume", "probe_slot"]
+slot_full_width = ["volume", "probe_slot"]
+no_recesses = ["probe_feet"]
+recesses_inboard = ["probe_feet"]

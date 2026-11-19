@@ -1,0 +1,99 @@
+id = "y05-board-hang-hole"
+title = "Revision: add a hanging hole through the cutting board"
+group = "revision"
+starting_scene = "start.py"
+
+prompt = """
+The open Blender scene holds an approved model of a hypothetical product: a wooden cutting board (mesh object "Board"). Units are metres (1 Blender unit = 1 m). The client has one revision:
+
+- Add a round hanging hole, 32 mm in diameter, straight through the board from the top face to the bottom face, with its axis vertical (along Z).
+- Put the hole's centre on the board's long centre line, 40 mm in from the end edge on the +X side (measured from that end face to the centre of the hole).
+- Everything else stays exactly as it is: the board's outline, its rounded corners, its thickness and where it sits.
+
+The object keeps its name. It stays a single closed (watertight) mesh in one connected piece, with consistent outward normals and no self-intersections, transforms applied (location at the origin, no rotation, scale 1), and at most 20,000 faces. No other mesh objects in the scene.
+
+Mesh hygiene: no duplicate or coincident vertices, no zero-length edges and no zero-area faces. Merge any coincident vertices before you finish.
+
+Tell me when you're done.
+"""
+
+[[checks]]
+type = "objects"
+expected = ["Board"]
+
+[[checks]]
+type = "transforms_applied"
+objects = ["Board"]
+
+[[checks]]
+type = "bbox"
+object = "Board"
+min = [-0.18, -0.12, 0.0]
+max = [0.18, 0.12, 0.018]
+tol = 0.0002
+
+[[checks]]
+type = "watertight"
+objects = ["Board"]
+
+[[checks]]
+type = "shells"
+objects = ["Board"]
+
+[[checks]]
+type = "self_intersection"
+objects = ["Board"]
+
+[[checks]]
+type = "topology"
+objects = ["Board"]
+
+[[checks]]
+type = "face_budget"
+objects = ["Board"]
+max = 20000
+
+# slab 18*(360*240 - (4-pi)*20^2) - hole pi*16^2*18 = 1549019.5 - 14476.5
+# Tolerance 0.3%: no hole (+0.94%), a 10 mm blind pocket (+0.52%) and sharp corners (+0.40%) must fail.
+[[checks]]
+type = "volume"
+object = "Board"
+mm3 = 1534543
+rel_tol = 0.003
+
+[[checks]]
+type = "ray_probe"
+label = "probe_hole"
+objects = ["Board"]
+tol = 0.0002
+probes = [
+  { name = "hole wall +X, 16 mm radius", origin = [0.14, 0.0, 0.009], dir = [1, 0, 0], hit = 0.016 },
+  { name = "hole wall -X", origin = [0.14, 0.0, 0.009], dir = [-1, 0, 0], hit = 0.016 },
+  { name = "hole wall +Y", origin = [0.14, 0.0, 0.009], dir = [0, 1, 0], hit = 0.016 },
+  { name = "clear through, near +X wall", origin = [0.146, 0.0, 0.05], dir = [0, 0, -1], hit = false },
+  { name = "clear through, near +Y wall", origin = [0.14, 0.01, 0.05], dir = [0, 0, -1], hit = false },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_unchanged"
+objects = ["Board"]
+tol = 0.0002
+probes = [
+  { name = "top face", origin = [0.0, 0.0, 0.1], dir = [0, 0, -1], hit = 0.082 },
+  { name = "bottom face", origin = [0.0, 0.0, -0.1], dir = [0, 0, 1], hit = 0.1 },
+  { name = "+X end", origin = [0.3, 0.0, 0.009], dir = [-1, 0, 0], hit = 0.12 },
+  { name = "-X end", origin = [-0.3, 0.0, 0.009], dir = [1, 0, 0], hit = 0.12 },
+  { name = "-Y side", origin = [0.0, -0.2, 0.009], dir = [0, 1, 0], hit = 0.08 },
+  { name = "corner radius 20", origin = [0.19, 0.13, 0.009], dir = [-1, -1, 0], hit = 0.022427 },
+  { name = "-X end stays solid", origin = [-0.14, 0.0, 0.05], dir = [0, 0, -1], hit = 0.032 },
+]
+
+[variants]
+good = []
+unchanged = ["volume", "probe_hole"]
+wrong_end = ["probe_hole", "probe_unchanged"]
+edge_measured = ["probe_hole"]
+radius_as_diameter = ["volume", "probe_hole"]
+blind_hole = ["volume", "probe_hole"]
+rebuilt_sharp = ["volume", "probe_unchanged"]

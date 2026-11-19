@@ -1,0 +1,163 @@
+id = "h02-lipstick"
+title = "Lipstick: case, sleeve, and bullet with a slanted tip"
+group = "hard-surface"
+starting_scene = "empty"
+
+prompt = """
+Model a hypothetical product in the open Blender scene: an open lipstick standing upright, as three mesh objects stacked on the world Z axis. Units are metres (1 Blender unit = 1 m). The case stands on the ground plane, and every part is centred on the world Z axis.
+
+Case (mesh object "Case"):
+- A solid cylinder 20 mm in diameter (radius 10 mm) from a flat underside at z = 0 to a flat top at z = 30 mm.
+- The top edge all the way round has a 1 mm by 45-degree chamfer: the flat top ends at radius 9 mm and the side wall ends at z = 29 mm. The bottom edge stays sharp.
+
+Sleeve (mesh object "Sleeve"):
+- A cup: outer radius 9 mm, from a flat underside at z = 30.4 mm (a 0.4 mm gap above the case) to an open top rim at z = 55 mm.
+- Its bore is a cylinder of radius 7 mm from the open top down to a flat floor at z = 32.4 mm (so the floor is 2 mm thick and the wall 2 mm thick). All edges are sharp.
+
+Bullet (mesh object "Bullet"):
+- A solid cylinder of radius 6.5 mm standing inside the sleeve bore, from a flat bottom at z = 32.8 mm (0.4 mm above the sleeve floor) up to its tip. It clears the bore wall by 0.5 mm all round.
+- The tip is a single flat face, cut by a plane tilted 40 degrees from horizontal. The plane slopes up towards -X and is level along Y: it meets the bullet's +X side (x = +6.5 mm) at z = 62 mm and rises from there towards the -X side.
+
+All three objects:
+- Each is a single closed (watertight) mesh in one connected piece, with consistent outward normals and no self-intersections. Surfaces are smooth enough for close-up product renders.
+- No two of them touch or intersect.
+- Transforms applied: location at the origin, no rotation, scale 1, so the mesh data holds world coordinates.
+- At most 20,000 faces each.
+- No other mesh objects in the scene.
+
+Mesh hygiene: no duplicate or coincident vertices, no zero-length edges and no zero-area faces. Merge any coincident vertices before you finish.
+
+Tell me when you're done.
+"""
+
+[[checks]]
+type = "objects"
+expected = ["Bullet", "Case", "Sleeve"]
+
+[[checks]]
+type = "transforms_applied"
+objects = ["Bullet", "Case", "Sleeve"]
+
+[[checks]]
+type = "bbox"
+label = "bbox_case"
+object = "Case"
+min = [-0.01, -0.01, 0.0]
+max = [0.01, 0.01, 0.03]
+tol = 0.0001
+
+[[checks]]
+type = "bbox"
+label = "bbox_sleeve"
+object = "Sleeve"
+min = [-0.009, -0.009, 0.0304]
+max = [0.009, 0.009, 0.055]
+tol = 0.0001
+
+# top: 62 + 13 * tan(40 deg) = 72.908 mm
+[[checks]]
+type = "bbox"
+label = "bbox_bullet"
+object = "Bullet"
+min = [-0.0065, -0.0065, 0.0328]
+max = [0.0065, 0.0065, 0.072908]
+tol = 0.0002
+
+[[checks]]
+type = "watertight"
+objects = ["Bullet", "Case", "Sleeve"]
+
+[[checks]]
+type = "shells"
+objects = ["Bullet", "Case", "Sleeve"]
+
+[[checks]]
+type = "self_intersection"
+objects = ["Bullet", "Case", "Sleeve"]
+
+[[checks]]
+type = "topology"
+objects = ["Bullet", "Case", "Sleeve"]
+
+[[checks]]
+type = "face_budget"
+objects = ["Bullet", "Case", "Sleeve"]
+max = 20000
+
+[[checks]]
+type = "no_overlap"
+label = "no_overlap_case_sleeve"
+a = "Case"
+b = "Sleeve"
+
+[[checks]]
+type = "no_overlap"
+label = "no_overlap_sleeve_bullet"
+a = "Sleeve"
+b = "Bullet"
+
+# pi * (9^2 * 24.6 - 7^2 * 22.6)
+[[checks]]
+type = "volume"
+label = "volume_sleeve"
+object = "Sleeve"
+mm3 = 2781
+rel_tol = 0.015
+
+# a plane-cut cylinder holds pi r^2 times its height on the axis: pi * 6.5^2 * (62 + 6.5 * tan 40 - 32.8)
+[[checks]]
+type = "volume"
+label = "volume_bullet"
+object = "Bullet"
+mm3 = 4600
+rel_tol = 0.015
+
+[[checks]]
+type = "ray_probe"
+label = "probe_tip"
+objects = ["Bullet"]
+tol = 0.0003
+probes = [
+  { name = "tip at x = +4 (z 64.098)", origin = [0.004, 0.0, 0.09], dir = [0, 0, -1], hit = 0.025902 },
+  { name = "tip on axis (z 67.454)", origin = [0.0, 0.0, 0.09], dir = [0, 0, -1], hit = 0.022546 },
+  { name = "tip at x = -4 (z 70.811)", origin = [-0.004, 0.0, 0.09], dir = [0, 0, -1], hit = 0.019189 },
+  { name = "tip level along +Y", origin = [0.0, 0.004, 0.09], dir = [0, 0, -1], hit = 0.022546 },
+  { name = "tip level along -Y", origin = [0.0, -0.004, 0.09], dir = [0, 0, -1], hit = 0.022546 },
+  { name = "bullet side wall", origin = [0.02, 0.0, 0.05], dir = [-1, 0, 0], hit = 0.0135 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_sleeve"
+objects = ["Sleeve"]
+tol = 0.0003
+probes = [
+  { name = "sleeve floor", origin = [0.0, 0.0, 0.07], dir = [0, 0, -1], hit = 0.0376 },
+  { name = "bore wall +X", origin = [0.0, 0.0, 0.045], dir = [1, 0, 0], hit = 0.007 },
+  { name = "rim top", origin = [0.008, 0.0, 0.07], dir = [0, 0, -1], hit = 0.015 },
+  { name = "sleeve outer wall", origin = [0.0, -0.02, 0.045], dir = [0, 1, 0], hit = 0.011 },
+]
+
+# chamfer face x + z = 39 mm in the XZ plane: from (20, 40) along (-1, -1) it lies 21 / sqrt(2) away
+[[checks]]
+type = "ray_probe"
+label = "probe_case"
+objects = ["Case"]
+tol = 0.0003
+probes = [
+  { name = "top chamfer +X", origin = [0.02, 0.0, 0.04], dir = [-1, 0, -1], hit = 0.014849 },
+  { name = "top chamfer -Y", origin = [0.0, -0.02, 0.04], dir = [0, 1, -1], hit = 0.014849 },
+  { name = "case side wall", origin = [0.02, 0.0, 0.015], dir = [-1, 0, 0], hit = 0.01 },
+  { name = "case top", origin = [0.0, 0.0, 0.031], dir = [0, 0, -1], hit = 0.001 },
+]
+
+[variants]
+good = []
+flat_tip = ["bbox_bullet", "probe_tip"]
+tip_reversed = ["probe_tip"]
+tip_tilted_y = ["probe_tip"]
+angle_45 = ["bbox_bullet", "probe_tip", "volume_bullet"]
+bullet_on_floor = ["bbox_bullet", "no_overlap_sleeve_bullet", "probe_tip"]
+solid_sleeve = ["no_overlap_sleeve_bullet", "probe_sleeve", "volume_sleeve"]
+no_chamfer = ["probe_case"]
+sleeve_on_case = ["bbox_sleeve", "no_overlap_case_sleeve", "probe_sleeve"]

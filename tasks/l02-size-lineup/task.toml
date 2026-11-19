@@ -1,0 +1,139 @@
+id = "l02-size-lineup"
+title = "Three bottle sizes in a centred row"
+group = "layout"
+starting_scene = "empty"
+
+prompt = """
+Lay out a product shot in the open Blender scene: three sizes of the same hypothetical bottle standing in a row, as three mesh objects. Units are metres (1 Blender unit = 1 m). All three bottles stand on the ground plane (their flat bottoms at z = 0) with their axes vertical and on the world X axis (y = 0).
+
+Each bottle is a solid of revolution about its own vertical axis: a cylindrical body with a flat bottom, a flat horizontal shoulder at the top of the body, and a cylindrical neck 20 mm tall rising from the middle of the shoulder to a flat top. All edges sharp.
+
+- "Bottle_S" (small): body 40 mm in diameter, neck 16 mm in diameter, 100 mm tall overall (shoulder at z = 80 mm).
+- "Bottle_M" (medium): body 50 mm in diameter, neck 20 mm in diameter, 140 mm tall overall (shoulder at z = 120 mm).
+- "Bottle_L" (large): body 60 mm in diameter, neck 24 mm in diameter, 180 mm tall overall (shoulder at z = 160 mm).
+
+Arrangement:
+- One row along X, in the order small, medium, large from -X to +X.
+- The gap between neighbouring bodies is 20 mm, measured surface to surface along X (so the gaps are equal although the bottles are different sizes).
+- The row as a whole is centred on the origin in X: its overall extent, from the left side of the small bottle to the right side of the large bottle, is symmetric about x = 0.
+
+Every object:
+- A single closed (watertight) mesh, one connected piece, with consistent outward normals and no self-intersections. No two bottles touch.
+- Transforms applied: location at the origin, no rotation, scale 1, so the mesh data holds world coordinates.
+- At most 5,000 faces each.
+- No other mesh objects in the scene.
+
+Mesh hygiene: no duplicate or coincident vertices, no zero-length edges and no zero-area faces. Merge any coincident vertices before you finish.
+
+Tell me when you're done.
+"""
+
+[[checks]]
+type = "objects"
+expected = ["Bottle_S", "Bottle_M", "Bottle_L"]
+
+[[checks]]
+type = "transforms_applied"
+objects = ["Bottle_S", "Bottle_M", "Bottle_L"]
+
+[[checks]]
+type = "watertight"
+objects = ["Bottle_S", "Bottle_M", "Bottle_L"]
+
+[[checks]]
+type = "shells"
+objects = ["Bottle_S", "Bottle_M", "Bottle_L"]
+
+[[checks]]
+type = "self_intersection"
+objects = ["Bottle_S", "Bottle_M", "Bottle_L"]
+
+[[checks]]
+type = "topology"
+objects = ["Bottle_S", "Bottle_M", "Bottle_L"]
+
+[[checks]]
+type = "face_budget"
+objects = ["Bottle_S", "Bottle_M", "Bottle_L"]
+max = 5000
+
+[[checks]]
+type = "bbox"
+label = "bbox_s"
+object = "Bottle_S"
+min = [-0.095, -0.02, 0.0]
+max = [-0.055, 0.02, 0.1]
+tol = 0.0003
+
+[[checks]]
+type = "bbox"
+label = "bbox_m"
+object = "Bottle_M"
+min = [-0.035, -0.025, 0.0]
+max = [0.015, 0.025, 0.14]
+tol = 0.0003
+
+[[checks]]
+type = "bbox"
+label = "bbox_l"
+object = "Bottle_L"
+min = [0.035, -0.03, 0.0]
+max = [0.095, 0.03, 0.18]
+tol = 0.0003
+
+# pi * (20^2 * 80 + 8^2 * 20)
+[[checks]]
+type = "volume"
+label = "volume_s"
+object = "Bottle_S"
+mm3 = 104552
+rel_tol = 0.01
+
+# pi * (25^2 * 120 + 10^2 * 20)
+[[checks]]
+type = "volume"
+label = "volume_m"
+object = "Bottle_M"
+mm3 = 241903
+rel_tol = 0.01
+
+# pi * (30^2 * 160 + 12^2 * 20)
+[[checks]]
+type = "volume"
+label = "volume_l"
+object = "Bottle_L"
+mm3 = 461437
+rel_tol = 0.01
+
+[[checks]]
+type = "ray_probe"
+label = "probe_necks"
+tol = 0.0003
+probes = [
+  { name = "neck top S", origin = [-0.075, 0.0, 0.3], dir = [0, 0, -1], hit = 0.2 },
+  { name = "neck side S", origin = [-0.075, -0.1, 0.09], dir = [0, 1, 0], hit = 0.092 },
+  { name = "neck top M", origin = [-0.01, 0.0, 0.3], dir = [0, 0, -1], hit = 0.16 },
+  { name = "neck side M", origin = [-0.01, -0.1, 0.13], dir = [0, 1, 0], hit = 0.09 },
+  { name = "neck top L", origin = [0.065, 0.0, 0.3], dir = [0, 0, -1], hit = 0.12 },
+  { name = "neck side L", origin = [0.065, -0.1, 0.17], dir = [0, 1, 0], hit = 0.088 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_shoulders"
+tol = 0.0003
+probes = [
+  { name = "shoulder S", origin = [-0.075, -0.014, 0.3], dir = [0, 0, -1], hit = 0.22 },
+  { name = "shoulder M", origin = [-0.01, -0.0175, 0.3], dir = [0, 0, -1], hit = 0.18 },
+  { name = "shoulder L", origin = [0.065, -0.021, 0.3], dir = [0, 0, -1], hit = 0.14 },
+]
+
+[variants]
+good = []
+centred_on_middle = ["bbox_s", "bbox_m", "bbox_l", "probe_necks"]
+equal_pitch = ["bbox_m", "bbox_l", "probe_necks"]
+touching = ["bbox_s", "bbox_l", "probe_necks", "probe_shoulders"]
+wrong_order = ["bbox_s", "bbox_m", "bbox_l", "probe_necks", "probe_shoulders"]
+floating = ["bbox_s", "bbox_m", "bbox_l", "probe_necks", "probe_shoulders"]
+no_necks = ["volume_s", "volume_m", "volume_l", "probe_necks", "probe_shoulders"]
+thin_neck_m = ["volume_m", "probe_necks"]

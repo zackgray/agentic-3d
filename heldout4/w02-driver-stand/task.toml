@@ -1,0 +1,128 @@
+id = "w02-driver-stand"
+title = "Screwdriver stand: chamfered rounded block with a row of five holes tilted 20 degrees"
+group = "hard-surface"
+starting_scene = "empty"
+
+prompt = """
+Model a hypothetical product part in the open Blender scene: a bench stand that holds five screwdrivers leaning back at an angle, a solid block with a row of tilted round holes in its top, as one mesh object named "DriverStand". Units are metres (1 Blender unit = 1 m). The stand sits on the ground plane, centred on the world Z axis; its front faces -Y.
+
+- Block: seen from above, a rectangle 100 mm in X by 40 mm in Y (x from -50 mm to +50 mm, y from -20 mm to +20 mm) whose four vertical corners are rounded with an 8 mm radius, with vertical sides from the flat underside at z = 0 up to z = 27 mm.
+- Chamfer: the top edge all the way round is a 3 mm by 3 mm 45-degree chamfer, so the flat top face at z = 30 mm is 94 mm by 34 mm with 5 mm corner radii. The bottom edge is sharp.
+- Holes: five identical blind round holes, each 10 mm in diameter, in a straight row along X. Each hole's axis lies in a plane parallel to the Y-Z plane and passes through the point (x, 0, 30) mm on the top face, at x = -36, -18, 0, +18 and +36 mm (18 mm apart). The axes are tilted 20 degrees from vertical: going down into the block, each axis runs towards +Y (direction (0, sin 20°, -cos 20°)), so a screwdriver standing in a hole leans back towards +Y. Each hole has a flat bottom square to its own axis, 20 mm from the top-face point measured along the axis. So the centre of each hole bottom is at y = 6.840 mm, z = 11.206 mm. The holes' edges are sharp.
+
+The object:
+- A single closed (watertight) mesh, one connected piece, with consistent outward normals and no self-intersections.
+- Transforms applied: location at the origin, no rotation, scale 1, so the mesh data holds world coordinates.
+- At most 20,000 faces.
+- No other mesh objects in the scene.
+
+Mesh hygiene: no duplicate or coincident vertices, no zero-length edges and no zero-area faces. Merge any coincident vertices before you finish.
+
+Tell me when you're done.
+"""
+
+[[checks]]
+type = "objects"
+expected = ["DriverStand"]
+
+[[checks]]
+type = "transforms_applied"
+objects = ["DriverStand"]
+
+[[checks]]
+type = "bbox"
+object = "DriverStand"
+min = [-0.05, -0.02, 0.0]
+max = [0.05, 0.02, 0.03]
+tol = 0.0003
+
+[[checks]]
+type = "watertight"
+objects = ["DriverStand"]
+
+[[checks]]
+type = "shells"
+objects = ["DriverStand"]
+
+[[checks]]
+type = "self_intersection"
+objects = ["DriverStand"]
+
+[[checks]]
+type = "topology"
+objects = ["DriverStand"]
+
+[[checks]]
+type = "face_budget"
+object = "DriverStand"
+max = 20000
+
+# block: plan area at inset t is A(t) = (100 - 2t)(40 - 2t) - (4 - pi)(8 - t)^2.
+# A(0)*27 = 106516.7 + chamfer band integral_0^3 A(t) dt = 10665.3, minus five holes. A hole cut
+# square to its axis and opened by the top plane through its axis point holds pi*5^2*20 = 1570.8
+# whatever the tilt, so holes 7854.0; total 109328.0. No chamfer +1.07%, one hole short -1.44%.
+[[checks]]
+type = "volume"
+object = "DriverStand"
+mm3 = 109328.0
+rel_tol = 0.01
+
+# corner diagonal: plan corner centre (42, 12), radius 8; from (60, 30) along (-1, -1) the arc is
+# hit 12.343*sqrt(2) = 17.456 mm away
+[[checks]]
+type = "ray_probe"
+label = "probe_block"
+tol = 0.0003
+probes = [
+  { name = "side +X", origin = [0.07, 0.0, 0.01], dir = [-1, 0, 0], hit = 0.02 },
+  { name = "side -X", origin = [-0.07, 0.0, 0.01], dir = [1, 0, 0], hit = 0.02 },
+  { name = "front -Y", origin = [0.0, -0.03, 0.01], dir = [0, 1, 0], hit = 0.01 },
+  { name = "back +Y", origin = [0.027, 0.03, 0.01], dir = [0, -1, 0], hit = 0.01 },
+  { name = "underside", origin = [0.0, 0.0, -0.01], dir = [0, 0, 1], hit = 0.01 },
+  { name = "top face front", origin = [0.0, -0.012, 0.04], dir = [0, 0, -1], hit = 0.01 },
+  { name = "top face back", origin = [0.027, 0.012, 0.04], dir = [0, 0, -1], hit = 0.01 },
+  { name = "corner +X+Y", origin = [0.06, 0.03, 0.01], dir = [-1, -1, 0], hit = 0.0174558 },
+  { name = "corner -X-Y", origin = [-0.06, -0.03, 0.01], dir = [1, 1, 0], hit = 0.0174558 },
+]
+
+# straight down 1.5 mm in from the outline: chamfer height z = 28.5
+[[checks]]
+type = "ray_probe"
+label = "probe_chamfer"
+tol = 0.0003
+probes = [
+  { name = "chamfer +Y", origin = [0.0, 0.0185, 0.04], dir = [0, 0, -1], hit = 0.0115 },
+  { name = "chamfer -Y", origin = [0.01, -0.0185, 0.04], dir = [0, 0, -1], hit = 0.0115 },
+  { name = "chamfer +X", origin = [0.0485, 0.0, 0.04], dir = [0, 0, -1], hit = 0.0115 },
+  { name = "chamfer at corner +X+Y", origin = [0.0465962, 0.0165962, 0.04], dir = [0, 0, -1], hit = 0.0115 },
+]
+
+# Axis rays start 10 mm above the top-face point, back along the axis, and hit the flat bottom
+# 30 mm away. Wall rays start on the axis 10 mm below the top-face point, at (x, 3.420, 20.603),
+# and run square to the axis to the wall, 5 mm away (sagitta of a 24-segment hole is 0.04 mm).
+[[checks]]
+type = "ray_probe"
+label = "probe_holes"
+tol = 0.0003
+probes = [
+  { name = "axis x=-36", origin = [-0.036, -0.0034202, 0.0393969], dir = [0, 0.342020, -0.939693], hit = 0.03 },
+  { name = "axis x=-18", origin = [-0.018, -0.0034202, 0.0393969], dir = [0, 0.342020, -0.939693], hit = 0.03 },
+  { name = "axis x=0", origin = [0.0, -0.0034202, 0.0393969], dir = [0, 0.342020, -0.939693], hit = 0.03 },
+  { name = "axis x=+18", origin = [0.018, -0.0034202, 0.0393969], dir = [0, 0.342020, -0.939693], hit = 0.03 },
+  { name = "axis x=+36", origin = [0.036, -0.0034202, 0.0393969], dir = [0, 0.342020, -0.939693], hit = 0.03 },
+  { name = "wall x=-36 towards +X", origin = [-0.036, 0.0034202, 0.0206031], dir = [1, 0, 0], hit = 0.005 },
+  { name = "wall x=+36 towards -X", origin = [0.036, 0.0034202, 0.0206031], dir = [-1, 0, 0], hit = 0.005 },
+  { name = "wall x=-36 front-down", origin = [-0.036, 0.0034202, 0.0206031], dir = [0, -0.939693, -0.342020], hit = 0.005 },
+  { name = "wall x=0 back-up", origin = [0.0, 0.0034202, 0.0206031], dir = [0, 0.939693, 0.342020], hit = 0.005 },
+]
+
+[variants]
+good = []
+coarse = []
+no_chamfer = ["volume", "probe_chamfer"]
+sharp_corners = ["volume", "probe_block", "probe_chamfer"]
+vertical_holes = ["probe_holes"]
+lean_wrong_way = ["probe_holes"]
+depth_measured_vertically = ["probe_holes"]
+pitch_20 = ["probe_holes"]
+four_holes = ["volume", "probe_holes"]

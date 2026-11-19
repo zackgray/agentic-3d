@@ -1,0 +1,104 @@
+id = "p04-gable-carton"
+title = "Gable-top carton with a top seal fin"
+group = "hard-surface"
+starting_scene = "empty"
+
+prompt = """
+Model a hypothetical product in the open Blender scene: a closed gable-top drinks carton, as one solid mesh object named "Carton". Units are metres (1 Blender unit = 1 m). The carton stands upright on the ground plane, centred on the world Z axis.
+
+- Body: a box 70 mm wide in X and 70 mm deep in Y (x and y each from -35 mm to +35 mm), from z = 0 up to z = 195 mm.
+- Gable roof: two flat roof panels rise from the top edges of the body at y = -35 mm and y = +35 mm (z = 195 mm) to a straight horizontal ridge along the X axis, at y = 0 and z = 230 mm. Seen from the side (along X), the roof is a triangle; the two end faces at x = -35 mm and x = +35 mm are flat and vertical.
+- Seal fin: a flat fin on top of the ridge, 70 mm long in X (x from -35 mm to +35 mm), 2 mm thick in Y (y from -1 mm to +1 mm), with its top edge at z = 242 mm. It grows out of the roof: the fin and roof form one continuous solid with no gap.
+- Edges are sharp; no bevels.
+
+The object:
+- A single closed (watertight) mesh with consistent outward normals and no self-intersections. Solid: no interior cavity.
+- Transforms applied: location at the origin, no rotation, scale 1, so the mesh data holds world coordinates.
+- At most 2,000 faces.
+- No other mesh objects in the scene.
+
+Mesh hygiene: no duplicate or coincident vertices, no zero-length edges and no zero-area faces. Merge any coincident vertices before you finish.
+
+Tell me when you're done.
+"""
+
+[[checks]]
+type = "objects"
+expected = ["Carton"]
+
+[[checks]]
+type = "transforms_applied"
+objects = ["Carton"]
+
+[[checks]]
+type = "bbox"
+object = "Carton"
+min = [-0.035, -0.035, 0.0]
+max = [0.035, 0.035, 0.242]
+tol = 0.0005
+
+[[checks]]
+type = "watertight"
+objects = ["Carton"]
+
+[[checks]]
+type = "shells"
+objects = ["Carton"]
+
+[[checks]]
+type = "self_intersection"
+objects = ["Carton"]
+
+[[checks]]
+type = "topology"
+objects = ["Carton"]
+
+[[checks]]
+type = "face_budget"
+object = "Carton"
+max = 2000
+
+# 70*70*195 body + 70*35*70/2 roof + fin above the ridge 70*(2*12 + 1) = 1,043,000 mm3
+[[checks]]
+type = "volume"
+object = "Carton"
+mm3 = 1043000
+rel_tol = 0.01
+
+[[checks]]
+type = "ray_probe"
+label = "probe_roof"
+tol = 0.0005
+probes = [
+  { name = "roof slope, y=+17.5", origin = [0.0, 0.0175, 0.3], dir = [0, 0, -1], hit = 0.0875 },
+  { name = "roof slope, y=-17.5", origin = [0.0, -0.0175, 0.3], dir = [0, 0, -1], hit = 0.0875 },
+  { name = "ridge runs along X, x=+30 y=+10", origin = [0.03, 0.01, 0.3], dir = [0, 0, -1], hit = 0.08 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_fin"
+tol = 0.0005
+probes = [
+  { name = "fin top", origin = [0.0, 0.0, 0.3], dir = [0, 0, -1], hit = 0.058 },
+  { name = "fin top near the end", origin = [0.034, 0.0, 0.3], dir = [0, 0, -1], hit = 0.058 },
+  { name = "beside the fin, y=+3", origin = [0.0, 0.003, 0.3], dir = [0, 0, -1], hit = 0.073 },
+  { name = "fin face from +Y", origin = [0.0, 0.1, 0.236], dir = [0, -1, 0], hit = 0.099 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_body"
+tol = 0.0005
+probes = [
+  { name = "side wall x=+35", origin = [0.1, 0.0, 0.1], dir = [-1, 0, 0], hit = 0.065 },
+  { name = "side wall y=-35", origin = [0.0, -0.1, 0.1], dir = [0, 1, 0], hit = 0.065 },
+  { name = "base", origin = [0.01, 0.01, -0.1], dir = [0, 0, 1], hit = 0.1 },
+]
+
+[variants]
+good = []
+flat_top = ["bbox", "volume", "probe_roof", "probe_fin"]
+ridge_along_y = ["probe_roof", "probe_fin"]
+thick_fin = ["probe_fin"]
+gap_fin = ["shells"]

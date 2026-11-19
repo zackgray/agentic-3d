@@ -1,0 +1,271 @@
+id = "z07-trimmer-dock"
+title = "Beard trimmer in its dock: chamfered dock with socket, tapered body with slider, flared head, slotted blade"
+group = "multi-step"
+starting_scene = "empty"
+
+prompt = """
+Model a hypothetical product in the open Blender scene: a cordless beard trimmer standing upright in its charging dock, as five separate mesh objects. Units are metres (1 Blender unit = 1 m). The dock stands on the ground plane and every part is centred on the world Z axis in plan (except where a position is given); the front of the trimmer faces -Y.
+
+A "rounded rectangle W by D, radius r" below is a rectangle W mm in X by D mm in Y, centred on the Z axis, whose four corners are rounded with radius r.
+
+Dock (mesh object "Dock"), one solid part:
+- Block: a rounded rectangle 64 by 50, radius 10 (x from -32 mm to +32 mm, y from -25 mm to +25 mm), with vertical sides from z = 0 up to z = 21 mm.
+- Chamfer: the top edge all the way round is a 3 mm by 3 mm 45-degree chamfer, so the flat top face at z = 24 mm is a rounded rectangle 58 by 44, radius 7. The bottom edge is sharp.
+- Socket: a pocket in the top face, a rounded rectangle 36 by 26, radius 6, with vertical walls from the top down to a flat floor at z = 8 mm. Its edges are sharp.
+
+Body (mesh object "Body"), one solid part:
+- A tapered column from a flat bottom at z = 8.5 mm (0.5 mm above the socket floor) to a flat top at z = 130 mm. Every horizontal section is a rounded rectangle with radius 5.5 and a constant 25 mm in Y (y from -12.5 mm to +12.5 mm). Its width in X shrinks linearly with height, from 35 mm at z = 8.5 mm (x from -17.5 to +17.5 mm, clearing the socket walls by 0.5 mm all round) to 29 mm at z = 130 mm (x from -14.5 to +14.5 mm). So the front and back faces are vertical and the two side faces lean inward. All edges are sharp.
+- Slider pocket: a pocket in the flat front face (y = -12.5 mm) shaped, seen from the front, as a vertical stadium 8 mm wide (x from -4 mm to +4 mm) from z = 75 mm to z = 95 mm, with semicircular ends of radius 4 mm. Its walls run along Y to a flat floor at y = -11 mm (1.5 mm deep).
+
+Slider (mesh object "Slider"): a solid stadium prism along Y, seen from the front a vertical stadium 7 mm wide (x from -3.5 mm to +3.5 mm) from z = 75.5 mm to z = 94.5 mm with semicircular ends of radius 3.5 mm, from its back face at y = -11.5 mm (0.5 mm in front of the pocket floor) to its flat front face at y = -14 mm. It clears the pocket walls by 0.5 mm all round and stands 1.5 mm proud of the front face.
+
+Head (mesh object "Head"), one solid part: a flared loft from a flat bottom at z = 130.5 mm (0.5 mm above the body top) to a flat top at z = 150 mm. Its bottom section is a rounded rectangle 29 by 25, radius 5.5; its top section is a rounded rectangle 44 by 12, radius 3. In between, each section is a rounded rectangle whose X width, Y depth and corner radius change linearly with height (so it widens in X and narrows in Y; the faces are straight from bottom to top).
+
+Blade (mesh object "Blade"), one solid part: a flat plate, a box from x = -20 mm to +20 mm, y = -2 mm to +2 mm, z = 150.5 mm (0.5 mm above the head top) to z = 160 mm, with nine comb slots cut down into its top edge. Each slot is 2 mm wide in X, runs right through the plate in Y, and has a flat floor at z = 156 mm (4 mm deep). The slots are centred at x = -16, -12, -8, -4, 0, +4, +8, +12 and +16 mm. All edges are sharp.
+
+All five objects:
+- Each is a single closed (watertight) mesh in one connected piece, with consistent outward normals and no self-intersections.
+- No two objects touch or intersect.
+- Transforms applied: location at the origin, no rotation, scale 1, so the mesh data holds world coordinates.
+- At most 20,000 faces per object.
+- No other mesh objects in the scene.
+
+Mesh hygiene: no duplicate or coincident vertices, no zero-length edges and no zero-area faces. Merge any coincident vertices before you finish.
+
+Tell me when you're done.
+"""
+
+[[checks]]
+type = "objects"
+expected = ["Blade", "Body", "Dock", "Head", "Slider"]
+
+[[checks]]
+type = "transforms_applied"
+objects = ["Blade", "Body", "Dock", "Head", "Slider"]
+
+[[checks]]
+type = "bbox"
+label = "bbox_dock"
+object = "Dock"
+min = [-0.032, -0.025, 0.0]
+max = [0.032, 0.025, 0.024]
+tol = 0.0003
+
+[[checks]]
+type = "bbox"
+label = "bbox_body"
+object = "Body"
+min = [-0.0175, -0.0125, 0.0085]
+max = [0.0175, 0.0125, 0.13]
+tol = 0.0003
+
+[[checks]]
+type = "bbox"
+label = "bbox_slider"
+object = "Slider"
+min = [-0.0035, -0.014, 0.0755]
+max = [0.0035, -0.0115, 0.0945]
+tol = 0.0003
+
+[[checks]]
+type = "bbox"
+label = "bbox_head"
+object = "Head"
+min = [-0.022, -0.0125, 0.1305]
+max = [0.022, 0.0125, 0.15]
+tol = 0.0003
+
+[[checks]]
+type = "bbox"
+label = "bbox_blade"
+object = "Blade"
+min = [-0.02, -0.002, 0.1505]
+max = [0.02, 0.002, 0.16]
+tol = 0.0003
+
+[[checks]]
+type = "watertight"
+objects = ["Blade", "Body", "Dock", "Head", "Slider"]
+
+[[checks]]
+type = "shells"
+objects = ["Blade", "Body", "Dock", "Head", "Slider"]
+
+[[checks]]
+type = "self_intersection"
+objects = ["Blade", "Body", "Dock", "Head", "Slider"]
+
+[[checks]]
+type = "topology"
+objects = ["Blade", "Body", "Dock", "Head", "Slider"]
+
+[[checks]]
+type = "face_budget"
+objects = ["Blade", "Body", "Dock", "Head", "Slider"]
+max = 20000
+
+[[checks]]
+type = "no_overlap"
+label = "no_overlap_dock_body"
+a = "Dock"
+b = "Body"
+
+[[checks]]
+type = "no_overlap"
+label = "no_overlap_body_slider"
+a = "Body"
+b = "Slider"
+
+[[checks]]
+type = "no_overlap"
+label = "no_overlap_body_head"
+a = "Body"
+b = "Head"
+
+[[checks]]
+type = "no_overlap"
+label = "no_overlap_head_blade"
+a = "Head"
+b = "Blade"
+
+# A(W,D,r) = W*D - (4-pi)*r^2 for a rounded rectangle.
+# 21*A(64,50,10) + chamfer band 3/6*(A(64,50,10) + 4*A(61,47,8.5) + A(58,44,7)) - socket 16*A(36,26,6)
+[[checks]]
+type = "volume"
+label = "volume_dock"
+object = "Dock"
+mm3 = 59338
+rel_tol = 0.01
+
+# 121.5*(32*25 - (4-pi)*5.5^2) - slider pocket 1.5*(8*12 + pi*4^2)
+[[checks]]
+type = "volume"
+label = "volume_body"
+object = "Body"
+mm3 = 93826
+rel_tol = 0.01
+
+# 2.5*(7*12 + pi*3.5^2); mostly round ends, so 2%
+[[checks]]
+type = "volume"
+label = "volume_slider"
+object = "Slider"
+mm3 = 306.2
+rel_tol = 0.02
+
+# Linear sections, so Simpson is exact: 19.5/6*(A(29,25,5.5) + 4*A(36.5,18.5,4.25) + A(44,12,3))
+[[checks]]
+type = "volume"
+label = "volume_head"
+object = "Head"
+mm3 = 12539
+rel_tol = 0.015
+
+# 40*4*9.5 - 9 slots * 2*4*4
+[[checks]]
+type = "volume"
+label = "volume_blade"
+object = "Blade"
+mm3 = 1232
+rel_tol = 0.01
+
+[[checks]]
+type = "ray_probe"
+label = "probe_dock"
+objects = ["Dock"]
+tol = 0.0003
+probes = [
+  { name = "side +X", origin = [0.05, 0.0, 0.01], dir = [-1, 0, 0], hit = 0.018 },
+  { name = "side -Y", origin = [0.0, -0.05, 0.01], dir = [0, 1, 0], hit = 0.025 },
+  { name = "plan corner radius 10", origin = [0.04, 0.033, 0.01], dir = [-1, -1, 0], hit = 0.015456 },
+  { name = "chamfer from the side at z 22.5", origin = [0.05, 0.0, 0.0225], dir = [-1, 0, 0], hit = 0.0195 },
+  { name = "chamfer from above at x 30.5", origin = [0.0305, 0.0, 0.05], dir = [0, 0, -1], hit = 0.0275 },
+  { name = "top face", origin = [0.0, 0.018, 0.05], dir = [0, 0, -1], hit = 0.026 },
+  { name = "socket floor", origin = [0.0, 0.0, 0.05], dir = [0, 0, -1], hit = 0.042 },
+  { name = "socket wall +X", origin = [0.0, 0.0, 0.015], dir = [1, 0, 0], hit = 0.018 },
+  { name = "socket wall +Y", origin = [0.0, 0.0, 0.015], dir = [0, 1, 0], hit = 0.013 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_body"
+objects = ["Body"]
+tol = 0.0003
+probes = [
+  { name = "front face", origin = [0.0, -0.05, 0.05], dir = [0, 1, 0], hit = 0.0375 },
+  { name = "back face", origin = [0.0, 0.05, 0.11], dir = [0, -1, 0], hit = 0.0375 },
+  { name = "side +X at z 69.25 (x 16)", origin = [0.05, 0.0, 0.06925], dir = [-1, 0, 0], hit = 0.034 },
+  { name = "side -X at z 120 (x -14.75)", origin = [-0.05, 0.0, 0.12], dir = [1, 0, 0], hit = 0.035253 },
+  { name = "top", origin = [0.0, 0.0, 0.2], dir = [0, 0, -1], hit = 0.07 },
+  { name = "bottom", origin = [0.0, 0.0, -0.01], dir = [0, 0, 1], hit = 0.0185 },
+  { name = "slider pocket floor", origin = [0.0, -0.05, 0.085], dir = [0, 1, 0], hit = 0.039 },
+  { name = "slider pocket side wall", origin = [0.0, -0.012, 0.085], dir = [1, 0, 0], hit = 0.004 },
+  { name = "slider pocket top end", origin = [0.0, -0.012, 0.085], dir = [0, 0, 1], hit = 0.01 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_slider"
+objects = ["Slider"]
+tol = 0.0003
+probes = [
+  { name = "front face", origin = [0.0, -0.05, 0.085], dir = [0, 1, 0], hit = 0.036 },
+  { name = "back face", origin = [0.0, 0.0, 0.085], dir = [0, -1, 0], hit = 0.0115 },
+  { name = "side", origin = [0.01, -0.0125, 0.085], dir = [-1, 0, 0], hit = 0.0065 },
+  { name = "top end", origin = [0.0, -0.0125, 0.1], dir = [0, 0, -1], hit = 0.0055 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_head"
+objects = ["Head"]
+tol = 0.0003
+probes = [
+  { name = "top", origin = [0.0, 0.005, 0.2], dir = [0, 0, -1], hit = 0.05 },
+  { name = "underside", origin = [0.0, 0.0, 0.1], dir = [0, 0, 1], hit = 0.0305 },
+  { name = "flared side +X at z 140.25 (x 18.25)", origin = [0.05, 0.0, 0.14025], dir = [-1, 0, 0], hit = 0.03175 },
+  { name = "narrowing front at z 140.25 (y -9.25)", origin = [0.0, -0.05, 0.14025], dir = [0, 1, 0], hit = 0.04075 },
+  { name = "narrowing back at z 146 (y 7.33)", origin = [0.0, 0.05, 0.146], dir = [0, -1, 0], hit = 0.042667 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_blade"
+objects = ["Blade"]
+tol = 0.0003
+probes = [
+  { name = "tooth top at x 2", origin = [0.002, 0.0, 0.2], dir = [0, 0, -1], hit = 0.04 },
+  { name = "end tooth top at x -18.5", origin = [-0.0185, 0.0, 0.2], dir = [0, 0, -1], hit = 0.04 },
+  { name = "slot floor at x 0", origin = [0.0, 0.0, 0.2], dir = [0, 0, -1], hit = 0.044 },
+  { name = "slot floor at x +16", origin = [0.016, 0.0, 0.2], dir = [0, 0, -1], hit = 0.044 },
+  { name = "slot floor at x -8", origin = [-0.008, 0.0, 0.2], dir = [0, 0, -1], hit = 0.044 },
+  { name = "slot wall", origin = [0.0, 0.0, 0.158], dir = [1, 0, 0], hit = 0.001 },
+  { name = "end face +X", origin = [0.05, 0.0, 0.153], dir = [-1, 0, 0], hit = 0.03 },
+  { name = "front face", origin = [0.0, -0.05, 0.153], dir = [0, 1, 0], hit = 0.048 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_fit"
+tol = 0.0003
+probes = [
+  { name = "gap between socket floor and body, to the socket wall", origin = [0.0, 0.0, 0.00825], dir = [1, 0, 0], hit = 0.018 },
+  { name = "gap between body and head", origin = [0.05, 0.0, 0.13025], dir = [-1, 0, 0], hit = false },
+  { name = "gap between head and blade", origin = [0.05, 0.0, 0.15025], dir = [-1, 0, 0], hit = false },
+  { name = "gap behind the slider, to the pocket wall", origin = [0.0, -0.01125, 0.085], dir = [1, 0, 0], hit = 0.004 },
+]
+
+[variants]
+good = []
+no_chamfer = ["volume_dock", "probe_dock"]
+body_on_floor = ["bbox_body", "no_overlap_dock_body", "probe_body", "probe_fit"]
+no_taper = ["volume_body", "probe_body"]
+no_slider_pocket = ["no_overlap_body_slider", "probe_body", "probe_fit"]
+slider_on_floor = ["bbox_slider", "volume_slider", "no_overlap_body_slider", "probe_slider", "probe_fit"]
+slider_scale = ["bbox_slider", "volume_slider", "no_overlap_body_slider", "probe_slider"]
+head_straight = ["bbox_head", "volume_head", "probe_head"]
+blade_no_slots = ["volume_blade", "probe_blade"]
+blade_along_y = ["bbox_blade", "probe_blade"]
+head_on_body = ["bbox_head", "volume_head", "no_overlap_body_head", "probe_head", "probe_fit"]
+blade_on_head = ["bbox_blade", "volume_blade", "no_overlap_head_blade", "probe_fit"]
+coarse24 = []

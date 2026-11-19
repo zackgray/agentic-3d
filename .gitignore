@@ -1,0 +1,9 @@
+outputs/
+runs/
+*.blend1
+*.blend@
+__pycache__/
+.venv/
+.env
+vendor/
+CLAUDE.local.md

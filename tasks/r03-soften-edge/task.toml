@@ -1,0 +1,98 @@
+id = "r03-soften-edge"
+title = "Revision: fillet the top edge of the housing cover"
+group = "revision"
+starting_scene = "start.py"
+
+prompt = """
+The open Blender scene holds an approved model of a hypothetical product part: the moulded top cover of a small electronics housing, an open-bottom shell (mesh object "Cover"). Units are metres (1 Blender unit = 1 m). The client has one revision:
+
+- Round off the top outside perimeter edge, where the flat top meets the side walls, with a 3 mm radius fillet all the way round. The fillet is tangent to both the top and the side walls and follows the rounded vertical corners.
+- Nothing else changes: the outside footprint, the overall height, the vertical corner radii, the wall and top thicknesses, the cavity and the open bottom all stay exactly as they are, and every other edge stays sharp.
+
+The object keeps its name. It stays a single closed (watertight) mesh in one connected piece, with consistent outward normals and no self-intersections, transforms applied (location at the origin, no rotation, scale 1), and at most 20,000 faces. No other mesh objects in the scene.
+
+Mesh hygiene: no duplicate or coincident vertices, no zero-length edges and no zero-area faces. Merge any coincident vertices before you finish.
+
+Tell me when you're done.
+"""
+
+[[checks]]
+type = "objects"
+expected = ["Cover"]
+
+[[checks]]
+type = "transforms_applied"
+objects = ["Cover"]
+
+[[checks]]
+type = "bbox"
+object = "Cover"
+min = [-0.05, -0.03, 0.0]
+max = [0.05, 0.03, 0.03]
+tol = 0.0002
+
+[[checks]]
+type = "watertight"
+objects = ["Cover"]
+
+[[checks]]
+type = "shells"
+objects = ["Cover"]
+
+[[checks]]
+type = "self_intersection"
+objects = ["Cover"]
+
+[[checks]]
+type = "topology"
+objects = ["Cover"]
+
+[[checks]]
+type = "face_budget"
+object = "Cover"
+max = 20000
+
+# outer 30*(100*60 - (4-pi)*8^2) - cavity 28*(96*56 - (4-pi)*6^2) - fillet P*r^2*(1-pi/4) + pi*r^3*(5/3-pi/2),
+# with r = 3 and P = 2*(100+60) - 8*8 + 2*pi*8 the outer perimeter (inward-offset area A - P*i + pi*i^2,
+# integrated over the fillet). Fillet removes 583 mm3 = 2.1%; a 3-segment bevel removes ~100 mm3 more.
+[[checks]]
+type = "volume"
+object = "Cover"
+mm3 = 28106
+rel_tol = 0.005
+
+[[checks]]
+type = "ray_probe"
+label = "probe_fillet"
+tol = 0.0003
+probes = [
+  { name = "fillet at 45 deg, +X side", origin = [0.06, 0.0, 0.04], dir = [-1, 0, -1], hit = 0.0153848 },
+  { name = "fillet at 45 deg, -Y side", origin = [0.0, -0.04, 0.04], dir = [0, 1, -1], hit = 0.0153848 },
+  { name = "fillet height 1 mm in from the side", origin = [0.049, 0.0, 0.04], dir = [0, 0, -1], hit = 0.0107639 },
+  { name = "fillet height 1 mm in from -X side", origin = [-0.049, 0.0, 0.04], dir = [0, 0, -1], hit = 0.0107639 },
+  { name = "fillet round a vertical corner", origin = [0.0530355, 0.0330355, 0.0376066], dir = [-0.5, -0.5, -0.7071068], hit = 0.012 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_cover"
+tol = 0.0003
+probes = [
+  { name = "top at centre", origin = [0.0, 0.0, 0.04], dir = [0, 0, -1], hit = 0.01 },
+  { name = "top still flat at x=46.5", origin = [0.0465, 0.0, 0.04], dir = [0, 0, -1], hit = 0.01 },
+  { name = "outer wall +X", origin = [0.06, 0.0, 0.015], dir = [-1, 0, 0], hit = 0.01 },
+  { name = "outer wall -Y", origin = [0.0, -0.04, 0.015], dir = [0, 1, 0], hit = 0.01 },
+  { name = "outer wall +X just under the fillet", origin = [0.06, 0.0, 0.0265], dir = [-1, 0, 0], hit = 0.01 },
+  { name = "vertical corner radius 8", origin = [0.055, 0.035, 0.015], dir = [-1, -1, 0], hit = 0.0103848 },
+  { name = "inner wall +X", origin = [0.0, 0.0, 0.015], dir = [1, 0, 0], hit = 0.048 },
+  { name = "inner wall +Y", origin = [0.0, 0.0, 0.015], dir = [0, 1, 0], hit = 0.028 },
+  { name = "ceiling", origin = [0.0, 0.0, 0.01], dir = [0, 0, 1], hit = 0.018 },
+  { name = "open bottom rim", origin = [0.049, 0.0, -0.01], dir = [0, 0, 1], hit = 0.01 },
+]
+
+[variants]
+good = []
+unchanged = ["volume", "probe_fillet"]
+too_small = ["volume", "probe_fillet"]
+chamfer = ["volume", "probe_fillet"]
+ceiling_lowered = ["volume", "probe_cover"]

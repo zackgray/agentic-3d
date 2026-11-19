@@ -1,0 +1,215 @@
+id = "y08"
+title = "Battery lantern: recessed base, open diffuser tube, recessed cap with handle pockets, and a handle"
+group = "multi-step"
+starting_scene = "empty"
+
+prompt = """
+Model a hypothetical product in the open Blender scene: a battery lantern, as four separate mesh objects. Units are metres (1 Blender unit = 1 m). The lantern stands on the ground plane, centred on the world Z axis, with its handle running along X.
+
+Base (mesh object "Base"), one solid part:
+- A cylinder 90 mm in diameter from a flat underside at z = 0 to a flat top at z = 25 mm.
+- Seat: a centred round recess 72 mm in diameter cut into the top, 3 mm deep with a flat floor at z = 22 mm.
+- All edges are sharp.
+
+Diffuser (mesh object "Diffuser"): the clear tube of the lantern (it gets a transparent material later; model it as plain geometry). A round tube on the Z axis, open at both ends, 71 mm in outside diameter with a uniform 3 mm wall (65 mm inside diameter), from a flat bottom rim at z = 22.5 mm to a flat top rim at z = 152.5 mm. It stands in the base's seat 0.5 mm above its floor and clears the seat wall by 0.5 mm all round. Sharp edges.
+
+Cap (mesh object "Cap"), one solid part:
+- A cylinder 90 mm in diameter from a flat underside at z = 150 mm to a flat top at z = 170 mm.
+- Seat: a centred round recess 72 mm in diameter cut up into the underside, with a flat ceiling at z = 153 mm, so the top rim of the diffuser sits inside it 0.5 mm below the ceiling and 0.5 mm clear of its wall all round.
+- Handle pockets: two square pockets cut down into the top, each 7 mm by 7 mm, centred at (x, y) = (-36, 0) mm and (+36, 0) mm, with flat floors at z = 160 mm and sharp corners.
+- All other edges are sharp.
+
+Handle (mesh object "Handle"), one connected solid made of three fused square-section bars, all 6 mm wide in Y (y from -3 mm to +3 mm), with sharp edges:
+- Two legs, each 6 mm by 6 mm in plan, centred at (x, y) = (-36, 0) mm and (+36, 0) mm, from a flat bottom at z = 160.5 mm up to z = 206 mm. Each leg stands in a handle pocket 0.5 mm above its floor and clears its walls by 0.5 mm all round.
+- A top bar from x = -39 mm to x = +39 mm, from z = 200 mm to a flat top at z = 206 mm, fused to the tops of both legs (its ends are flush with the legs' outer faces).
+
+All four objects:
+- Each is a single closed (watertight) mesh in one connected piece, with consistent outward normals and no self-intersections.
+- No two objects touch or intersect.
+- Transforms applied: location at the origin, no rotation, scale 1, so the mesh data holds world coordinates.
+- At most 20,000 faces per object.
+- No other mesh objects in the scene.
+
+Mesh hygiene: no duplicate or coincident vertices, no zero-length edges and no zero-area faces. Merge any coincident vertices before you finish.
+
+Tell me when you're done.
+"""
+
+[[checks]]
+type = "objects"
+expected = ["Base", "Cap", "Diffuser", "Handle"]
+
+[[checks]]
+type = "transforms_applied"
+objects = ["Base", "Cap", "Diffuser", "Handle"]
+
+[[checks]]
+type = "bbox"
+label = "bbox_base"
+object = "Base"
+min = [-0.045, -0.045, 0.0]
+max = [0.045, 0.045, 0.025]
+tol = 0.0003
+
+[[checks]]
+type = "bbox"
+label = "bbox_diffuser"
+object = "Diffuser"
+min = [-0.0355, -0.0355, 0.0225]
+max = [0.0355, 0.0355, 0.1525]
+tol = 0.0003
+
+[[checks]]
+type = "bbox"
+label = "bbox_cap"
+object = "Cap"
+min = [-0.045, -0.045, 0.15]
+max = [0.045, 0.045, 0.17]
+tol = 0.0003
+
+[[checks]]
+type = "bbox"
+label = "bbox_handle"
+object = "Handle"
+min = [-0.039, -0.003, 0.1605]
+max = [0.039, 0.003, 0.206]
+tol = 0.0003
+
+[[checks]]
+type = "watertight"
+objects = ["Base", "Cap", "Diffuser", "Handle"]
+
+[[checks]]
+type = "shells"
+objects = ["Base", "Cap", "Diffuser", "Handle"]
+
+[[checks]]
+type = "self_intersection"
+objects = ["Base", "Cap", "Diffuser", "Handle"]
+
+[[checks]]
+type = "topology"
+objects = ["Base", "Cap", "Diffuser", "Handle"]
+
+[[checks]]
+type = "face_budget"
+objects = ["Base", "Cap", "Diffuser", "Handle"]
+max = 20000
+
+[[checks]]
+type = "no_overlap"
+label = "no_overlap_base_diffuser"
+a = "Base"
+b = "Diffuser"
+
+[[checks]]
+type = "no_overlap"
+label = "no_overlap_diffuser_cap"
+a = "Diffuser"
+b = "Cap"
+
+[[checks]]
+type = "no_overlap"
+label = "no_overlap_cap_handle"
+a = "Cap"
+b = "Handle"
+
+# pi*45^2*25 - seat pi*36^2*3
+[[checks]]
+type = "volume"
+label = "volume_base"
+object = "Base"
+mm3 = 146829
+rel_tol = 0.01
+
+# pi*(35.5^2 - 32.5^2)*130
+[[checks]]
+type = "volume"
+label = "volume_diffuser"
+object = "Diffuser"
+mm3 = 83315
+rel_tol = 0.01
+
+# pi*45^2*20 - seat pi*36^2*3 - pockets 2*7*7*10
+[[checks]]
+type = "volume"
+label = "volume_cap"
+object = "Cap"
+mm3 = 114040
+rel_tol = 0.01
+
+[[checks]]
+type = "ray_probe"
+label = "probe_base"
+objects = ["Base"]
+tol = 0.0003
+probes = [
+  { name = "top ring outside the seat", origin = [0.04, 0.0, 0.05], dir = [0, 0, -1], hit = 0.025 },
+  { name = "seat floor", origin = [0.0, 0.0, 0.05], dir = [0, 0, -1], hit = 0.028 },
+  { name = "seat wall", origin = [0.0, 0.0, 0.0235], dir = [1, 0, 0], hit = 0.036 },
+  { name = "side", origin = [0.1, 0.0, 0.01], dir = [-1, 0, 0], hit = 0.055 },
+  { name = "underside", origin = [0.0, 0.0, -0.01], dir = [0, 0, 1], hit = 0.01 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_diffuser"
+objects = ["Diffuser"]
+tol = 0.0003
+probes = [
+  { name = "outside wall", origin = [0.1, 0.0, 0.09], dir = [-1, 0, 0], hit = 0.0645 },
+  { name = "inside wall", origin = [0.0, 0.0, 0.09], dir = [1, 0, 0], hit = 0.0325 },
+  { name = "open bore end to end", origin = [0.0, 0.0, 0.3], dir = [0, 0, -1], hit = false },
+  { name = "top rim", origin = [0.0345, 0.0, 0.3], dir = [0, 0, -1], hit = 0.1475 },
+  { name = "bottom rim", origin = [0.0345, 0.0, 0.0], dir = [0, 0, 1], hit = 0.0225 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_cap"
+objects = ["Cap"]
+tol = 0.0003
+probes = [
+  { name = "top", origin = [0.0, 0.0, 0.25], dir = [0, 0, -1], hit = 0.08 },
+  { name = "top beside the pockets", origin = [0.0, 0.036, 0.25], dir = [0, 0, -1], hit = 0.08 },
+  { name = "seat ceiling", origin = [0.0, 0.0, 0.1], dir = [0, 0, 1], hit = 0.053 },
+  { name = "underside ring outside the seat", origin = [0.04, 0.0, 0.1], dir = [0, 0, 1], hit = 0.05 },
+  { name = "side", origin = [0.1, 0.0, 0.16], dir = [-1, 0, 0], hit = 0.055 },
+  { name = "pocket +X floor", origin = [0.036, 0.0, 0.25], dir = [0, 0, -1], hit = 0.09 },
+  { name = "pocket -X floor", origin = [-0.036, 0.0, 0.25], dir = [0, 0, -1], hit = 0.09 },
+  { name = "pocket +X wall", origin = [0.036, 0.0, 0.165], dir = [1, 0, 0], hit = 0.0035 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_handle"
+objects = ["Handle"]
+tol = 0.0003
+probes = [
+  { name = "top bar top", origin = [0.0, 0.0, 0.25], dir = [0, 0, -1], hit = 0.044 },
+  { name = "top bar underside", origin = [0.0, 0.0, 0.18], dir = [0, 0, 1], hit = 0.02 },
+  { name = "top bar front face", origin = [0.0, -0.1, 0.203], dir = [0, 1, 0], hit = 0.097 },
+  { name = "leg outer face", origin = [0.1, 0.0, 0.19], dir = [-1, 0, 0], hit = 0.061 },
+  { name = "leg bottom", origin = [0.036, 0.0, 0.0], dir = [0, 0, 1], hit = 0.1605 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_fit"
+tol = 0.0003
+probes = [
+  { name = "under the diffuser to the base seat wall", origin = [0.0, 0.0, 0.02225], dir = [1, 0, 0], hit = 0.036 },
+  { name = "over the diffuser to the cap seat wall", origin = [0.0, 0.0, 0.15275], dir = [1, 0, 0], hit = 0.036 },
+  { name = "down the leg clearance to the pocket floor", origin = [0.036, 0.00325, 0.25], dir = [0, 0, -1], hit = 0.09 },
+]
+
+[variants]
+good = []
+solid_diffuser = ["volume_diffuser", "probe_diffuser"]
+thin_wall = ["volume_diffuser", "probe_diffuser"]
+diffuser_seated = ["bbox_diffuser", "no_overlap_base_diffuser", "probe_diffuser", "probe_fit"]
+no_base_recess = ["volume_base", "probe_base", "no_overlap_base_diffuser", "probe_fit"]
+no_cap_recess = ["volume_cap", "probe_cap", "no_overlap_diffuser_cap", "probe_fit"]
+no_handle_pockets = ["probe_cap", "no_overlap_cap_handle", "probe_fit"]
+handle_along_y = ["bbox_handle", "probe_cap", "probe_handle", "probe_fit"]
+handle_low = ["bbox_handle", "probe_handle"]

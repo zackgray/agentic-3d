@@ -1,0 +1,225 @@
+id = "m03-toothbrush-dock"
+title = "Electric toothbrush in its charging dock: dock, handle, button and brush head"
+group = "multi-step"
+starting_scene = "empty"
+
+prompt = """
+Model a hypothetical product in the open Blender scene: an electric toothbrush standing in its charging dock, as four separate mesh objects. Units are metres (1 Blender unit = 1 m). The dock stands on the ground plane; the handle and brush head are centred on the world Z axis. The front of the toothbrush faces -Y.
+
+Dock (mesh object "Dock"), one solid part:
+- Block: seen from above, a rounded rectangle 60 mm in X by 50 mm in Y (x from -30 mm to +30 mm, y from -25 mm to +25 mm) whose four vertical corners are rounded with a 10 mm radius, from z = 0 to a flat top at z = 30 mm. All other edges are sharp.
+- Socket: a cylindrical hole 27 mm in diameter centred on the Z axis, from the top down to a flat floor at z = 8 mm.
+- Charging post: a solid cylinder 8 mm in diameter centred on the Z axis, standing on the socket floor and rising to a flat top at z = 20 mm, fused to the dock.
+
+Handle (mesh object "Handle"), one solid part:
+- Grip: a cylinder 26 mm in diameter from a flat bottom at z = 8.5 mm (0.5 mm above the socket floor, clearing the socket wall by 0.5 mm all round) up to z = 170 mm.
+- Taper: a straight cone from 26 mm in diameter at z = 170 mm to 12 mm in diameter at z = 185 mm, ending in a flat shoulder at z = 185 mm.
+- Drive shaft: a cylinder 5 mm in diameter rising from the shoulder to a flat top at z = 200 mm.
+- Charging bore: a flat-topped blind hole 9 mm in diameter up into the bottom, from z = 8.5 mm to z = 20.5 mm, so it clears the charging post by 0.5 mm all round and over its top.
+- Button pocket: a round blind hole 9 mm in diameter in the front of the grip, its axis along Y at (x, z) = (0, 110) mm, with a flat floor perpendicular to the Y axis at y = -11 mm (2 mm deep at its axis).
+- All edges are sharp.
+
+Button (mesh object "Button"): a solid cylinder 8 mm in diameter with its axis along Y at (x, z) = (0, 110) mm, from y = -11.5 mm (0.5 mm in front of the pocket floor) to its flat face at y = -14.5 mm, clearing the pocket wall by 0.5 mm all round and standing 1.5 mm proud of the grip.
+
+Brush head (mesh object "BrushHead"), one solid part:
+- Neck: a cylinder 10 mm in diameter from a flat bottom at z = 185.5 mm (0.5 mm above the shoulder) to a flat top at z = 245 mm, with a flat-topped blind bore 6 mm in diameter up into its bottom from z = 185.5 mm to z = 200.5 mm, so it clears the drive shaft by 0.5 mm all round and over its top.
+- Bristle block: a box from x = -5 mm to +5 mm, y = -12 mm to -4 mm and z = 222 mm to 242 mm, fused to the front of the neck.
+
+All four objects:
+- Each is a single closed (watertight) mesh in one connected piece, with consistent outward normals and no self-intersections.
+- No two objects touch or intersect.
+- Transforms applied: location at the origin, no rotation, scale 1, so the mesh data holds world coordinates.
+- At most 20,000 faces per object.
+- No other mesh objects in the scene.
+
+Mesh hygiene: no duplicate or coincident vertices, no zero-length edges and no zero-area faces. Merge any coincident vertices before you finish.
+
+Tell me when you're done.
+"""
+
+[[checks]]
+type = "objects"
+expected = ["BrushHead", "Button", "Dock", "Handle"]
+
+[[checks]]
+type = "transforms_applied"
+objects = ["BrushHead", "Button", "Dock", "Handle"]
+
+[[checks]]
+type = "bbox"
+label = "bbox_dock"
+object = "Dock"
+min = [-0.03, -0.025, 0.0]
+max = [0.03, 0.025, 0.03]
+tol = 0.0003
+
+[[checks]]
+type = "bbox"
+label = "bbox_handle"
+object = "Handle"
+min = [-0.013, -0.013, 0.0085]
+max = [0.013, 0.013, 0.2]
+tol = 0.0003
+
+[[checks]]
+type = "bbox"
+label = "bbox_button"
+object = "Button"
+min = [-0.004, -0.0145, 0.106]
+max = [0.004, -0.0115, 0.114]
+tol = 0.0003
+
+[[checks]]
+type = "bbox"
+label = "bbox_head"
+object = "BrushHead"
+min = [-0.005, -0.012, 0.1855]
+max = [0.005, 0.005, 0.245]
+tol = 0.0003
+
+[[checks]]
+type = "watertight"
+objects = ["BrushHead", "Button", "Dock", "Handle"]
+
+[[checks]]
+type = "shells"
+objects = ["BrushHead", "Button", "Dock", "Handle"]
+
+[[checks]]
+type = "self_intersection"
+objects = ["BrushHead", "Button", "Dock", "Handle"]
+
+[[checks]]
+type = "topology"
+objects = ["BrushHead", "Button", "Dock", "Handle"]
+
+[[checks]]
+type = "face_budget"
+objects = ["BrushHead", "Button", "Dock", "Handle"]
+max = 20000
+
+[[checks]]
+type = "no_overlap"
+label = "no_overlap_dock_handle"
+a = "Dock"
+b = "Handle"
+
+[[checks]]
+type = "no_overlap"
+label = "no_overlap_handle_button"
+a = "Handle"
+b = "Button"
+
+[[checks]]
+type = "no_overlap"
+label = "no_overlap_handle_head"
+a = "Handle"
+b = "BrushHead"
+
+# 30*(60*50 - (4-pi)*10^2) - socket pi*13.5^2*22 + post pi*4^2*12
+[[checks]]
+type = "volume"
+label = "volume_dock"
+object = "Dock"
+mm3 = 75432
+rel_tol = 0.01
+
+# grip pi*13^2*161.5 + taper pi*15/3*(13^2+13*6+6^2) + shaft pi*2.5^2*15 - bore pi*4.5^2*12
+#   - button pocket: integral over the 9 mm disc of (sqrt(13^2 - u^2) - 11) dA = 114.7
+[[checks]]
+type = "volume"
+label = "volume_handle"
+object = "Handle"
+mm3 = 89607
+rel_tol = 0.01
+
+# neck pi*5^2*59.5 - bore pi*3^2*15 + bristles 10*8*20 - their overlap with the neck
+#   (circular segment beyond y = -4 of the 5 mm radius: 25*acos(0.8) - 4*3 = 4.0875 mm^2, times 20)
+[[checks]]
+type = "volume"
+label = "volume_head"
+object = "BrushHead"
+mm3 = 5767
+rel_tol = 0.01
+
+[[checks]]
+type = "ray_probe"
+label = "probe_dock"
+objects = ["Dock"]
+tol = 0.0003
+probes = [
+  { name = "side +X", origin = [0.05, 0.0, 0.015], dir = [-1, 0, 0], hit = 0.02 },
+  { name = "side -Y", origin = [0.0, -0.04, 0.015], dir = [0, 1, 0], hit = 0.015 },
+  { name = "plan corner radius 10", origin = [0.035, 0.03, 0.015], dir = [-1, -1, 0], hit = 0.011213 },
+  { name = "top", origin = [0.022, 0.0, 0.05], dir = [0, 0, -1], hit = 0.02 },
+  { name = "socket floor", origin = [0.009, 0.0, 0.05], dir = [0, 0, -1], hit = 0.042 },
+  { name = "socket wall", origin = [0.0, 0.0, 0.025], dir = [1, 0, 0], hit = 0.0135 },
+  { name = "post top", origin = [0.0, 0.0, 0.05], dir = [0, 0, -1], hit = 0.03 },
+  { name = "post side", origin = [0.009, 0.0, 0.015], dir = [-1, 0, 0], hit = 0.005 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_handle"
+objects = ["Handle"]
+tol = 0.0003
+probes = [
+  { name = "grip side low", origin = [0.03, 0.0, 0.06], dir = [-1, 0, 0], hit = 0.017 },
+  { name = "grip side high", origin = [0.03, 0.0, 0.15], dir = [-1, 0, 0], hit = 0.017 },
+  { name = "taper at mid-height", origin = [0.03, 0.0, 0.1775], dir = [-1, 0, 0], hit = 0.0205 },
+  { name = "shoulder", origin = [0.004, 0.0, 0.21], dir = [0, 0, -1], hit = 0.025 },
+  { name = "shaft side", origin = [0.03, 0.0, 0.195], dir = [-1, 0, 0], hit = 0.0275 },
+  { name = "shaft top", origin = [0.0, 0.0, 0.21], dir = [0, 0, -1], hit = 0.01 },
+  { name = "bottom", origin = [0.008, 0.0, -0.01], dir = [0, 0, 1], hit = 0.0185 },
+  { name = "charging bore ceiling", origin = [0.0, 0.0, -0.01], dir = [0, 0, 1], hit = 0.0305 },
+  { name = "button pocket floor", origin = [0.0, -0.03, 0.11], dir = [0, 1, 0], hit = 0.019 },
+  { name = "button pocket wall", origin = [0.0, -0.012, 0.11], dir = [1, 0, 0], hit = 0.0045 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_button"
+objects = ["Button"]
+tol = 0.0003
+probes = [
+  { name = "button face", origin = [0.0, -0.03, 0.11], dir = [0, 1, 0], hit = 0.0155 },
+  { name = "button back", origin = [0.0, 0.0, 0.11], dir = [0, -1, 0], hit = 0.0115 },
+  { name = "button side", origin = [0.02, -0.013, 0.11], dir = [-1, 0, 0], hit = 0.016 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_head"
+objects = ["BrushHead"]
+tol = 0.0003
+probes = [
+  { name = "neck top", origin = [0.0, 0.0, 0.26], dir = [0, 0, -1], hit = 0.015 },
+  { name = "neck side", origin = [0.03, 0.0, 0.21], dir = [-1, 0, 0], hit = 0.025 },
+  { name = "bore ceiling", origin = [0.0, 0.0, 0.19], dir = [0, 0, 1], hit = 0.0105 },
+  { name = "bristle face", origin = [0.0, -0.03, 0.232], dir = [0, 1, 0], hit = 0.018 },
+  { name = "bristle block top", origin = [0.0, -0.008, 0.26], dir = [0, 0, -1], hit = 0.018 },
+  { name = "bristle block bottom", origin = [0.0, -0.008, 0.2], dir = [0, 0, 1], hit = 0.022 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_fit"
+tol = 0.0003
+probes = [
+  { name = "down the socket clearance to the floor", origin = [0.01325, 0.0, 0.05], dir = [0, 0, -1], hit = 0.042 },
+  { name = "gap under the handle to the socket wall", origin = [0.009, 0.0, 0.00825], dir = [1, 0, 0], hit = 0.0045 },
+  { name = "gap over the post to the bore wall", origin = [0.0, 0.0, 0.02025], dir = [1, 0, 0], hit = 0.0045 },
+  { name = "into the button clearance to the pocket floor", origin = [0.00425, -0.03, 0.11], dir = [0, 1, 0], hit = 0.019 },
+  { name = "gap under the brush head to the shaft", origin = [0.03, 0.0, 0.18525], dir = [-1, 0, 0], hit = 0.0275 },
+]
+
+[variants]
+good = []
+no_post = ["probe_dock"]
+tight_socket = ["no_overlap_dock_handle", "volume_dock", "probe_dock", "probe_fit"]
+handle_on_floor = ["bbox_handle", "no_overlap_dock_handle", "probe_handle", "probe_fit"]
+no_taper = ["volume_handle", "probe_handle"]
+no_button_pocket = ["no_overlap_handle_button", "probe_handle", "probe_fit"]
+button_flush = ["bbox_button", "no_overlap_handle_button", "probe_button"]
+head_seated = ["bbox_head", "no_overlap_handle_head", "probe_head", "probe_fit"]
+no_bristles = ["bbox_head", "volume_head", "probe_head"]

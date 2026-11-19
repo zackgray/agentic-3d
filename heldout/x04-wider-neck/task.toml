@@ -1,0 +1,138 @@
+id = "x04-wider-neck"
+title = "Revision: widen the bottle neck and refit the cap"
+group = "revision"
+starting_scene = "start.py"
+
+prompt = """
+The open Blender scene holds an approved model of a hypothetical product: a lotion bottle with a bored neck (mesh object "Bottle") and a cap (mesh object "Cap"). Units are metres (1 Blender unit = 1 m). The client has one revision:
+
+- Widen the neck by 6 mm in diameter, still centred where it is. It keeps its height, and the bore through it (the opening) keeps its current diameter and depth.
+- Refit the cap to the wider neck: it keeps its side-wall and top-wall thickness, the same clearance round the side of the neck and over its top, and its rim stays at the same height.
+- Leave the bottle body exactly as it is.
+
+Both objects keep their names. Each stays a single closed (watertight) mesh in one connected piece, with consistent outward normals and no self-intersections, transforms applied (location at the origin, no rotation, scale 1), and at most 20,000 faces. The cap must not touch or intersect the bottle. No other mesh objects in the scene.
+
+Mesh hygiene: no duplicate or coincident vertices, no zero-length edges and no zero-area faces. Merge any coincident vertices before you finish.
+
+Tell me when you're done.
+"""
+
+[[checks]]
+type = "objects"
+expected = ["Bottle", "Cap"]
+
+[[checks]]
+type = "transforms_applied"
+objects = ["Bottle", "Cap"]
+
+[[checks]]
+type = "bbox"
+label = "bbox_bottle"
+object = "Bottle"
+min = [-0.028, -0.02, 0.0]
+max = [0.028, 0.02, 0.116]
+tol = 0.0002
+
+[[checks]]
+type = "bbox"
+label = "bbox_cap"
+object = "Cap"
+min = [-0.0145, -0.0145, 0.104]
+max = [0.0145, 0.0145, 0.1195]
+tol = 0.0002
+
+[[checks]]
+type = "watertight"
+objects = ["Bottle", "Cap"]
+
+[[checks]]
+type = "shells"
+objects = ["Bottle", "Cap"]
+
+[[checks]]
+type = "self_intersection"
+objects = ["Bottle", "Cap"]
+
+[[checks]]
+type = "topology"
+objects = ["Bottle", "Cap"]
+
+[[checks]]
+type = "face_budget"
+objects = ["Bottle", "Cap"]
+max = 20000
+
+[[checks]]
+type = "no_overlap"
+a = "Bottle"
+b = "Cap"
+
+# body 100*(56*40 - (4-pi)*8^2) + neck pi*12^2*16 - bore pi*5^2*26  (unchanged neck r 9 gives 220536, -1.4%)
+[[checks]]
+type = "volume"
+label = "volume_bottle"
+object = "Bottle"
+mm3 = 223702
+rel_tol = 0.005
+
+# top disc pi*14.5^2*3 + side ring pi*(14.5^2 - 12.5^2)*12.5
+[[checks]]
+type = "volume"
+label = "volume_cap"
+object = "Cap"
+mm3 = 4102
+rel_tol = 0.01
+
+[[checks]]
+type = "ray_probe"
+label = "probe_body"
+objects = ["Bottle"]
+tol = 0.0002
+probes = [
+  { name = "body side +X", origin = [0.1, 0.0, 0.05], dir = [-1, 0, 0], hit = 0.072 },
+  { name = "body side -Y", origin = [0.0, -0.1, 0.05], dir = [0, 1, 0], hit = 0.08 },
+  { name = "corner radius 8", origin = [0.03, 0.022, 0.05], dir = [-1, -1, 0], hit = 0.006142 },
+  { name = "shoulder", origin = [0.02, 0.0, 0.2], dir = [0, 0, -1], hit = 0.1 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_neck"
+objects = ["Bottle"]
+tol = 0.0002
+probes = [
+  { name = "neck side +X, 24 mm across", origin = [0.03, 0.0, 0.108], dir = [-1, 0, 0], hit = 0.018 },
+  { name = "neck side -Y", origin = [0.0, -0.03, 0.108], dir = [0, 1, 0], hit = 0.018 },
+  { name = "neck top", origin = [0.009, 0.0, 0.2], dir = [0, 0, -1], hit = 0.084 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_bore"
+objects = ["Bottle"]
+tol = 0.0002
+probes = [
+  { name = "bore wall stays 10 mm across", origin = [0.0, 0.0, 0.11], dir = [1, 0, 0], hit = 0.005 },
+  { name = "bore floor", origin = [0.003, 0.0, 0.2], dir = [0, 0, -1], hit = 0.11 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_cap"
+objects = ["Cap"]
+tol = 0.0002
+probes = [
+  { name = "cap top", origin = [0.0, 0.0, 0.2], dir = [0, 0, -1], hit = 0.0805 },
+  { name = "cap outside", origin = [0.03, 0.0, 0.11], dir = [-1, 0, 0], hit = 0.0155 },
+  { name = "cap inside wall", origin = [0.0, 0.0, 0.11625], dir = [1, 0, 0], hit = 0.0125 },
+  { name = "rim underside", origin = [0.0135, 0.0, 0.05], dir = [0, 0, 1], hit = 0.054 },
+]
+
+[variants]
+good = []
+unchanged = ["bbox_cap", "volume_bottle", "volume_cap", "probe_neck", "probe_cap"]
+cap_scaled = ["no_overlap", "volume_cap", "probe_cap"]
+neck_scaled = ["volume_bottle", "probe_bore"]
+cap_left = ["bbox_cap", "no_overlap", "volume_cap", "probe_cap"]
+body_rebuilt_sharp = ["volume_bottle", "probe_body"]
+radius_plus_6 = ["bbox_cap", "volume_bottle", "volume_cap", "probe_neck", "probe_cap"]

@@ -1,0 +1,99 @@
+id = "y02-tealight-holder"
+title = "Tealight holder: square block with chamfered top and blind pocket"
+group = "hard-surface"
+starting_scene = "empty"
+
+prompt = """
+Model a hypothetical product in the open Blender scene: a solid square tealight holder, as one mesh object. Units are metres (1 Blender unit = 1 m). The holder stands on the ground plane, centred on the world Z axis, with its sides square to world X and Y.
+
+Holder (mesh object "Holder"):
+- Body: a square block 60 mm by 60 mm (x and y from -30 mm to +30 mm), from a flat underside at z = 0 to a flat top at z = 40 mm. The four vertical edges are sharp.
+- Chamfer: the four outer edges of the top face are cut with a 45-degree chamfer 4 mm by 4 mm. The straight sides end at z = 36 mm, and the flat top runs out to 26 mm from the centre on each side (x and y from -26 mm to +26 mm). The bottom edges are sharp.
+- Pocket: a centred cylindrical blind hole 40 mm in diameter (radius 20 mm), from the top face straight down to a flat floor at z = 22 mm (18 mm deep). The pocket's edges are sharp.
+
+The object:
+- A single closed (watertight) mesh in one connected piece, with consistent outward normals and no self-intersections. Surfaces are smooth enough for close-up product renders.
+- Transforms applied: location at the origin, no rotation, scale 1, so the mesh data holds world coordinates.
+- At most 20,000 faces.
+- No other mesh objects in the scene.
+
+Mesh hygiene: no duplicate or coincident vertices, no zero-length edges and no zero-area faces. Merge any coincident vertices before you finish.
+
+Tell me when you're done.
+"""
+
+[[checks]]
+type = "objects"
+expected = ["Holder"]
+
+[[checks]]
+type = "transforms_applied"
+objects = ["Holder"]
+
+[[checks]]
+type = "bbox"
+object = "Holder"
+min = [-0.03, -0.03, 0.0]
+max = [0.03, 0.03, 0.04]
+tol = 0.0003
+
+[[checks]]
+type = "watertight"
+objects = ["Holder"]
+
+[[checks]]
+type = "shells"
+objects = ["Holder"]
+
+[[checks]]
+type = "self_intersection"
+objects = ["Holder"]
+
+[[checks]]
+type = "topology"
+objects = ["Holder"]
+
+[[checks]]
+type = "face_budget"
+objects = ["Holder"]
+max = 20000
+
+# 60*60*40 - chamfer (60*60*4 - 4/3*(60^2 + 52^2 + 60*52)) - pocket pi*20^2*18
+[[checks]]
+type = "volume"
+object = "Holder"
+mm3 = 119546
+rel_tol = 0.01
+
+[[checks]]
+type = "ray_probe"
+label = "probe_body"
+objects = ["Holder"]
+tol = 0.0003
+probes = [
+  { name = "side +X", origin = [0.1, 0.0, 0.02], dir = [-1, 0, 0], hit = 0.07 },
+  { name = "side -Y", origin = [0.0, -0.1, 0.02], dir = [0, 1, 0], hit = 0.07 },
+  { name = "chamfer +X", origin = [0.038, 0.0, 0.048], dir = [-1, 0, -1], hit = 0.0141421 },
+  { name = "chamfer +Y", origin = [0.0, 0.038, 0.048], dir = [0, -1, -1], hit = 0.0141421 },
+  { name = "top face", origin = [0.024, 0.0, 0.1], dir = [0, 0, -1], hit = 0.06 },
+  { name = "underside", origin = [0.0, 0.0, -0.01], dir = [0, 0, 1], hit = 0.01 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_pocket"
+objects = ["Holder"]
+tol = 0.0003
+probes = [
+  { name = "pocket floor", origin = [0.01, 0.0, 0.1], dir = [0, 0, -1], hit = 0.078 },
+  { name = "pocket wall +X", origin = [0.0, 0.0, 0.03], dir = [1, 0, 0], hit = 0.02 },
+  { name = "pocket wall -Y", origin = [0.0, 0.0, 0.03], dir = [0, -1, 0], hit = 0.02 },
+]
+
+[variants]
+good = []
+sharp_top = ["volume", "probe_body"]
+through_pocket = ["volume", "probe_body", "probe_pocket"]
+shallow_pocket = ["volume", "probe_pocket"]
+small_pocket = ["volume", "probe_pocket"]
+floating = ["bbox", "probe_body", "probe_pocket"]

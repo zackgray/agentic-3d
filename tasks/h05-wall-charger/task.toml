@@ -1,0 +1,116 @@
+id = "h05-wall-charger"
+title = "Wall charger: rounded body, flat prongs, USB-C port"
+group = "hard-surface"
+starting_scene = "empty"
+
+prompt = """
+Model a hypothetical product in the open Blender scene: a compact wall charger, as one mesh object named "Charger". Units are metres (1 Blender unit = 1 m). It stands on the ground plane, centred on the world Z axis, with its prongs pointing along +Y and its port facing -Y.
+
+- Body: seen along the Y axis, the body is a square 36 mm in X by 36 mm in Z (x from -18 mm to +18 mm, z from 0 to 36 mm) whose four corners are rounded with a 6 mm radius. It runs straight through in Y from a flat front face at y = -14 mm to a flat back face at y = +14 mm (28 mm deep). So the four edges that run along Y are rounded with a 6 mm radius; the edges round the front and back faces stay sharp.
+- Prongs: two flat rectangular blades standing out of the back face, from y = +14 mm to their flat tips at y = +30 mm (16 mm long). Each blade is 1.5 mm thick in X and 6.4 mm tall in Z, centred at z = 18 mm; their centre planes are at x = -6.35 mm and x = +6.35 mm (12.7 mm apart). Each blade is fused to the body. All blade edges are sharp.
+- Port: a rectangular recess in the front face, 9 mm wide in X by 3.4 mm tall in Z, centred at (x, z) = (0, 18) mm, running from the front face 7 mm into the body to a flat bottom at y = -7 mm. Its corners and edges are sharp.
+
+The object:
+- A single closed (watertight) mesh, one connected piece, with consistent outward normals and no self-intersections. Curved surfaces are smooth enough for close-up product renders.
+- Transforms applied: location at the origin, no rotation, scale 1, so the mesh data holds world coordinates.
+- At most 20,000 faces.
+- No other mesh objects in the scene.
+
+Mesh hygiene: no duplicate or coincident vertices, no zero-length edges and no zero-area faces. Merge any coincident vertices before you finish.
+
+Tell me when you're done.
+"""
+
+[[checks]]
+type = "objects"
+expected = ["Charger"]
+
+[[checks]]
+type = "transforms_applied"
+objects = ["Charger"]
+
+[[checks]]
+type = "bbox"
+object = "Charger"
+min = [-0.018, -0.014, 0.0]
+max = [0.018, 0.03, 0.036]
+tol = 0.0002
+
+[[checks]]
+type = "watertight"
+objects = ["Charger"]
+
+[[checks]]
+type = "shells"
+objects = ["Charger"]
+
+[[checks]]
+type = "self_intersection"
+objects = ["Charger"]
+
+[[checks]]
+type = "topology"
+objects = ["Charger"]
+
+[[checks]]
+type = "face_budget"
+object = "Charger"
+max = 20000
+
+# body (36 * 36 - (4 - pi) * 6^2) * 28 + prongs 2 * 1.5 * 6.4 * 16 - port 9 * 3.4 * 7
+[[checks]]
+type = "volume"
+object = "Charger"
+mm3 = 35516
+rel_tol = 0.01
+
+# corner centre (x, z) = (12, 30); from (28, 46) along (-1, -1) the arc lies 16 * sqrt(2) - 6 away
+[[checks]]
+type = "ray_probe"
+label = "probe_body"
+tol = 0.0003
+probes = [
+  { name = "corner radius 6 +X+Z", origin = [0.028, 0.0, 0.046], dir = [-1, 0, -1], hit = 0.016627 },
+  { name = "corner radius 6 -X+Z", origin = [-0.028, 0.005, 0.046], dir = [1, 0, -1], hit = 0.016627 },
+  { name = "corner radius 6 -X-Z", origin = [-0.028, -0.005, -0.010], dir = [1, 0, 1], hit = 0.016627 },
+  { name = "side face +X", origin = [0.03, 0.0, 0.018], dir = [-1, 0, 0], hit = 0.012 },
+  { name = "top face", origin = [0.0, 0.0, 0.05], dir = [0, 0, -1], hit = 0.014 },
+  { name = "front face", origin = [0.012, -0.03, 0.018], dir = [0, 1, 0], hit = 0.016 },
+  { name = "back face between prongs", origin = [0.0, 0.04, 0.018], dir = [0, -1, 0], hit = 0.026 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_prongs"
+tol = 0.0003
+probes = [
+  { name = "prong tip +X", origin = [0.00635, 0.04, 0.018], dir = [0, -1, 0], hit = 0.01 },
+  { name = "prong tip -X", origin = [-0.00635, 0.04, 0.018], dir = [0, -1, 0], hit = 0.01 },
+  { name = "prong +X outer face (x = 7.1)", origin = [0.012, 0.022, 0.018], dir = [-1, 0, 0], hit = 0.0049 },
+  { name = "prong -X inner face (x = -5.6)", origin = [0.0, 0.022, 0.018], dir = [-1, 0, 0], hit = 0.0056 },
+  { name = "prong +X top edge (z = 21.2)", origin = [0.00635, 0.022, 0.03], dir = [0, 0, -1], hit = 0.0088 },
+  { name = "prong -X bottom edge (z = 14.8)", origin = [-0.00635, 0.022, 0.005], dir = [0, 0, 1], hit = 0.0098 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_port"
+tol = 0.0003
+probes = [
+  { name = "port bottom", origin = [0.0, -0.03, 0.018], dir = [0, 1, 0], hit = 0.023 },
+  { name = "port bottom near +X end", origin = [0.0042, -0.03, 0.018], dir = [0, 1, 0], hit = 0.023 },
+  { name = "port bottom near top", origin = [-0.004, -0.03, 0.0195], dir = [0, 1, 0], hit = 0.023 },
+  { name = "port side wall +X (x = 4.5)", origin = [0.0, -0.01, 0.018], dir = [1, 0, 0], hit = 0.0045 },
+  { name = "port top wall (z = 19.7)", origin = [0.0, -0.01, 0.018], dir = [0, 0, 1], hit = 0.0017 },
+]
+
+[variants]
+good = []
+sharp_corners = ["probe_body", "volume"]
+no_port = ["probe_port"]
+shallow_port = ["probe_port"]
+port_vertical = ["probe_port"]
+prongs_rotated = ["probe_prongs"]
+prongs_floating = ["shells"]
+short_prongs = ["bbox", "probe_prongs"]
+prongs_on_front = ["bbox", "probe_prongs"]

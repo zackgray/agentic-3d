@@ -1,0 +1,149 @@
+id = "l05-duplicate-array"
+title = "Revision: a centred row of five copies"
+group = "layout"
+starting_scene = "start.py"
+
+prompt = """
+The open Blender scene holds an approved model of a hypothetical product: a single bottle, mesh object "Product". Units are metres (1 Blender unit = 1 m). The client now wants a line-up of five for the shot:
+
+- Keep "Product" exactly where it is and exactly as it is.
+- Add four copies of it, named "Product_2", "Product_3", "Product_4" and "Product_5", so that all five stand in one straight row along the world X axis, centred on the original, with their axes 80 mm apart centre-to-centre. "Product_2" and "Product_3" are on the -X side ("Product_2" is the outermost, 160 mm from the original); "Product_4" and "Product_5" are on the +X side ("Product_5" is the outermost).
+- Every copy is identical to the original in shape and size, faces the same way as the original, and stands at the same height (same ground level, same Y position).
+
+Every object, the original and each copy:
+- Its own separate mesh object with its own mesh data (not linked to another object's mesh), a single closed (watertight) mesh in one connected piece, with consistent outward normals and no self-intersections. No two objects touch.
+- Transforms applied: location at the origin, no rotation, scale 1, so the mesh data holds world coordinates.
+- At most 5,000 faces each.
+- No other mesh objects in the scene.
+
+Mesh hygiene: no duplicate or coincident vertices, no zero-length edges and no zero-area faces. Merge any coincident vertices before you finish.
+
+Tell me when you're done.
+"""
+
+[[checks]]
+type = "objects"
+expected = ["Product", "Product_2", "Product_3", "Product_4", "Product_5"]
+
+[[checks]]
+type = "transforms_applied"
+objects = ["Product", "Product_2", "Product_3", "Product_4", "Product_5"]
+
+[[checks]]
+type = "watertight"
+objects = ["Product", "Product_2", "Product_3", "Product_4", "Product_5"]
+
+[[checks]]
+type = "shells"
+objects = ["Product", "Product_2", "Product_3", "Product_4", "Product_5"]
+
+[[checks]]
+type = "self_intersection"
+objects = ["Product", "Product_2", "Product_3", "Product_4", "Product_5"]
+
+[[checks]]
+type = "topology"
+objects = ["Product", "Product_2", "Product_3", "Product_4", "Product_5"]
+
+[[checks]]
+type = "face_budget"
+objects = ["Product", "Product_2", "Product_3", "Product_4", "Product_5"]
+max = 5000
+
+[[checks]]
+type = "bbox"
+label = "bbox_product"
+object = "Product"
+min = [-0.025, -0.02, 0.0]
+max = [0.025, 0.025, 0.12]
+tol = 0.0003
+
+[[checks]]
+type = "bbox"
+label = "bbox_product_2"
+object = "Product_2"
+min = [-0.185, -0.02, 0.0]
+max = [-0.135, 0.025, 0.12]
+tol = 0.0003
+
+[[checks]]
+type = "bbox"
+label = "bbox_product_3"
+object = "Product_3"
+min = [-0.105, -0.02, 0.0]
+max = [-0.055, 0.025, 0.12]
+tol = 0.0003
+
+[[checks]]
+type = "bbox"
+label = "bbox_product_4"
+object = "Product_4"
+min = [0.055, -0.02, 0.0]
+max = [0.105, 0.025, 0.12]
+tol = 0.0003
+
+[[checks]]
+type = "bbox"
+label = "bbox_product_5"
+object = "Product_5"
+min = [0.135, -0.02, 0.0]
+max = [0.185, 0.025, 0.12]
+tol = 0.0003
+
+# (pi * 25^2 - segment) * 120, segment = 25^2 * acos(20/25) - 20 * sqrt(25^2 - 20^2)
+[[checks]]
+type = "volume"
+label = "volume_product"
+object = "Product"
+mm3 = 223357
+rel_tol = 0.01
+
+# (pi * 25^2 - segment) * 120, segment = 25^2 * acos(20/25) - 20 * sqrt(25^2 - 20^2)
+[[checks]]
+type = "volume"
+label = "volume_product_2"
+object = "Product_2"
+mm3 = 223357
+rel_tol = 0.01
+
+# (pi * 25^2 - segment) * 120, segment = 25^2 * acos(20/25) - 20 * sqrt(25^2 - 20^2)
+[[checks]]
+type = "volume"
+label = "volume_product_5"
+object = "Product_5"
+mm3 = 223357
+rel_tol = 0.01
+
+[[checks]]
+type = "ray_probe"
+label = "probe_fronts"
+tol = 0.0003
+probes = [
+  { name = "label flat Product", origin = [0.0, -0.1, 0.06], dir = [0, 1, 0], hit = 0.08 },
+  { name = "label flat Product_2", origin = [-0.16, -0.1, 0.06], dir = [0, 1, 0], hit = 0.08 },
+  { name = "label flat Product_3", origin = [-0.08, -0.1, 0.06], dir = [0, 1, 0], hit = 0.08 },
+  { name = "label flat Product_4", origin = [0.08, -0.1, 0.06], dir = [0, 1, 0], hit = 0.08 },
+  { name = "label flat Product_5", origin = [0.16, -0.1, 0.06], dir = [0, 1, 0], hit = 0.08 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_tops"
+tol = 0.0003
+probes = [
+  { name = "top Product", origin = [0.0, 0.0, 0.2], dir = [0, 0, -1], hit = 0.08 },
+  { name = "top Product_2", origin = [-0.16, 0.0, 0.2], dir = [0, 0, -1], hit = 0.08 },
+  { name = "top Product_3", origin = [-0.08, 0.0, 0.2], dir = [0, 0, -1], hit = 0.08 },
+  { name = "top Product_4", origin = [0.08, 0.0, 0.2], dir = [0, 0, -1], hit = 0.08 },
+  { name = "top Product_5", origin = [0.16, 0.0, 0.2], dir = [0, 0, -1], hit = 0.08 },
+]
+
+[variants]
+good = []
+unchanged = ["objects", "probe_fronts", "probe_tops", "bbox_product_2", "bbox_product_3", "bbox_product_4", "bbox_product_5", "volume_product_2", "volume_product_5", "transforms_applied", "watertight", "shells", "self_intersection", "topology", "face_budget"]
+linked = ["transforms_applied"]
+all_right = ["bbox_product_2", "bbox_product_3", "bbox_product_4", "bbox_product_5", "probe_fronts", "probe_tops"]
+wrong_pitch = ["bbox_product_2", "bbox_product_3", "bbox_product_4", "bbox_product_5"]
+turned_copies = ["bbox_product_2", "bbox_product_3", "bbox_product_4", "bbox_product_5", "probe_fronts"]
+default_names = ["objects", "bbox_product_2", "bbox_product_3", "bbox_product_4", "bbox_product_5", "volume_product_2", "volume_product_5", "transforms_applied", "watertight", "shells", "self_intersection", "topology", "face_budget"]
+joined = ["objects", "bbox_product", "volume_product", "bbox_product_2", "bbox_product_3", "bbox_product_4", "bbox_product_5", "volume_product_2", "volume_product_5", "transforms_applied", "watertight", "shells", "self_intersection", "topology", "face_budget"]

@@ -1,0 +1,160 @@
+id = "h07-wide-mouth-jar"
+title = "Wide-mouth jar with a stepped neck and a push-on screw-style lid"
+group = "hard-surface"
+starting_scene = "empty"
+
+prompt = """
+Model a hypothetical product in the open Blender scene: a wide-mouth storage jar with its lid on, as two mesh objects. Units are metres (1 Blender unit = 1 m). Both parts are centred on the world Z axis; the jar stands on the ground plane.
+
+Jar (mesh object "Jar"), a hollow moulded jar, open at the top:
+- Body: outside, a cylinder 70 mm in diameter from z = 0 to a flat shoulder at z = 70 mm.
+- Shoulder and neck: at z = 70 mm a flat horizontal ring steps the outside in to a neck 64 mm in outer diameter, which rises from z = 70 mm to the rim at z = 85 mm. The rim is a flat ring and the jar is open there. No thread is needed.
+- Walls and floor: the body wall is 2.5 mm thick, so the inside of the body is 65 mm across; the floor is 3 mm thick, so the inside floor is at z = 3 mm. The neck wall is also 2.5 mm thick, so the neck bore is 59 mm across. Inside, the body cavity rises to a flat ceiling at z = 67.5 mm (2.5 mm under the outside shoulder), where it steps in to the neck bore, which runs from z = 67.5 mm up through the open rim.
+- All edges are sharp.
+
+Lid (mesh object "Lid"), a cap that sits over the neck without touching the jar:
+- Outside: a cylinder 70 mm in diameter (flush with the jar body) from its open bottom at z = 70.5 mm (0.5 mm above the shoulder) to a flat top at z = 88 mm. The outer top edge is rounded with a 2 mm radius (a quarter-round blending the top into the side). All other edges are sharp.
+- Inside: a cylindrical cavity 65 mm in diameter, open at the bottom, rising from z = 70.5 mm to a flat ceiling at z = 85.5 mm. So the skirt is 2.5 mm thick and clears the neck by 0.5 mm all round, and the 2.5 mm thick top sits 0.5 mm above the rim.
+
+Both objects:
+- Each is a single closed (watertight) mesh in one connected piece, with consistent outward normals and no self-intersections. Thin walls are solid with real thickness, not single-sided surfaces.
+- The jar and lid do not touch or intersect.
+- Transforms applied: location at the origin, no rotation, scale 1, so the mesh data holds world coordinates.
+- At most 20,000 faces each.
+- No other mesh objects in the scene.
+
+Mesh hygiene: no duplicate or coincident vertices, no zero-length edges and no zero-area faces. Merge any coincident vertices before you finish.
+
+Tell me when you're done.
+"""
+
+[[checks]]
+type = "objects"
+expected = ["Jar", "Lid"]
+
+[[checks]]
+type = "transforms_applied"
+objects = ["Jar", "Lid"]
+
+[[checks]]
+type = "bbox"
+label = "bbox_jar"
+object = "Jar"
+min = [-0.035, -0.035, 0.0]
+max = [0.035, 0.035, 0.085]
+tol = 0.0003
+
+[[checks]]
+type = "bbox"
+label = "bbox_lid"
+object = "Lid"
+min = [-0.035, -0.035, 0.0705]
+max = [0.035, 0.035, 0.088]
+tol = 0.0003
+
+[[checks]]
+type = "watertight"
+objects = ["Jar", "Lid"]
+
+[[checks]]
+type = "shells"
+objects = ["Jar", "Lid"]
+
+[[checks]]
+type = "self_intersection"
+objects = ["Jar", "Lid"]
+
+[[checks]]
+type = "topology"
+objects = ["Jar", "Lid"]
+
+[[checks]]
+type = "face_budget"
+objects = ["Jar", "Lid"]
+max = 20000
+
+[[checks]]
+type = "no_overlap"
+a = "Jar"
+b = "Lid"
+
+# pi*35^2*70 + pi*32^2*15 - pi*32.5^2*(67.5-3) - pi*29.5^2*(85-67.5)
+[[checks]]
+type = "volume"
+label = "volume_jar"
+object = "Jar"
+mm3 = 55771
+rel_tol = 0.01
+
+# pi*35^2*17.5 - pi*32.5^2*15 - roundover 2*pi*(33 + 2*(1/6)/(1-pi/4))*2^2*(1-pi/4) (186, 1.1%, inside tol)
+[[checks]]
+type = "volume"
+label = "volume_lid"
+object = "Lid"
+mm3 = 17387
+rel_tol = 0.015
+
+[[checks]]
+type = "ray_probe"
+label = "probe_jar_body"
+objects = ["Jar"]
+tol = 0.0003
+probes = [
+  { name = "outer body wall", origin = [0.05, 0.0, 0.03], dir = [-1, 0, 0], hit = 0.015 },
+  { name = "inner body wall", origin = [0.0, 0.0, 0.03], dir = [1, 0, 0], hit = 0.0325 },
+  { name = "inner floor", origin = [0.01, 0.0, 0.05], dir = [0, 0, -1], hit = 0.047 },
+  { name = "underside", origin = [0.01, 0.0, -0.01], dir = [0, 0, 1], hit = 0.01 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_neck"
+objects = ["Jar"]
+tol = 0.0003
+probes = [
+  { name = "shoulder top", origin = [0.0335, 0.0, 0.1], dir = [0, 0, -1], hit = 0.03 },
+  { name = "neck outer wall", origin = [0.05, 0.0, 0.078], dir = [-1, 0, 0], hit = 0.018 },
+  { name = "neck bore", origin = [0.0, 0.0, 0.078], dir = [1, 0, 0], hit = 0.0295 },
+  { name = "rim", origin = [0.031, 0.0, 0.1], dir = [0, 0, -1], hit = 0.015 },
+  { name = "inner shoulder ceiling", origin = [0.031, 0.0, 0.03], dir = [0, 0, 1], hit = 0.0375 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_lid"
+objects = ["Lid"]
+tol = 0.0003
+probes = [
+  { name = "lid top", origin = [0.0, 0.0, 0.1], dir = [0, 0, -1], hit = 0.012 },
+  { name = "lid ceiling", origin = [0.0, 0.0, 0.05], dir = [0, 0, 1], hit = 0.0355 },
+  { name = "skirt outer wall", origin = [0.05, 0.0, 0.075], dir = [-1, 0, 0], hit = 0.015 },
+  { name = "skirt bottom", origin = [0.034, 0.0, 0.06], dir = [0, 0, 1], hit = 0.0105 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_lid_edge"
+objects = ["Lid"]
+tol = 0.0003
+probes = [
+  { name = "lid top roundover radius 2", origin = [0.043, 0.0, 0.096], dir = [-1, 0, -1], hit = 0.012142 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_fit"
+tol = 0.0003
+probes = [
+  { name = "gap over the rim to the skirt", origin = [0.0, 0.0, 0.08525], dir = [1, 0, 0], hit = 0.0325 },
+  { name = "gap under the skirt to the neck", origin = [0.05, 0.0, 0.07025], dir = [-1, 0, 0], hit = 0.018 },
+]
+
+[variants]
+good = []
+solid_jar = ["volume_jar", "probe_jar_body", "probe_neck"]
+thin_floor = ["volume_jar", "probe_jar_body"]
+no_shoulder = ["no_overlap", "volume_jar", "probe_neck", "probe_fit"]
+lid_sitting = ["bbox_lid", "no_overlap", "probe_lid", "probe_fit"]
+tight_lid = ["no_overlap", "volume_lid", "probe_fit"]
+sharp_lid = ["probe_lid_edge"]
+lid_no_cavity = ["no_overlap", "volume_lid", "probe_lid", "probe_fit"]

@@ -1,0 +1,142 @@
+id = "h01-cosmetic-compact"
+title = "Round powder compact: base with pan recess, and lid"
+group = "hard-surface"
+starting_scene = "empty"
+
+prompt = """
+Model a hypothetical product in the open Blender scene: a round powder compact shown closed, as two mesh objects. Units are metres (1 Blender unit = 1 m). The compact lies flat on the ground plane, centred on the world Z axis.
+
+Overall form: seen from above, the compact is a circle 70 mm in diameter (radius 35 mm) centred on the Z axis. It is split horizontally into a base and a lid.
+
+Base (mesh object "Base"):
+- A solid cylinder of radius 35 mm from a flat underside at z = 0 to a flat top at z = 10 mm. All its edges are sharp.
+- Pan recess: a shallow cylindrical recess 56 mm in diameter (radius 28 mm), centred on the Z axis, cut into the top face down to a flat floor at z = 6 mm (4 mm deep). This leaves a 7 mm wide flat rim round it at z = 10 mm.
+
+Lid (mesh object "Lid"):
+- A solid cylinder of radius 35 mm from a flat underside at z = 10.4 mm (a 0.4 mm gap above the base) to a flat top at z = 16 mm.
+- The top edge all the way round is rounded with a 3 mm radius (a quarter-round blending the flat top into the vertical side). Its bottom edge stays sharp.
+
+Both objects:
+- Each is a single closed (watertight) mesh in one connected piece, with consistent outward normals and no self-intersections. Surfaces are smooth enough for close-up product renders.
+- The base and lid do not touch or intersect.
+- Transforms applied: location at the origin, no rotation, scale 1, so the mesh data holds world coordinates.
+- At most 20,000 faces each.
+- No other mesh objects in the scene.
+
+Mesh hygiene: no duplicate or coincident vertices, no zero-length edges and no zero-area faces. Merge any coincident vertices before you finish.
+
+Tell me when you're done.
+"""
+
+[[checks]]
+type = "objects"
+expected = ["Base", "Lid"]
+
+[[checks]]
+type = "transforms_applied"
+objects = ["Base", "Lid"]
+
+[[checks]]
+type = "bbox"
+label = "bbox_base"
+object = "Base"
+min = [-0.035, -0.035, 0.0]
+max = [0.035, 0.035, 0.01]
+tol = 0.0001
+
+[[checks]]
+type = "bbox"
+label = "bbox_lid"
+object = "Lid"
+min = [-0.035, -0.035, 0.0104]
+max = [0.035, 0.035, 0.016]
+tol = 0.0001
+
+[[checks]]
+type = "watertight"
+objects = ["Base", "Lid"]
+
+[[checks]]
+type = "shells"
+objects = ["Base", "Lid"]
+
+[[checks]]
+type = "self_intersection"
+objects = ["Base", "Lid"]
+
+[[checks]]
+type = "topology"
+objects = ["Base", "Lid"]
+
+[[checks]]
+type = "face_budget"
+objects = ["Base", "Lid"]
+max = 20000
+
+[[checks]]
+type = "no_overlap"
+a = "Base"
+b = "Lid"
+
+# pi * (35^2 * 10 - 28^2 * 4)
+[[checks]]
+type = "volume"
+label = "volume_base"
+object = "Base"
+mm3 = 28632
+rel_tol = 0.012
+
+# pi * 35^2 * 5.6 - 2 * pi * (35 - d) * A, with fillet corner area A = 3^2 * (1 - pi/4) and its
+# centroid inset d = 3 * (5/6 - pi/4) / (1 - pi/4) = 0.670 mm (Pappus)
+[[checks]]
+type = "volume"
+label = "volume_lid"
+object = "Lid"
+mm3 = 21135
+rel_tol = 0.012
+
+[[checks]]
+type = "ray_probe"
+label = "probe_recess"
+objects = ["Base"]
+tol = 0.0003
+probes = [
+  { name = "recess floor centre", origin = [0.0, 0.0, 0.03], dir = [0, 0, -1], hit = 0.024 },
+  { name = "recess floor off-centre", origin = [0.0, -0.02, 0.03], dir = [0, 0, -1], hit = 0.024 },
+  { name = "recess wall +X", origin = [0.0, 0.0, 0.008], dir = [1, 0, 0], hit = 0.028 },
+  { name = "recess wall -Y", origin = [0.0, 0.0, 0.008], dir = [0, -1, 0], hit = 0.028 },
+  { name = "rim top", origin = [0.0315, 0.0, 0.03], dir = [0, 0, -1], hit = 0.02 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_lid"
+objects = ["Lid"]
+tol = 0.0003
+probes = [
+  { name = "lid top roundover radius 3", origin = [0.042, 0.0, 0.023], dir = [-1, 0, -1], hit = 0.011142 },
+  { name = "lid top roundover radius 3 (-Y)", origin = [0.0, -0.042, 0.023], dir = [0, 1, -1], hit = 0.011142 },
+  { name = "lid top", origin = [0.0, 0.0, 0.03], dir = [0, 0, -1], hit = 0.014 },
+  { name = "lid underside", origin = [0.0, 0.0, 0.008], dir = [0, 0, 1], hit = 0.0024 },
+  { name = "lid side wall", origin = [0.05, 0.0, 0.0115], dir = [-1, 0, 0], hit = 0.015 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_base"
+objects = ["Base"]
+tol = 0.0003
+probes = [
+  { name = "base side wall +X", origin = [0.05, 0.0, 0.005], dir = [-1, 0, 0], hit = 0.015 },
+  { name = "base side wall -Y", origin = [0.0, -0.05, 0.005], dir = [0, 1, 0], hit = 0.015 },
+  { name = "underside", origin = [0.0, 0.0, -0.01], dir = [0, 0, 1], hit = 0.01 },
+]
+
+[variants]
+good = []
+no_recess = ["volume_base", "probe_recess"]
+deep_recess = ["volume_base", "probe_recess"]
+narrow_recess = ["volume_base", "probe_recess"]
+sharp_lid = ["volume_lid", "probe_lid"]
+lid_touching = ["bbox_lid", "no_overlap", "probe_lid"]
+small_base = ["bbox_base", "volume_base", "probe_base"]

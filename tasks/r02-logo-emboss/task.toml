@@ -1,0 +1,102 @@
+id = "r02-logo-emboss"
+title = "Revision: add a raised logo plaque to the carton"
+group = "revision"
+starting_scene = "start.py"
+
+prompt = """
+The open Blender scene holds an approved model of a hypothetical product: a packaging mock-up of a carton, modelled as a solid block (mesh object "Carton"). Units are metres (1 Blender unit = 1 m). The carton's front is the face that looks towards -Y. The client has one revision:
+
+- Add a raised logo plaque to the front face: a rounded rectangle 40 mm wide (along X) by 20 mm tall (along Z) with 4 mm corner radii, standing 2 mm proud of the front face, with a flat top face parallel to the front face. Centre it on the front face, both left to right and top to bottom. Leave its edges sharp apart from the four corner radii.
+- The plaque is fused to the carton: one solid, not a separate part sitting on it.
+- Everything else about the carton stays exactly as it is.
+
+The object keeps its name. It stays a single closed (watertight) mesh in one connected piece, with consistent outward normals and no self-intersections, transforms applied (location at the origin, no rotation, scale 1), and at most 20,000 faces. No other mesh objects in the scene.
+
+Mesh hygiene: no duplicate or coincident vertices, no zero-length edges and no zero-area faces. Merge any coincident vertices before you finish.
+
+Tell me when you're done.
+"""
+
+[[checks]]
+type = "objects"
+expected = ["Carton"]
+
+[[checks]]
+type = "transforms_applied"
+objects = ["Carton"]
+
+[[checks]]
+type = "bbox"
+object = "Carton"
+min = [-0.035, -0.022, 0.0]
+max = [0.035, 0.02, 0.1]
+tol = 0.0001
+
+[[checks]]
+type = "watertight"
+objects = ["Carton"]
+
+[[checks]]
+type = "shells"
+objects = ["Carton"]
+
+[[checks]]
+type = "self_intersection"
+objects = ["Carton"]
+
+[[checks]]
+type = "topology"
+objects = ["Carton"]
+
+[[checks]]
+type = "face_budget"
+object = "Carton"
+max = 20000
+
+# block 70*40*100 + plaque 2*(40*20 - (4-pi)*4^2); the plaque is 0.56% of the total
+[[checks]]
+type = "volume"
+object = "Carton"
+mm3 = 281573
+rel_tol = 0.002
+
+[[checks]]
+type = "ray_probe"
+label = "probe_plaque"
+tol = 0.0003
+probes = [
+  { name = "plaque face at centre", origin = [0.0, -0.05, 0.05], dir = [0, 1, 0], hit = 0.028 },
+  { name = "plaque reaches x=+19", origin = [0.019, -0.05, 0.05], dir = [0, 1, 0], hit = 0.028 },
+  { name = "plaque ends before x=+21", origin = [0.021, -0.05, 0.05], dir = [0, 1, 0], hit = 0.03 },
+  { name = "plaque reaches x=-19", origin = [-0.019, -0.05, 0.05], dir = [0, 1, 0], hit = 0.028 },
+  { name = "plaque ends before x=-21", origin = [-0.021, -0.05, 0.05], dir = [0, 1, 0], hit = 0.03 },
+  { name = "plaque reaches z=59", origin = [0.0, -0.05, 0.059], dir = [0, 1, 0], hit = 0.028 },
+  { name = "plaque ends before z=61", origin = [0.0, -0.05, 0.061], dir = [0, 1, 0], hit = 0.03 },
+  { name = "plaque reaches z=41", origin = [0.0, -0.05, 0.041], dir = [0, 1, 0], hit = 0.028 },
+  { name = "plaque ends before z=39", origin = [0.0, -0.05, 0.039], dir = [0, 1, 0], hit = 0.03 },
+  { name = "corner radius 4 (outside the arc)", origin = [0.0194, -0.05, 0.0594], dir = [0, 1, 0], hit = 0.03 },
+  { name = "corner radius 4 (inside the arc)", origin = [0.0182, -0.05, 0.0582], dir = [0, 1, 0], hit = 0.028 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_carton"
+tol = 0.0003
+probes = [
+  { name = "front face beside the plaque", origin = [0.03, -0.05, 0.05], dir = [0, 1, 0], hit = 0.03 },
+  { name = "back face", origin = [0.0, 0.05, 0.05], dir = [0, -1, 0], hit = 0.03 },
+  { name = "side +X", origin = [0.05, 0.0, 0.05], dir = [-1, 0, 0], hit = 0.015 },
+  { name = "side -X", origin = [-0.05, 0.0, 0.05], dir = [1, 0, 0], hit = 0.015 },
+  { name = "top", origin = [0.0, 0.0, 0.15], dir = [0, 0, -1], hit = 0.05 },
+  { name = "underside", origin = [0.0, 0.0, -0.05], dir = [0, 0, 1], hit = 0.05 },
+]
+
+[variants]
+good = []
+unchanged = ["bbox", "volume", "probe_plaque"]
+recessed = ["bbox", "volume", "probe_plaque"]
+not_fused = ["shells", "self_intersection"]
+sharp_corners = ["probe_plaque"]
+off_centre = ["probe_plaque"]
+wrong_face = ["bbox", "probe_carton", "probe_plaque"]
+too_high = ["bbox", "volume", "probe_plaque"]

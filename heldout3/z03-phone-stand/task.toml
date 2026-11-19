@@ -1,0 +1,152 @@
+id = "z03-phone-stand"
+title = "Desk phone stand: chamfered base, leaning back panel with an angled cable hole, bullnose lip"
+group = "hard-surface"
+starting_scene = "empty"
+
+prompt = """
+Model a hypothetical product in the open Blender scene: a one-piece desk stand for a phone, as one mesh object named "Stand". Units are metres (1 Blender unit = 1 m). The stand sits on the ground plane, centred on the world Z axis; the phone rests facing -Y, leaning back toward +Y.
+
+- Base: seen from above, a rectangle 80 mm in X by 90 mm in Y (x from -40 mm to +40 mm, y from -45 mm to +45 mm) whose four vertical corners are rounded with a 10 mm radius, from its flat underside at z = 0 to a flat top at z = 8 mm. The top perimeter edge, all the way round, carries a 45-degree chamfer 2 mm wide and 2 mm high (so the flat top ends 2 mm in from every side, and the side walls are vertical from z = 0 to z = 6 mm). The bottom edges are sharp.
+- Foot recesses: four flat-bottomed circular recesses 12 mm in diameter and 1.5 mm deep in the underside (their floors at z = 1.5 mm), centred at (x, y) = (+28, +33), (-28, +33), (-28, -33) and (+28, -33) mm.
+- Back panel: a solid prism running along X from x = -35 mm to +35 mm, whose cross-section in the YZ plane is the parallelogram with corners (y, z) = (0, 8), (8, 8), (38, 88) and (30, 88) mm. So it stands on the base top and leans back toward +Y: its front face is the plane through (y, z) = (0, 8) and (30, 88) mm, its back face is parallel to it 8 mm further along +Y, its top is a flat strip at z = 88 mm, and its two ends are flat at x = -35 mm and x = +35 mm. All its edges are sharp and it is fused to the base.
+- Cable hole: a round through-hole 16 mm in diameter in the back panel, its axis perpendicular to the panel's front and back faces (not horizontal) and passing through the point (x, y, z) = (0, 8.25, 30) mm on the front face. It runs straight through from the front face to the back face.
+- Front lip: a bar running along X from x = -35 mm to +35 mm, from y = -40 mm to y = -34 mm, standing on the base top and fused to it. Its front and back faces are flat and vertical up to z = 17 mm; its top is a full half-round (a semicircle of 3 mm radius centred on y = -37 mm, z = 17 mm), so its highest line is at z = 20 mm. Its two ends are flat.
+
+The object:
+- A single closed (watertight) mesh, one connected piece, with consistent outward normals and no self-intersections.
+- Transforms applied: location at the origin, no rotation, scale 1, so the mesh data holds world coordinates.
+- At most 20,000 faces.
+- No other mesh objects in the scene.
+
+Mesh hygiene: no duplicate or coincident vertices, no zero-length edges and no zero-area faces. Merge any coincident vertices before you finish.
+
+Tell me when you're done.
+"""
+
+[[checks]]
+type = "objects"
+expected = ["Stand"]
+
+[[checks]]
+type = "transforms_applied"
+objects = ["Stand"]
+
+[[checks]]
+type = "bbox"
+object = "Stand"
+min = [-0.04, -0.045, 0.0]
+max = [0.04, 0.045, 0.088]
+tol = 0.0005
+
+[[checks]]
+type = "watertight"
+objects = ["Stand"]
+
+[[checks]]
+type = "shells"
+objects = ["Stand"]
+
+[[checks]]
+type = "self_intersection"
+objects = ["Stand"]
+
+[[checks]]
+type = "topology"
+objects = ["Stand"]
+
+[[checks]]
+type = "face_budget"
+object = "Stand"
+max = 20000
+
+# base: 6*A(0) + integral_0^2 A(s) ds, A(s) = (80-2s)(90-2s) - (4-pi)(10-s)^2  (= 42685 + 13591)
+# - recesses 4*pi*6^2*1.5 + panel 640*70 - hole pi*8^2*t, t = 8*80/sqrt(30^2+80^2) (perpendicular
+# thickness) + lip 70*(6*9 + pi*3^2/2). Curved surfaces are a small share; 1% absorbs any segment
+# count (a 24-segment build loses well under 0.2%), and a missing hole (1.45%) still fails.
+[[checks]]
+type = "volume"
+object = "Stand"
+mm3 = 103661
+rel_tol = 0.01
+
+[[checks]]
+type = "ray_probe"
+label = "probe_base"
+tol = 0.0003
+probes = [
+  { name = "side +X", origin = [0.06, -0.02, 0.003], dir = [-1, 0, 0], hit = 0.02 },
+  { name = "side -Y", origin = [0.0, -0.07, 0.003], dir = [0, 1, 0], hit = 0.025 },
+  { name = "corner radius 10", origin = [0.0441421, 0.0491421, 0.003], dir = [-1, -1, 0], hit = 0.01 },
+  { name = "flat top", origin = [0.037, -0.02, 0.1], dir = [0, 0, -1], hit = 0.092 },
+  { name = "underside", origin = [0.0, 0.0, -0.01], dir = [0, 0, 1], hit = 0.01 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_chamfer"
+tol = 0.0003
+probes = [
+  { name = "chamfer +X", origin = [0.039, -0.02, 0.1], dir = [0, 0, -1], hit = 0.093 },
+  { name = "chamfer -Y", origin = [0.0, -0.044, 0.1], dir = [0, 0, -1], hit = 0.093 },
+  { name = "chamfer +Y", origin = [0.0, 0.044, 0.1], dir = [0, 0, -1], hit = 0.093 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_recesses"
+tol = 0.0003
+probes = [
+  { name = "recess +X+Y", origin = [0.028, 0.033, -0.01], dir = [0, 0, 1], hit = 0.0115 },
+  { name = "recess -X+Y", origin = [-0.028, 0.033, -0.01], dir = [0, 0, 1], hit = 0.0115 },
+  { name = "recess -X-Y", origin = [-0.028, -0.033, -0.01], dir = [0, 0, 1], hit = 0.0115 },
+  { name = "recess +X-Y", origin = [0.028, -0.033, -0.01], dir = [0, 0, 1], hit = 0.0115 },
+]
+
+# Panel faces probed square-on, 30 mm off the face at x = 20 mm, z = 60 mm (front face y = 19.5).
+# n = (0, 80, -30) / sqrt(30^2 + 80^2) points from the front face into the panel.
+[[checks]]
+type = "ray_probe"
+label = "probe_panel"
+tol = 0.0003
+probes = [
+  { name = "front face", origin = [0.02, -0.0085899, 0.0705337], dir = [0, 0.9363292, -0.3511234], hit = 0.03 },
+  { name = "back face", origin = [0.02, 0.0555899, 0.0494663], dir = [0, -0.9363292, 0.3511234], hit = 0.03 },
+  { name = "top strip", origin = [0.02, 0.034, 0.1], dir = [0, 0, -1], hit = 0.012 },
+  { name = "end +X", origin = [0.06, 0.016, 0.04], dir = [-1, 0, 0], hit = 0.025 },
+]
+
+# The hole's mid-thickness point is (0, 11.7568, 28.6849) mm. Up-slope u = (0, 30, 80) / sqrt(30^2 + 80^2)
+# lies in the panel faces, so a horizontal hole (which reaches 9.95 mm up-slope) fails it.
+[[checks]]
+type = "ray_probe"
+label = "probe_hole"
+tol = 0.0003
+probes = [
+  { name = "through, 4 mm off axis", origin = [0.004, -0.0198399, 0.0405337], dir = [0, 0.9363292, -0.3511234], hit = false },
+  { name = "beside the hole", origin = [0.014, -0.0198399, 0.0405337], dir = [0, 0.9363292, -0.3511234], hit = 0.03 },
+  { name = "wall +X", origin = [0.0, 0.0117568, 0.0286849], dir = [1, 0, 0], hit = 0.008 },
+  { name = "wall up-slope", origin = [0.0, 0.0117568, 0.0286849], dir = [0, 0.3511234, 0.9363292], hit = 0.008 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_lip"
+tol = 0.0003
+probes = [
+  { name = "lip crest", origin = [0.02, -0.037, 0.1], dir = [0, 0, -1], hit = 0.08 },
+  { name = "lip half-round 2 mm off crest", origin = [0.02, -0.035, 0.1], dir = [0, 0, -1], hit = 0.0807639 },
+  { name = "lip front", origin = [0.02, -0.07, 0.012], dir = [0, 1, 0], hit = 0.03 },
+  { name = "lip back", origin = [0.02, -0.025, 0.012], dir = [0, -1, 0], hit = 0.009 },
+]
+
+[variants]
+good = []
+no_chamfer = ["probe_chamfer"]
+sharp_corners = ["probe_base"]
+no_recesses = ["probe_recesses"]
+no_hole = ["volume", "probe_hole"]
+horizontal_hole = ["probe_hole"]
+upright_panel = ["probe_panel", "probe_hole"]
+thick_panel = ["volume", "probe_panel"]
+square_lip = ["probe_lip"]
+floating_panel = ["shells"]

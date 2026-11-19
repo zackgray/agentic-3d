@@ -1,0 +1,120 @@
+id = "p02-housing-bosses"
+title = "Electronics housing with screw bosses"
+group = "hard-surface"
+starting_scene = "empty"
+
+prompt = """
+Model a hypothetical product part in the open Blender scene: the lower half of a small electronics housing, an open-top moulded tray with four screw bosses, as one mesh object named "Housing". Units are metres (1 Blender unit = 1 m). The tray sits on the ground plane, centred on the world Z axis.
+
+- Outside: 100 mm in X by 60 mm in Y (x from -50 mm to +50 mm, y from -30 mm to +30 mm), from z = 0 to the rim at z = 25 mm. The four vertical outside corners are rounded with a 5 mm radius. All other edges are sharp.
+- Walls and floor: the side walls are 2 mm thick all round and the floor is 2 mm thick. So the open cavity is 96 mm by 56 mm with 3 mm inside corner radii, from the floor top at z = 2 mm up through the open top at z = 25 mm.
+- Screw bosses: four solid cylinders, 7 mm in outer diameter, standing on the floor with their axes vertical at (x, y) = (+42, +22), (-42, +22), (-42, -22) and (+42, -22) mm. Each rises from the floor to a flat top at z = 22 mm and is fused to the floor.
+- Pilot holes: each boss has a centred blind hole 2.5 mm in diameter, from the boss top down to a flat bottom at z = 4 mm.
+
+The object:
+- A single closed (watertight) mesh, one connected piece, with consistent outward normals and no self-intersections.
+- Transforms applied: location at the origin, no rotation, scale 1, so the mesh data holds world coordinates.
+- At most 20,000 faces.
+- No other mesh objects in the scene.
+
+Mesh hygiene: no duplicate or coincident vertices, no zero-length edges and no zero-area faces. Merge any coincident vertices before you finish.
+
+Tell me when you're done.
+"""
+
+[[checks]]
+type = "objects"
+expected = ["Housing"]
+
+[[checks]]
+type = "transforms_applied"
+objects = ["Housing"]
+
+[[checks]]
+type = "bbox"
+object = "Housing"
+min = [-0.05, -0.03, 0.0]
+max = [0.05, 0.03, 0.025]
+tol = 0.0005
+
+[[checks]]
+type = "watertight"
+objects = ["Housing"]
+
+[[checks]]
+type = "shells"
+objects = ["Housing"]
+
+[[checks]]
+type = "self_intersection"
+objects = ["Housing"]
+
+[[checks]]
+type = "topology"
+objects = ["Housing"]
+
+[[checks]]
+type = "face_budget"
+object = "Housing"
+max = 20000
+
+# outer 25*(6000 - (4-pi)*25) - cavity 23*(5376 - (4-pi)*9) + bosses 4*pi*3.5^2*20 - holes 4*pi*1.25^2*18
+[[checks]]
+type = "volume"
+object = "Housing"
+mm3 = 28719
+rel_tol = 0.015
+
+[[checks]]
+type = "ray_probe"
+label = "probe_walls"
+tol = 0.0003
+probes = [
+  { name = "inner wall +X", origin = [0.0, 0.0, 0.0125], dir = [1, 0, 0], hit = 0.048 },
+  { name = "outer wall +X", origin = [0.06, 0.0, 0.0125], dir = [-1, 0, 0], hit = 0.01 },
+  { name = "inner wall +Y", origin = [0.0, 0.0, 0.0125], dir = [0, 1, 0], hit = 0.028 },
+  { name = "outer wall -Y", origin = [0.0, -0.04, 0.0125], dir = [0, 1, 0], hit = 0.01 },
+  { name = "rim top", origin = [0.049, 0.0, 0.03], dir = [0, 0, -1], hit = 0.005 },
+  { name = "outer corner radius 5", origin = [0.055, 0.035, 0.0125], dir = [-1, -1, 0], hit = 0.009142 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_floor"
+tol = 0.0003
+probes = [
+  { name = "floor top", origin = [0.0, 0.0, 0.03], dir = [0, 0, -1], hit = 0.028 },
+  { name = "underside", origin = [0.0, 0.0, -0.01], dir = [0, 0, 1], hit = 0.01 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_bosses"
+tol = 0.0003
+probes = [
+  { name = "boss top +X+Y", origin = [0.0444, 0.022, 0.03], dir = [0, 0, -1], hit = 0.008 },
+  { name = "boss top -X+Y", origin = [-0.0444, 0.022, 0.03], dir = [0, 0, -1], hit = 0.008 },
+  { name = "boss top -X-Y", origin = [-0.042, -0.0244, 0.03], dir = [0, 0, -1], hit = 0.008 },
+  { name = "boss top +X-Y", origin = [0.042, -0.0196, 0.03], dir = [0, 0, -1], hit = 0.008 },
+  { name = "boss side wall", origin = [0.0, 0.022, 0.012], dir = [1, 0, 0], hit = 0.0385 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_holes"
+tol = 0.0003
+probes = [
+  { name = "hole +X+Y", origin = [0.042, 0.022, 0.03], dir = [0, 0, -1], hit = 0.026 },
+  { name = "hole -X+Y", origin = [-0.042, 0.022, 0.03], dir = [0, 0, -1], hit = 0.026 },
+  { name = "hole -X-Y", origin = [-0.042, -0.022, 0.03], dir = [0, 0, -1], hit = 0.026 },
+  { name = "hole +X-Y", origin = [0.042, -0.022, 0.03], dir = [0, 0, -1], hit = 0.026 },
+]
+
+[variants]
+good = []
+no_holes = ["probe_holes"]
+no_bosses = ["volume", "probe_bosses", "probe_holes"]
+thick_walls = ["volume", "probe_walls"]
+sharp_corners = ["probe_walls"]
+solid = ["volume", "probe_walls", "probe_floor", "probe_bosses", "probe_holes"]
+floating_bosses = ["shells"]

@@ -1,0 +1,152 @@
+id = "x07-remote-button"
+title = "Revision: move the remote's power button down 30 mm and make it 3 mm wider"
+group = "revision"
+starting_scene = "start.py"
+
+prompt = """
+The open Blender scene holds an approved model of a hypothetical product: a TV remote control (mesh object "Remote") with a round power button (mesh object "Button") sitting in a pocket in its top face. Units are metres (1 Blender unit = 1 m). The client has one revision:
+
+- Move the power button 30 mm toward the bottom end of the remote (the -Y direction), pocket and all. It stays on the remote's centre line.
+- While you're there, make the button 3 mm wider across. Widen its pocket to match, so the clearance around the button stays the same. The button's height, its gap above the pocket floor and the pocket depth don't change.
+- Fill the old pocket flush with the top face: no trace of it may remain.
+- Everything else stays exactly as it is: the remote's outline, height, rounded top edge and the recess in its underside.
+
+Both objects keep their names. Each stays a single closed (watertight) mesh in one connected piece, with consistent outward normals and no self-intersections, transforms applied (location at the origin, no rotation, scale 1), and at most 20,000 faces. The button must not touch or intersect the remote. No other mesh objects in the scene.
+
+Mesh hygiene: no duplicate or coincident vertices, no zero-length edges and no zero-area faces. Merge any coincident vertices before you finish.
+
+Tell me when you're done.
+"""
+
+[[checks]]
+type = "objects"
+expected = ["Button", "Remote"]
+
+[[checks]]
+type = "transforms_applied"
+objects = ["Button", "Remote"]
+
+[[checks]]
+type = "bbox"
+label = "bbox_remote"
+object = "Remote"
+min = [-0.0225, -0.08, 0.0]
+max = [0.0225, 0.08, 0.018]
+tol = 0.0002
+
+[[checks]]
+type = "bbox"
+label = "bbox_button"
+object = "Button"
+min = [-0.008, 0.012, 0.0155]
+max = [0.008, 0.028, 0.02]
+tol = 0.0002
+
+[[checks]]
+type = "watertight"
+objects = ["Button", "Remote"]
+
+[[checks]]
+type = "shells"
+objects = ["Button", "Remote"]
+
+[[checks]]
+type = "self_intersection"
+objects = ["Button", "Remote"]
+
+[[checks]]
+type = "topology"
+objects = ["Button", "Remote"]
+
+[[checks]]
+type = "face_budget"
+objects = ["Button", "Remote"]
+max = 20000
+
+[[checks]]
+type = "no_overlap"
+a = "Remote"
+b = "Button"
+
+# A(d) = plan area inset by d = 4*(22.5-d)*(80-d) - (4-pi)*(10-d)^2, top edge radius r = 3:
+#   prism A(0)*15 + rounded band int_0^3 A(3 - sqrt(9 - t^2)) dt
+#   = A(0)*3 - 392.832*r^2*(1 - pi/4) + pi*r^3*(5/3 - pi/2)
+#   - underside recess 30*60*1 - new pocket pi*8.5^2*3
+# Tolerance 0.3%: the old pocket left open (pi*7^2*3 = 462 mm3) must fail, any segment count must pass.
+[[checks]]
+type = "volume"
+label = "volume_remote"
+object = "Remote"
+mm3 = 124823
+rel_tol = 0.003
+
+# pi*8^2*4.5
+[[checks]]
+type = "volume"
+label = "volume_button"
+object = "Button"
+mm3 = 904.8
+rel_tol = 0.015
+
+[[checks]]
+type = "ray_probe"
+label = "probe_new_pocket"
+objects = ["Remote"]
+tol = 0.0002
+probes = [
+  { name = "pocket floor at y=20", origin = [0.0, 0.02, 0.03], dir = [0, 0, -1], hit = 0.015 },
+  { name = "pocket wall +Y, 8.5 mm radius", origin = [0.0, 0.02, 0.0165], dir = [0, 1, 0], hit = 0.0085 },
+  { name = "pocket wall -X", origin = [0.0, 0.02, 0.0165], dir = [-1, 0, 0], hit = 0.0085 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_old_pocket"
+objects = ["Remote"]
+tol = 0.0002
+probes = [
+  { name = "old pocket centre filled flush", origin = [0.0, 0.05, 0.03], dir = [0, 0, -1], hit = 0.012 },
+  { name = "old pocket rim filled flush", origin = [0.00675, 0.05, 0.03], dir = [0, 0, -1], hit = 0.012 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_button"
+objects = ["Button"]
+tol = 0.0002
+probes = [
+  { name = "button top", origin = [0.0, 0.02, 0.03], dir = [0, 0, -1], hit = 0.01 },
+  { name = "button side, 8 mm radius", origin = [0.03, 0.02, 0.018], dir = [-1, 0, 0], hit = 0.022 },
+  { name = "button bottom", origin = [0.0, 0.02, 0.0], dir = [0, 0, 1], hit = 0.0155 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_fit"
+tol = 0.0002
+probes = [
+  { name = "down the clearance to the pocket floor", origin = [0.00825, 0.02, 0.03], dir = [0, 0, -1], hit = 0.015 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_unchanged"
+objects = ["Remote"]
+tol = 0.0002
+probes = [
+  { name = "underside recess", origin = [0.0, -0.03, -0.01], dir = [0, 0, 1], hit = 0.011 },
+  { name = "underside", origin = [0.0, 0.05, -0.01], dir = [0, 0, 1], hit = 0.01 },
+  { name = "side", origin = [0.05, 0.0, 0.009], dir = [-1, 0, 0], hit = 0.0275 },
+  { name = "rounded top edge at z=17", origin = [0.05, 0.0, 0.017], dir = [-1, 0, 0], hit = 0.028264 },
+  { name = "bottom end", origin = [0.0, -0.1, 0.009], dir = [0, 1, 0], hit = 0.02 },
+  { name = "top face", origin = [0.0, -0.05, 0.03], dir = [0, 0, -1], hit = 0.012 },
+]
+
+[variants]
+good = []
+unchanged = ["bbox_button", "probe_button", "probe_fit", "probe_new_pocket", "probe_old_pocket", "volume_button"]
+button_only = ["no_overlap", "probe_fit", "probe_new_pocket", "probe_old_pocket"]
+not_resized = ["bbox_button", "probe_button", "probe_fit", "probe_new_pocket", "volume_button"]
+old_left_open = ["probe_old_pocket", "volume_remote"]
+scaled_button = ["bbox_button", "probe_button", "volume_button"]
+rebuilt_sharp = ["probe_unchanged", "volume_remote"]

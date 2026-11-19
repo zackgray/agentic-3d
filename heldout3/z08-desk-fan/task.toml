@@ -1,0 +1,243 @@
+id = "z08-desk-fan"
+title = "Desk fan: chamfered stand with tapered post and dial pocket, filleted motor, five-blade rotor, dial"
+group = "multi-step"
+starting_scene = "empty"
+
+prompt = """
+Model a hypothetical product in the open Blender scene: a small desk fan, as four separate mesh objects. Units are metres (1 Blender unit = 1 m). The stand rests on the ground plane, centred on the world Z axis. The fan's axis is horizontal, along the world Y axis at (x, z) = (0, 135.5) mm, and the fan blows towards -Y (the front).
+
+Stand (mesh object "Stand"), one solid part:
+- Base: seen from above, a rectangle 120 mm in X by 90 mm in Y (x from -60 mm to +60 mm, y from -45 mm to +45 mm) whose four vertical corners are rounded with a 15 mm radius, with vertical sides from z = 0 up to z = 14 mm.
+- Chamfer: the base's top edge all the way round is a 4 mm by 4 mm 45-degree chamfer, so its flat top face at z = 18 mm is 112 mm by 82 mm with 11 mm corner radii. The bottom edge is sharp.
+- Post: a tapered round column (a cone frustum) centred on the Z axis, standing on the base top and fused to it, 30 mm in diameter at z = 18 mm narrowing linearly to 20 mm in diameter at its flat top at z = 110 mm.
+- Dial pocket: a round blind hole 22 mm in diameter in the base top, centred at (x, y) = (+38, -20) mm, from the top face down to a flat floor at z = 12 mm.
+
+Motor (mesh object "Motor"), one solid part: a cylinder 50 mm in diameter lying along the fan axis (its axis along Y at (x, z) = (0, 135.5) mm), from a flat front face at y = -20 mm to a flat rear face at y = +40 mm. Its rear circular edge is rounded with a 6 mm radius fillet (a quarter-round blending the side into the rear face); its front edge is sharp. Its lowest point, z = 110.5 mm, is 0.5 mm above the post top.
+
+Rotor (mesh object "Rotor"), one solid part:
+- Hub: a cylinder 30 mm in diameter on the fan axis, from its flat back face at y = -20.5 mm (0.5 mm in front of the motor) to a flat front face at y = -36 mm.
+- Blades: five identical flat blades, fused to the hub, spaced every 72 degrees around the fan axis. Each blade is a flat plate 3 mm thick in Y (from y = -30 mm to y = -27 mm) and 16 mm wide, running radially out from the hub to a square-cut tip 78 mm from the fan axis (the tip edge is a straight line perpendicular to the blade's centre line). Its centre line lies in the X-Z plane at angles 0, 72, 144, 216 and 288 degrees, measured around the fan axis from straight up (+Z) towards +X; so the first blade points straight up and its tip edge is at z = 213.5 mm.
+
+Dial (mesh object "Dial"): a cylinder 21 mm in diameter with a vertical axis at (x, y) = (+38, -20) mm, from a flat bottom at z = 12.5 mm (0.5 mm above the pocket floor, clearing the pocket wall by 0.5 mm all round) to a flat top at z = 24 mm. Its top edge is a 1.5 mm by 1.5 mm 45-degree chamfer, so the flat top face is 18 mm across. Its bottom edge is sharp.
+
+All four objects:
+- Each is a single closed (watertight) mesh in one connected piece, with consistent outward normals and no self-intersections.
+- No two objects touch or intersect.
+- Transforms applied: location at the origin, no rotation, scale 1, so the mesh data holds world coordinates.
+- At most 20,000 faces per object.
+- No other mesh objects in the scene.
+
+Mesh hygiene: no duplicate or coincident vertices, no zero-length edges and no zero-area faces. Merge any coincident vertices before you finish.
+
+Tell me when you're done.
+"""
+
+[[checks]]
+type = "objects"
+expected = ["Dial", "Motor", "Rotor", "Stand"]
+
+[[checks]]
+type = "transforms_applied"
+objects = ["Dial", "Motor", "Rotor", "Stand"]
+
+[[checks]]
+type = "bbox"
+label = "bbox_stand"
+object = "Stand"
+min = [-0.06, -0.045, 0.0]
+max = [0.06, 0.045, 0.11]
+tol = 0.0003
+
+[[checks]]
+type = "bbox"
+label = "bbox_motor"
+object = "Motor"
+min = [-0.025, -0.02, 0.1105]
+max = [0.025, 0.04, 0.1605]
+tol = 0.0003
+
+# Blade tip corners: x = 78*sin(a) + 8*cos(a) at a = 72 deg; z = 135.5 + 78*cos(a) - 8*sin(a) at a = 144 deg
+[[checks]]
+type = "bbox"
+label = "bbox_rotor"
+object = "Rotor"
+min = [-0.076655, -0.036, 0.067694]
+max = [0.076655, -0.0205, 0.2135]
+tol = 0.0003
+
+[[checks]]
+type = "bbox"
+label = "bbox_dial"
+object = "Dial"
+min = [0.0275, -0.0305, 0.0125]
+max = [0.0485, -0.0095, 0.024]
+tol = 0.0003
+
+[[checks]]
+type = "watertight"
+objects = ["Dial", "Motor", "Rotor", "Stand"]
+
+[[checks]]
+type = "shells"
+objects = ["Dial", "Motor", "Rotor", "Stand"]
+
+[[checks]]
+type = "self_intersection"
+objects = ["Dial", "Motor", "Rotor", "Stand"]
+
+[[checks]]
+type = "topology"
+objects = ["Dial", "Motor", "Rotor", "Stand"]
+
+[[checks]]
+type = "face_budget"
+objects = ["Dial", "Motor", "Rotor", "Stand"]
+max = 20000
+
+[[checks]]
+type = "no_overlap"
+label = "no_overlap_stand_motor"
+a = "Stand"
+b = "Motor"
+
+[[checks]]
+type = "no_overlap"
+label = "no_overlap_motor_rotor"
+a = "Motor"
+b = "Rotor"
+
+[[checks]]
+type = "no_overlap"
+label = "no_overlap_stand_dial"
+a = "Stand"
+b = "Dial"
+
+# A(W,D,r) = W*D - (4-pi)*r^2. 14*A(120,90,15) + chamfer band 4/6*(A(120,90,15) + 4*A(116,86,13) + A(112,82,11))
+# + post pi*92/3*(15^2 + 15*10 + 10^2) - dial pocket pi*11^2*6
+[[checks]]
+type = "volume"
+label = "volume_stand"
+object = "Stand"
+mm3 = 231318
+rel_tol = 0.01
+
+# pi*25^2*60 - fillet ring by Pappus: (1 - pi/4)*6^2 at radius 25 - 6*(10 - 3*pi)/(3*(4 - pi)); mostly round, so 2%
+[[checks]]
+type = "volume"
+label = "volume_motor"
+object = "Motor"
+mm3 = 116661
+rel_tol = 0.02
+
+# hub pi*15^2*15.5 + 5 blades * 3 * (16*78 - (8*sqrt(15^2 - 8^2) + 15^2*asin(8/15))), the part of each blade outside the hub
+[[checks]]
+type = "volume"
+label = "volume_rotor"
+object = "Rotor"
+mm3 = 26255
+rel_tol = 0.015
+
+# pi*10.5^2*10 + chamfer frustum pi*1.5/3*(10.5^2 + 10.5*9 + 9^2); round, so 2%
+[[checks]]
+type = "volume"
+label = "volume_dial"
+object = "Dial"
+mm3 = 3912
+rel_tol = 0.02
+
+[[checks]]
+type = "ray_probe"
+label = "probe_stand"
+objects = ["Stand"]
+tol = 0.0003
+probes = [
+  { name = "base side +X", origin = [0.09, 0.0, 0.007], dir = [-1, 0, 0], hit = 0.03 },
+  { name = "base side -Y", origin = [0.0, -0.08, 0.007], dir = [0, 1, 0], hit = 0.035 },
+  { name = "plan corner radius 15", origin = [0.07, 0.055, 0.007], dir = [-1, -1, 0], hit = 0.020355 },
+  { name = "chamfer from the side at z 16", origin = [0.09, 0.0, 0.016], dir = [-1, 0, 0], hit = 0.032 },
+  { name = "chamfer from above at y 43", origin = [0.0, 0.043, 0.05], dir = [0, 0, -1], hit = 0.034 },
+  { name = "base top face", origin = [-0.03, 0.03, 0.05], dir = [0, 0, -1], hit = 0.032 },
+  { name = "post side at z 64 (r 12.5)", origin = [0.05, 0.0, 0.064], dir = [-1, 0, 0], hit = 0.0375 },
+  { name = "post side at z 100 (r 10.54)", origin = [0.0, -0.05, 0.1], dir = [0, 1, 0], hit = 0.039457 },
+  { name = "post top", origin = [0.005, 0.0, 0.12], dir = [0, 0, -1], hit = 0.01 },
+  { name = "dial pocket floor", origin = [0.038, -0.02, 0.05], dir = [0, 0, -1], hit = 0.038 },
+  { name = "dial pocket wall", origin = [0.038, -0.02, 0.015], dir = [1, 0, 0], hit = 0.011 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_motor"
+objects = ["Motor"]
+tol = 0.0003
+probes = [
+  { name = "front face", origin = [0.01, -0.05, 0.1355], dir = [0, 1, 0], hit = 0.03 },
+  { name = "rear face", origin = [0.0, 0.08, 0.1355], dir = [0, -1, 0], hit = 0.04 },
+  { name = "top of the side", origin = [0.0, 0.0, 0.2], dir = [0, 0, -1], hit = 0.0395 },
+  { name = "underside", origin = [0.0, 0.01, 0.05], dir = [0, 0, 1], hit = 0.0605 },
+  { name = "side +X", origin = [0.05, 0.01, 0.1355], dir = [-1, 0, 0], hit = 0.025 },
+]
+
+# On the fillet surface, so a wider tolerance: radius 6 gives z = 135.5 + 19 + sqrt(6^2 - 5^2) at y = 39;
+# a sharp edge would be 2.7 mm higher.
+[[checks]]
+type = "ray_probe"
+label = "probe_motor_fillet"
+objects = ["Motor"]
+tol = 0.001
+probes = [
+  { name = "fillet at y 39", origin = [0.0, 0.039, 0.2], dir = [0, 0, -1], hit = 0.042183 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_rotor"
+objects = ["Rotor"]
+tol = 0.0003
+probes = [
+  { name = "hub front", origin = [0.0, -0.08, 0.1355], dir = [0, 1, 0], hit = 0.044 },
+  { name = "hub side", origin = [0.04, -0.033, 0.1355], dir = [-1, 0, 0], hit = 0.025 },
+  { name = "blade 0 front at r 50", origin = [0.0, -0.08, 0.1855], dir = [0, 1, 0], hit = 0.05 },
+  { name = "blade 72 front at r 50", origin = [0.047553, -0.08, 0.150951], dir = [0, 1, 0], hit = 0.05 },
+  { name = "blade 216 front at r 60", origin = [-0.035267, -0.08, 0.086959], dir = [0, 1, 0], hit = 0.05 },
+  { name = "between blades at 36 deg", origin = [0.029389, -0.08, 0.175951], dir = [0, 1, 0], hit = false },
+  { name = "between blades at 180 deg", origin = [0.0, -0.08, 0.0855], dir = [0, 1, 0], hit = false },
+  { name = "blade 0 tip", origin = [0.0, -0.0285, 0.25], dir = [0, 0, -1], hit = 0.0365 },
+  { name = "blade 0 side", origin = [0.03, -0.0285, 0.1855], dir = [-1, 0, 0], hit = 0.022 },
+  { name = "blade 144 tip", origin = [0.058779, -0.0285, 0.054598], dir = [-0.587785, 0, 0.809017], hit = 0.022 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_dial"
+objects = ["Dial"]
+tol = 0.0003
+probes = [
+  { name = "top", origin = [0.038, -0.02, 0.05], dir = [0, 0, -1], hit = 0.026 },
+  { name = "side", origin = [0.07, -0.02, 0.015], dir = [-1, 0, 0], hit = 0.0215 },
+  { name = "chamfer at r 9.75", origin = [0.04775, -0.02, 0.05], dir = [0, 0, -1], hit = 0.02675 },
+  { name = "bottom", origin = [0.038, -0.02, -0.01], dir = [0, 0, 1], hit = 0.0225 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_fit"
+tol = 0.0003
+probes = [
+  { name = "gap between post and motor", origin = [0.05, 0.0, 0.11025], dir = [-1, 0, 0], hit = false },
+  { name = "gap between motor and hub", origin = [0.1, -0.02025, 0.1355], dir = [-1, 0, 0], hit = false },
+  { name = "gap under the dial, to the pocket wall", origin = [0.038, -0.02, 0.01225], dir = [1, 0, 0], hit = 0.011 },
+  { name = "down the dial clearance to the pocket floor", origin = [0.04875, -0.02, 0.05], dir = [0, 0, -1], hit = 0.038 },
+]
+
+[variants]
+good = []
+coarse24 = []
+no_chamfer = ["volume_stand", "probe_stand"]
+straight_post = ["volume_stand", "probe_stand"]
+motor_on_post = ["bbox_motor", "no_overlap_stand_motor", "probe_motor", "probe_fit"]
+no_fillet = ["probe_motor_fillet"]
+rotor_on_motor = ["bbox_rotor", "no_overlap_motor_rotor", "probe_fit"]
+blades_rotated = ["bbox_rotor", "probe_rotor"]
+four_blades = ["bbox_rotor", "volume_rotor", "probe_rotor"]
+dial_tight = ["bbox_dial", "volume_dial", "no_overlap_stand_dial", "probe_dial", "probe_fit"]
+blades_too_long = ["bbox_rotor", "volume_rotor", "probe_rotor"]

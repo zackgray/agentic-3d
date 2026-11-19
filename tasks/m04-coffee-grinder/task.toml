@@ -1,0 +1,258 @@
+id = "m04-coffee-grinder"
+title = "Hand coffee grinder: body with drawer recess, hopper, lid, crank and knob"
+group = "multi-step"
+starting_scene = "empty"
+
+prompt = """
+Model a hypothetical product in the open Blender scene: a manual coffee grinder, as five separate mesh objects. Units are metres (1 Blender unit = 1 m). The body stands on the ground plane, centred on the world Z axis; the drawer faces -Y and the crank arm points along +X.
+
+Body (mesh object "Body"), one solid part:
+- Block: seen from above, a square 80 mm by 80 mm (x and y from -40 mm to +40 mm) whose four vertical corners are rounded with an 8 mm radius, from z = 0 to a flat top at z = 100 mm. All other edges are sharp.
+- Drawer recess: a rectangular pocket in the -Y face with sharp corners and a flat floor, from x = -30 mm to +30 mm and z = 20 mm to 55 mm, 5 mm deep (its floor at y = -35 mm).
+
+Hopper (mesh object "Hopper"), an open-top cup:
+- A cylinder 70 mm in outer diameter from its flat underside at z = 100.5 mm (0.5 mm above the body) to its rim at z = 140 mm.
+- Hollow: the wall is 3 mm thick (inside 64 mm across) and the floor is 3 mm thick (inside floor at z = 103.5 mm). The rim is a flat ring and the top is open.
+
+Lid (mesh object "Lid"): a flat disc 74 mm in diameter from z = 140.5 mm (0.5 mm above the rim) to z = 144.5 mm, with a central through-hole 9 mm in diameter.
+
+Crank (mesh object "Crank"), one solid part made of three fused pieces:
+- Shaft: a vertical cylinder 8 mm in diameter on the Z axis, from its flat bottom at z = 115 mm (inside the hopper) up through the lid hole (clearing it by 0.5 mm all round) to the arm.
+- Arm: a box from x = -8 mm to +60 mm, y = -5 mm to +5 mm and z = 150 mm to 158 mm.
+- Pin: a vertical cylinder 6 mm in diameter at (x, y) = (+55, 0) mm, standing on the arm's top face and rising to a flat top at z = 178 mm.
+
+Knob (mesh object "Knob"): a cylinder 16 mm in diameter at (x, y) = (+55, 0) mm, from z = 158.5 mm (0.5 mm above the arm) to a flat top at z = 185 mm, with a flat-topped blind bore 7 mm in diameter up into its bottom from z = 158.5 mm to z = 178.5 mm. It sits over the pin, clearing it by 0.5 mm all round and over its top.
+
+All five objects:
+- Each is a single closed (watertight) mesh in one connected piece, with consistent outward normals and no self-intersections.
+- No two objects touch or intersect.
+- Transforms applied: location at the origin, no rotation, scale 1, so the mesh data holds world coordinates.
+- At most 20,000 faces per object.
+- No other mesh objects in the scene.
+
+Mesh hygiene: no duplicate or coincident vertices, no zero-length edges and no zero-area faces. Merge any coincident vertices before you finish.
+
+Tell me when you're done.
+"""
+
+[[checks]]
+type = "objects"
+expected = ["Body", "Crank", "Hopper", "Knob", "Lid"]
+
+[[checks]]
+type = "transforms_applied"
+objects = ["Body", "Crank", "Hopper", "Knob", "Lid"]
+
+[[checks]]
+type = "bbox"
+label = "bbox_body"
+object = "Body"
+min = [-0.04, -0.04, 0.0]
+max = [0.04, 0.04, 0.1]
+tol = 0.0003
+
+[[checks]]
+type = "bbox"
+label = "bbox_hopper"
+object = "Hopper"
+min = [-0.035, -0.035, 0.1005]
+max = [0.035, 0.035, 0.14]
+tol = 0.0003
+
+[[checks]]
+type = "bbox"
+label = "bbox_lid"
+object = "Lid"
+min = [-0.037, -0.037, 0.1405]
+max = [0.037, 0.037, 0.1445]
+tol = 0.0003
+
+[[checks]]
+type = "bbox"
+label = "bbox_crank"
+object = "Crank"
+min = [-0.008, -0.005, 0.115]
+max = [0.06, 0.005, 0.178]
+tol = 0.0003
+
+[[checks]]
+type = "bbox"
+label = "bbox_knob"
+object = "Knob"
+min = [0.047, -0.008, 0.1585]
+max = [0.063, 0.008, 0.185]
+tol = 0.0003
+
+[[checks]]
+type = "watertight"
+objects = ["Body", "Crank", "Hopper", "Knob", "Lid"]
+
+[[checks]]
+type = "shells"
+objects = ["Body", "Crank", "Hopper", "Knob", "Lid"]
+
+[[checks]]
+type = "self_intersection"
+objects = ["Body", "Crank", "Hopper", "Knob", "Lid"]
+
+[[checks]]
+type = "topology"
+objects = ["Body", "Crank", "Hopper", "Knob", "Lid"]
+
+[[checks]]
+type = "face_budget"
+objects = ["Body", "Crank", "Hopper", "Knob", "Lid"]
+max = 20000
+
+[[checks]]
+type = "no_overlap"
+label = "no_overlap_body_hopper"
+a = "Body"
+b = "Hopper"
+
+[[checks]]
+type = "no_overlap"
+label = "no_overlap_hopper_lid"
+a = "Hopper"
+b = "Lid"
+
+[[checks]]
+type = "no_overlap"
+label = "no_overlap_hopper_crank"
+a = "Hopper"
+b = "Crank"
+
+[[checks]]
+type = "no_overlap"
+label = "no_overlap_lid_crank"
+a = "Lid"
+b = "Crank"
+
+[[checks]]
+type = "no_overlap"
+label = "no_overlap_crank_knob"
+a = "Crank"
+b = "Knob"
+
+# 100*(80*80 - (4-pi)*8^2) - drawer 60*35*5
+[[checks]]
+type = "volume"
+label = "volume_body"
+object = "Body"
+mm3 = 624006
+rel_tol = 0.01
+
+# pi*35^2*39.5 - pi*32^2*36.5
+[[checks]]
+type = "volume"
+label = "volume_hopper"
+object = "Hopper"
+mm3 = 34594
+rel_tol = 0.01
+
+# pi*(37^2 - 4.5^2)*4
+[[checks]]
+type = "volume"
+label = "volume_lid"
+object = "Lid"
+mm3 = 16949
+rel_tol = 0.01
+
+# pi*8^2*26.5 - pi*3.5^2*20
+[[checks]]
+type = "volume"
+label = "volume_knob"
+object = "Knob"
+mm3 = 4558
+rel_tol = 0.01
+
+[[checks]]
+type = "ray_probe"
+label = "probe_body"
+objects = ["Body"]
+tol = 0.0003
+probes = [
+  { name = "side +X", origin = [0.06, 0.0, 0.05], dir = [-1, 0, 0], hit = 0.02 },
+  { name = "plan corner radius 8", origin = [0.045, 0.045, 0.07], dir = [-1, -1, 0], hit = 0.010385 },
+  { name = "top", origin = [0.02, 0.0, 0.12], dir = [0, 0, -1], hit = 0.02 },
+  { name = "drawer floor", origin = [0.0, -0.06, 0.04], dir = [0, 1, 0], hit = 0.025 },
+  { name = "front beside the drawer", origin = [0.031, -0.06, 0.04], dir = [0, 1, 0], hit = 0.02 },
+  { name = "front above the drawer", origin = [0.0, -0.06, 0.07], dir = [0, 1, 0], hit = 0.02 },
+  { name = "drawer ceiling", origin = [0.0, -0.0375, 0.04], dir = [0, 0, 1], hit = 0.015 },
+  { name = "drawer side wall", origin = [0.0, -0.0375, 0.04], dir = [1, 0, 0], hit = 0.03 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_hopper"
+objects = ["Hopper"]
+tol = 0.0003
+probes = [
+  { name = "outer wall", origin = [0.05, 0.0, 0.12], dir = [-1, 0, 0], hit = 0.015 },
+  { name = "inner wall", origin = [0.0, 0.0, 0.12], dir = [1, 0, 0], hit = 0.032 },
+  { name = "inner floor", origin = [0.01, 0.0, 0.12], dir = [0, 0, -1], hit = 0.0165 },
+  { name = "underside", origin = [0.01, 0.0, 0.05], dir = [0, 0, 1], hit = 0.0505 },
+  { name = "rim", origin = [0.0335, 0.0, 0.16], dir = [0, 0, -1], hit = 0.02 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_lid"
+objects = ["Lid"]
+tol = 0.0003
+probes = [
+  { name = "lid top", origin = [0.02, 0.0, 0.16], dir = [0, 0, -1], hit = 0.0155 },
+  { name = "lid edge", origin = [0.05, 0.0, 0.1425], dir = [-1, 0, 0], hit = 0.013 },
+  { name = "lid hole wall", origin = [0.0, 0.0, 0.1425], dir = [1, 0, 0], hit = 0.0045 },
+  { name = "lid underside", origin = [0.02, 0.0, 0.12], dir = [0, 0, 1], hit = 0.0205 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_crank"
+objects = ["Crank"]
+tol = 0.0003
+probes = [
+  { name = "arm top", origin = [0.03, 0.0, 0.17], dir = [0, 0, -1], hit = 0.012 },
+  { name = "arm end +X", origin = [0.07, 0.0, 0.154], dir = [-1, 0, 0], hit = 0.01 },
+  { name = "arm end -X", origin = [-0.02, 0.0, 0.154], dir = [1, 0, 0], hit = 0.012 },
+  { name = "arm side -Y", origin = [0.03, -0.02, 0.154], dir = [0, 1, 0], hit = 0.015 },
+  { name = "shaft side", origin = [0.02, 0.0, 0.13], dir = [-1, 0, 0], hit = 0.016 },
+  { name = "shaft bottom", origin = [0.0, 0.0, 0.105], dir = [0, 0, 1], hit = 0.01 },
+  { name = "pin top", origin = [0.055, 0.0, 0.2], dir = [0, 0, -1], hit = 0.022 },
+  { name = "pin side", origin = [0.065, 0.0, 0.17], dir = [-1, 0, 0], hit = 0.007 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_knob"
+objects = ["Knob"]
+tol = 0.0003
+probes = [
+  { name = "knob top", origin = [0.055, 0.0, 0.2], dir = [0, 0, -1], hit = 0.015 },
+  { name = "knob side", origin = [0.08, 0.0, 0.17], dir = [-1, 0, 0], hit = 0.017 },
+  { name = "knob bore ceiling", origin = [0.055, 0.0, 0.16], dir = [0, 0, 1], hit = 0.0185 },
+  { name = "knob bottom", origin = [0.06, 0.0, 0.15], dir = [0, 0, 1], hit = 0.0085 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_fit"
+tol = 0.0003
+probes = [
+  { name = "gap between body and hopper", origin = [0.05, 0.0, 0.10025], dir = [-1, 0, 0], hit = false },
+  { name = "gap between rim and lid to the shaft", origin = [0.05, 0.0, 0.14025], dir = [-1, 0, 0], hit = 0.046 },
+  { name = "down the lid-hole clearance to the hopper floor", origin = [0.00425, 0.0, 0.147], dir = [0, 0, -1], hit = 0.0435 },
+  { name = "gap under the knob to the pin", origin = [0.08, 0.0, 0.15825], dir = [-1, 0, 0], hit = 0.022 },
+  { name = "gap over the pin to the knob bore", origin = [0.055, 0.0, 0.17825], dir = [1, 0, 0], hit = 0.0035 },
+]
+
+[variants]
+good = []
+no_drawer = ["volume_body", "probe_body"]
+hopper_on_body = ["bbox_hopper", "no_overlap_body_hopper", "probe_hopper", "probe_fit"]
+solid_hopper = ["volume_hopper", "no_overlap_hopper_crank", "probe_hopper", "probe_fit"]
+lid_no_hole = ["volume_lid", "no_overlap_lid_crank", "probe_lid", "probe_fit"]
+knob_no_bore = ["volume_knob", "no_overlap_crank_knob", "probe_knob", "probe_fit"]
+knob_on_arm = ["bbox_knob", "volume_knob", "no_overlap_crank_knob", "probe_knob", "probe_fit"]
+crank_reversed = ["bbox_crank", "bbox_knob", "probe_crank", "probe_knob", "probe_fit"]

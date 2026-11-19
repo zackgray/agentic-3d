@@ -1,0 +1,177 @@
+id = "y07"
+title = "Table clock: flat-bottomed disc body with a front face recess, crown button and two feet"
+group = "multi-step"
+starting_scene = "empty"
+
+prompt = """
+Model a hypothetical product in the open Blender scene: a table clock, as four separate mesh objects. Units are metres (1 Blender unit = 1 m). The clock stands on its two feet on the ground plane, centred on the world Z axis. Its front face is the side facing -Y and its back face is the side facing +Y.
+
+Body (mesh object "Body"), one solid part:
+- Disc: a solid cylinder 110 mm in diameter with its axis along Y at (x, z) = (0, 62) mm, from a flat back face at y = +20 mm to a flat front face at y = -20 mm (40 mm thick). The edges where the round side meets the front and back faces are sharp.
+- Flat bottom: the disc is cut off by a horizontal plane at z = 12 mm, leaving a flat underside there (the round side meets it in sharp edges).
+- Face recess: a round pocket 80 mm in diameter cut into the front face, centred on the disc axis, 3 mm deep with a flat floor at y = -17 mm and sharp edges.
+- Crown pocket: a round pocket 12 mm in diameter cut down into the top of the disc, its axis vertical at (x, y) = (0, 0), with a flat floor at z = 112 mm.
+
+Crown (mesh object "Crown"): a solid cylinder 11 mm in diameter, its axis vertical at (x, y) = (0, 0), from z = 112.5 mm to a flat top at z = 122 mm. It sits in the crown pocket 0.5 mm above its floor and clears its wall by 0.5 mm all round.
+
+Feet (mesh objects "FootLeft" and "FootRight"): two solid rectangular blocks, each 14 mm in X by 30 mm in Y (y from -15 mm to +15 mm), from z = 0 to a flat top at z = 11.5 mm, so they clear the body's flat underside by 0.5 mm. FootLeft spans x from -20 mm to -6 mm; FootRight spans x from +6 mm to +20 mm. Sharp edges.
+
+All four objects:
+- Each is a single closed (watertight) mesh in one connected piece, with consistent outward normals and no self-intersections.
+- No two objects touch or intersect.
+- Transforms applied: location at the origin, no rotation, scale 1, so the mesh data holds world coordinates.
+- At most 20,000 faces per object.
+- No other mesh objects in the scene.
+
+Mesh hygiene: no duplicate or coincident vertices, no zero-length edges and no zero-area faces. Merge any coincident vertices before you finish.
+
+Tell me when you're done.
+"""
+
+[[checks]]
+type = "objects"
+expected = ["Body", "Crown", "FootLeft", "FootRight"]
+
+[[checks]]
+type = "transforms_applied"
+objects = ["Body", "Crown", "FootLeft", "FootRight"]
+
+[[checks]]
+type = "bbox"
+label = "bbox_body"
+object = "Body"
+min = [-0.055, -0.02, 0.012]
+max = [0.055, 0.02, 0.117]
+tol = 0.0003
+
+[[checks]]
+type = "bbox"
+label = "bbox_crown"
+object = "Crown"
+min = [-0.0055, -0.0055, 0.1125]
+max = [0.0055, 0.0055, 0.122]
+tol = 0.0003
+
+[[checks]]
+type = "bbox"
+label = "bbox_foot_left"
+object = "FootLeft"
+min = [-0.02, -0.015, 0.0]
+max = [-0.006, 0.015, 0.0115]
+tol = 0.0003
+
+[[checks]]
+type = "bbox"
+label = "bbox_foot_right"
+object = "FootRight"
+min = [0.006, -0.015, 0.0]
+max = [0.02, 0.015, 0.0115]
+tol = 0.0003
+
+[[checks]]
+type = "watertight"
+objects = ["Body", "Crown", "FootLeft", "FootRight"]
+
+[[checks]]
+type = "shells"
+objects = ["Body", "Crown", "FootLeft", "FootRight"]
+
+[[checks]]
+type = "self_intersection"
+objects = ["Body", "Crown", "FootLeft", "FootRight"]
+
+[[checks]]
+type = "topology"
+objects = ["Body", "Crown", "FootLeft", "FootRight"]
+
+[[checks]]
+type = "face_budget"
+objects = ["Body", "Crown", "FootLeft", "FootRight"]
+max = 20000
+
+[[checks]]
+type = "no_overlap"
+label = "no_overlap_body_crown"
+a = "Body"
+b = "Crown"
+
+[[checks]]
+type = "no_overlap"
+label = "no_overlap_body_foot_left"
+a = "Body"
+b = "FootLeft"
+
+[[checks]]
+type = "no_overlap"
+label = "no_overlap_body_foot_right"
+a = "Body"
+b = "FootRight"
+
+# disc 40*(pi*55^2 - segment below the flat, 55^2*acos(50/55) - 50*sqrt(55^2-50^2) = 154.2)
+#   - recess pi*40^2*3 - crown pocket, int over r<6 of (sqrt(55^2-x^2) - 50) dA = 556.2
+[[checks]]
+type = "volume"
+label = "volume_body"
+object = "Body"
+mm3 = 358329
+rel_tol = 0.01
+
+[[checks]]
+type = "ray_probe"
+label = "probe_body"
+objects = ["Body"]
+tol = 0.0003
+probes = [
+  { name = "front face outside the recess", origin = [0.0, -0.1, 0.109], dir = [0, 1, 0], hit = 0.08 },
+  { name = "recess floor", origin = [0.0, -0.1, 0.062], dir = [0, 1, 0], hit = 0.083 },
+  { name = "recess wall", origin = [0.0, -0.0185, 0.062], dir = [1, 0, 0], hit = 0.04 },
+  { name = "back face", origin = [0.0, 0.1, 0.062], dir = [0, -1, 0], hit = 0.08 },
+  { name = "round side at its widest", origin = [0.1, 0.0, 0.062], dir = [-1, 0, 0], hit = 0.045 },
+  { name = "top beside the crown pocket", origin = [0.0, 0.015, 0.15], dir = [0, 0, -1], hit = 0.033 },
+  { name = "flat underside", origin = [0.015, 0.0, -0.01], dir = [0, 0, 1], hit = 0.022 },
+  { name = "crown pocket floor", origin = [0.0, 0.0, 0.15], dir = [0, 0, -1], hit = 0.038 },
+  { name = "crown pocket wall", origin = [0.0, 0.0, 0.114], dir = [1, 0, 0], hit = 0.006 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_crown"
+objects = ["Crown"]
+tol = 0.0003
+probes = [
+  { name = "crown top", origin = [0.0, 0.0, 0.15], dir = [0, 0, -1], hit = 0.028 },
+  { name = "crown side", origin = [0.05, 0.0, 0.118], dir = [-1, 0, 0], hit = 0.0445 },
+  { name = "crown bottom", origin = [0.0, 0.0, 0.0], dir = [0, 0, 1], hit = 0.1125 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_feet"
+tol = 0.0003
+probes = [
+  { name = "right foot underside", origin = [0.013, 0.0, -0.01], dir = [0, 0, 1], hit = 0.01, objects = ["FootRight"] },
+  { name = "right foot outer side", origin = [0.05, 0.0, 0.005], dir = [-1, 0, 0], hit = 0.03, objects = ["FootRight"] },
+  { name = "left foot outer side", origin = [-0.05, 0.0, 0.005], dir = [1, 0, 0], hit = 0.03, objects = ["FootLeft"] },
+  { name = "left foot top", origin = [-0.013, 0.0, 0.05], dir = [0, 0, -1], hit = 0.0385, objects = ["FootLeft"] },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_fit"
+tol = 0.0003
+probes = [
+  { name = "down the crown clearance to the pocket floor", origin = [0.00575, 0.0, 0.15], dir = [0, 0, -1], hit = 0.038 },
+  { name = "through the gap over the right foot", origin = [0.013, -0.1, 0.01175], dir = [0, 1, 0], hit = false },
+  { name = "through the gap over the left foot", origin = [-0.013, -0.1, 0.01175], dir = [0, 1, 0], hit = false },
+]
+
+[variants]
+good = []
+no_recess = ["volume_body", "probe_body"]
+shallow_recess = ["volume_body", "probe_body"]
+recess_on_back = ["probe_body"]
+round_bottom = ["bbox_body", "volume_body", "probe_body", "no_overlap_body_foot_left", "no_overlap_body_foot_right", "probe_fit"]
+no_crown_pocket = ["no_overlap_body_crown", "probe_body", "probe_fit"]
+crown_seated = ["bbox_crown", "no_overlap_body_crown", "probe_crown"]
+feet_touching = ["bbox_foot_left", "bbox_foot_right", "no_overlap_body_foot_left", "no_overlap_body_foot_right", "probe_feet", "probe_fit"]
+feet_outboard = ["bbox_foot_left", "bbox_foot_right", "probe_feet"]

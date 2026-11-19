@@ -1,0 +1,110 @@
+id = "y03-tissue-box"
+title = "Tissue-box cover: hollow open-bottom box with a stadium slot in the top"
+group = "hard-surface"
+starting_scene = "empty"
+
+prompt = """
+Model a hypothetical product part in the open Blender scene: a tissue-box cover, as one mesh object named "Cover". Units are metres (1 Blender unit = 1 m). The cover sits on the ground plane, centred on the world Z axis, its long side along X.
+
+- Outside: a rectangular box 240 mm in X by 124 mm in Y (x from -120 mm to +120 mm, y from -62 mm to +62 mm), from z = 0 up to a flat top at z = 90 mm. Its sides are parallel to the world axes.
+- Hollow, open at the bottom: the four side walls and the top are all 4 mm thick. The inside is a rectangular cavity from x = -116 mm to +116 mm and y = -58 mm to +58 mm, rising from the ground (z = 0) to the underside of the top at z = 86 mm. There is no bottom panel: the cavity is open across the whole underside, and the cover rests on the 4 mm edges of its walls.
+- Slot: one opening straight through the top, centred on the world Z axis, in the shape of a rectangle with fully rounded ends (a stadium). It is 120 mm long in X (x from -60 mm to +60 mm) and 30 mm wide in Y (y from -15 mm to +15 mm); each end is a half-circle of radius 15 mm centred at x = -45 mm and x = +45 mm, y = 0. The slot walls are vertical.
+- All edges are sharp.
+
+The object:
+- A single closed (watertight) mesh, one connected piece, with consistent outward normals and no self-intersections.
+- Transforms applied: location at the origin, no rotation, scale 1, so the mesh data holds world coordinates.
+- At most 5,000 faces.
+- No other mesh objects in the scene.
+
+Mesh hygiene: no duplicate or coincident vertices, no zero-length edges and no zero-area faces. Merge any coincident vertices before you finish.
+
+Tell me when you're done.
+"""
+
+[[checks]]
+type = "objects"
+expected = ["Cover"]
+
+[[checks]]
+type = "transforms_applied"
+objects = ["Cover"]
+
+[[checks]]
+type = "bbox"
+object = "Cover"
+min = [-0.12, -0.062, 0.0]
+max = [0.12, 0.062, 0.09]
+tol = 0.0003
+
+[[checks]]
+type = "watertight"
+objects = ["Cover"]
+
+[[checks]]
+type = "shells"
+objects = ["Cover"]
+
+[[checks]]
+type = "self_intersection"
+objects = ["Cover"]
+
+[[checks]]
+type = "topology"
+objects = ["Cover"]
+
+[[checks]]
+type = "face_budget"
+objects = ["Cover"]
+max = 5000
+
+# 240*124*90 - 232*116*86 - 4*(90*30 + pi*15^2)
+[[checks]]
+type = "volume"
+object = "Cover"
+mm3 = 350341
+rel_tol = 0.005
+
+[[checks]]
+type = "ray_probe"
+label = "probe_outer"
+tol = 0.0003
+probes = [
+  { name = "side +X", origin = [0.15, 0.03, 0.045], dir = [-1, 0, 0], hit = 0.03 },
+  { name = "side -Y", origin = [0.05, -0.1, 0.045], dir = [0, 1, 0], hit = 0.038 },
+  { name = "top beside the slot", origin = [0.09, 0.03, 0.12], dir = [0, 0, -1], hit = 0.03 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_inner"
+tol = 0.0003
+probes = [
+  { name = "inner wall +X", origin = [0.0, 0.03, 0.045], dir = [1, 0, 0], hit = 0.116 },
+  { name = "inner wall -Y", origin = [0.09, 0.0, 0.045], dir = [0, -1, 0], hit = 0.058 },
+  { name = "underside of top, through the open bottom", origin = [0.09, 0.03, -0.01], dir = [0, 0, 1], hit = 0.096 },
+  { name = "underside of top -X", origin = [-0.1, -0.04, -0.01], dir = [0, 0, 1], hit = 0.096 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_slot"
+tol = 0.0003
+probes = [
+  { name = "straight through slot and open bottom", origin = [0.0, 0.0, 0.12], dir = [0, 0, -1], hit = false },
+  { name = "through slot near +X end", origin = [0.055, 0.0, 0.12], dir = [0, 0, -1], hit = false },
+  { name = "slot end +X", origin = [0.0, 0.0, 0.088], dir = [1, 0, 0], hit = 0.06 },
+  { name = "slot end -X", origin = [0.0, 0.0, 0.088], dir = [-1, 0, 0], hit = 0.06 },
+  { name = "slot side +Y", origin = [0.02, 0.0, 0.088], dir = [0, 1, 0], hit = 0.015 },
+  { name = "rounded end at y=12", origin = [0.0, 0.012, 0.088], dir = [1, 0, 0], hit = 0.054 },
+  { name = "top outside the rounded corner", origin = [0.058, 0.012, 0.12], dir = [0, 0, -1], hit = 0.03 },
+]
+
+[variants]
+good = []
+closed_bottom = ["volume", "probe_inner", "probe_slot"]
+solid = ["volume", "probe_inner", "probe_slot"]
+thin_wall = ["volume", "probe_inner"]
+no_slot = ["volume", "probe_slot"]
+rect_slot = ["probe_slot"]
+wall_outward = ["bbox", "volume", "probe_outer", "probe_inner", "probe_slot"]

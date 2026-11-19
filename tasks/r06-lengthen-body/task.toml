@@ -1,0 +1,116 @@
+id = "r06-lengthen-body"
+title = "Revision: lengthen the pen barrel by 20 mm"
+group = "revision"
+starting_scene = "start.py"
+
+prompt = """
+The open Blender scene holds an approved model of a hypothetical product: a pen lying along the X axis, with a conical writing tip, a plain round barrel, a slightly larger end cap section and a clip on top of the end cap, all one solid (mesh object "Pen"). Units are metres (1 Blender unit = 1 m). The client has one revision:
+
+- Make the pen 20 mm longer by lengthening the plain barrel by 20 mm.
+- The tip end stays exactly where it is. The tip cone, the end cap section and the clip keep exactly their current shapes and sizes; the end cap section and the clip simply move 20 mm further along +X with the end of the barrel.
+- The barrel's diameter does not change.
+
+The object keeps its name. It stays a single closed (watertight) mesh in one connected piece, with consistent outward normals and no self-intersections, transforms applied (location at the origin, no rotation, scale 1), and at most 20,000 faces. No other mesh objects in the scene.
+
+Mesh hygiene: no duplicate or coincident vertices, no zero-length edges and no zero-area faces. Merge any coincident vertices before you finish.
+
+Tell me when you're done.
+"""
+
+[[checks]]
+type = "objects"
+expected = ["Pen"]
+
+[[checks]]
+type = "transforms_applied"
+objects = ["Pen"]
+
+[[checks]]
+type = "bbox"
+object = "Pen"
+min = [0.0, -0.0055, -0.0055]
+max = [0.16, 0.0055, 0.007]
+tol = 0.0002
+
+[[checks]]
+type = "watertight"
+objects = ["Pen"]
+
+[[checks]]
+type = "shells"
+objects = ["Pen"]
+
+[[checks]]
+type = "self_intersection"
+objects = ["Pen"]
+
+[[checks]]
+type = "topology"
+objects = ["Pen"]
+
+[[checks]]
+type = "face_budget"
+object = "Pen"
+max = 20000
+
+# tip frustum pi*15/3*(0.5^2 + 0.5*5 + 5^2) + barrel pi*5^2*130 + cap pi*5.5^2*15
+# + clip above the cap surface 12*(3*7 - integral_{-1.5}^{1.5} sqrt(5.5^2 - y^2) dy) = 12*(21 - 16.292).
+# A uniform X-scale lands within 0.5% of this, so the probes (not volume) catch the naive edit.
+[[checks]]
+type = "volume"
+object = "Pen"
+mm3 = 12128
+rel_tol = 0.01
+
+[[checks]]
+type = "ray_probe"
+label = "probe_tip"
+tol = 0.0003
+probes = [
+  { name = "tip end face at x=0", origin = [-0.02, 0.0002, 0.0002], dir = [1, 0, 0], hit = 0.02 },
+  { name = "cone r 2.75 at x=7.5", origin = [0.0075, 0.03, 0.0], dir = [0, -1, 0], hit = 0.02725 },
+  { name = "cone r 4.4 at x=13", origin = [0.013, 0.03, 0.0], dir = [0, -1, 0], hit = 0.0256 },
+  { name = "cone r 4.4 at x=13, from below", origin = [0.013, 0.0, -0.03], dir = [0, 0, 1], hit = 0.0256 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_barrel"
+tol = 0.0003
+probes = [
+  { name = "barrel r 5 at x=60", origin = [0.06, 0.03, 0.0], dir = [0, -1, 0], hit = 0.025 },
+  { name = "barrel r 5 at x=100, from below", origin = [0.1, 0.0, -0.03], dir = [0, 0, 1], hit = 0.025 },
+  { name = "barrel r 5 at x=140", origin = [0.14, 0.03, 0.0], dir = [0, -1, 0], hit = 0.025 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_end"
+tol = 0.0003
+probes = [
+  { name = "still barrel at x=144", origin = [0.144, 0.03, 0.0], dir = [0, -1, 0], hit = 0.025 },
+  { name = "end cap r 5.5 at x=146", origin = [0.146, 0.03, 0.0], dir = [0, -1, 0], hit = 0.0245 },
+  { name = "end cap r 5.5 at x=155, from below", origin = [0.155, 0.0, -0.03], dir = [0, 0, 1], hit = 0.0245 },
+  { name = "flat end at x=160", origin = [0.2, 0.002, -0.002], dir = [-1, 0, 0], hit = 0.04 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_clip"
+tol = 0.0003
+probes = [
+  { name = "clip top at x=148", origin = [0.148, 0.0, 0.03], dir = [0, 0, -1], hit = 0.023 },
+  { name = "clip top at x=158.5", origin = [0.1585, 0.0, 0.03], dir = [0, 0, -1], hit = 0.023 },
+  { name = "no clip yet at x=146", origin = [0.146, 0.0, 0.03], dir = [0, 0, -1], hit = 0.0245 },
+  { name = "clip ended by x=159.5", origin = [0.1595, 0.0, 0.03], dir = [0, 0, -1], hit = 0.0245 },
+  { name = "clip side y=+1.5", origin = [0.153, 0.03, 0.0065], dir = [0, -1, 0], hit = 0.0285 },
+]
+
+[variants]
+good = []
+unchanged = ["bbox", "volume", "probe_barrel", "probe_end", "probe_clip"]
+scaled_uniform = ["probe_tip", "probe_end", "probe_clip"]
+scaled_all_axes = ["bbox", "volume", "probe_barrel", "probe_end", "probe_clip"]
+stretched_rear = ["probe_end", "probe_clip"]
+tip_end_extended = ["bbox", "probe_tip", "probe_barrel", "probe_end", "probe_clip"]
+too_long = ["bbox", "volume", "probe_end", "probe_clip"]

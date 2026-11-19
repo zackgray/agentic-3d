@@ -1,0 +1,192 @@
+id = "l01-jar-grid"
+title = "Jar grid on a display tray"
+group = "layout"
+starting_scene = "empty"
+
+prompt = """
+Lay out a product shot in the open Blender scene: twelve identical hypothetical jars standing in a grid on a display tray, as thirteen mesh objects. Units are metres (1 Blender unit = 1 m). The tray sits on the ground plane, centred on the world Z axis.
+
+Tray (mesh object "Tray"): a solid rectangular slab 300 mm in X by 220 mm in Y and 10 mm thick, from z = 0 to its flat top at z = 10 mm, centred on the origin in X and Y. All edges sharp.
+
+Jars (mesh objects "Jar_1" to "Jar_12"): each jar is a solid cylinder 50 mm in diameter and 60 mm tall with its axis vertical and flat top and bottom.
+
+- The jars form a grid of 4 columns along X by 3 rows along Y, at a pitch of 70 mm centre-to-centre in both X and Y. The grid is centred on the origin in X and Y.
+- Every jar's flat bottom is 0.5 mm above the tray top (a 0.5 mm clearance, so jar and tray do not touch).
+- Numbering: "Jar_1" to "Jar_4" are the front row (most negative Y), numbered from -X to +X; "Jar_5" to "Jar_8" are the middle row, from -X to +X; "Jar_9" to "Jar_12" are the back row (most positive Y), from -X to +X.
+
+Every object:
+- A single closed (watertight) mesh, one connected piece, with consistent outward normals and no self-intersections. No two objects touch or intersect.
+- Transforms applied: location at the origin, no rotation, scale 1, so the mesh data holds world coordinates.
+- At most 5,000 faces each.
+- No other mesh objects in the scene.
+
+Mesh hygiene: no duplicate or coincident vertices, no zero-length edges and no zero-area faces. Merge any coincident vertices before you finish.
+
+Tell me when you're done.
+"""
+
+[[checks]]
+type = "objects"
+expected = ["Tray", "Jar_1", "Jar_2", "Jar_3", "Jar_4", "Jar_5", "Jar_6", "Jar_7", "Jar_8", "Jar_9", "Jar_10", "Jar_11", "Jar_12"]
+
+[[checks]]
+type = "transforms_applied"
+objects = ["Tray", "Jar_1", "Jar_2", "Jar_3", "Jar_4", "Jar_5", "Jar_6", "Jar_7", "Jar_8", "Jar_9", "Jar_10", "Jar_11", "Jar_12"]
+
+[[checks]]
+type = "watertight"
+objects = ["Tray", "Jar_1", "Jar_2", "Jar_3", "Jar_4", "Jar_5", "Jar_6", "Jar_7", "Jar_8", "Jar_9", "Jar_10", "Jar_11", "Jar_12"]
+
+[[checks]]
+type = "shells"
+objects = ["Tray", "Jar_1", "Jar_2", "Jar_3", "Jar_4", "Jar_5", "Jar_6", "Jar_7", "Jar_8", "Jar_9", "Jar_10", "Jar_11", "Jar_12"]
+
+[[checks]]
+type = "self_intersection"
+objects = ["Tray", "Jar_1", "Jar_2", "Jar_3", "Jar_4", "Jar_5", "Jar_6", "Jar_7", "Jar_8", "Jar_9", "Jar_10", "Jar_11", "Jar_12"]
+
+[[checks]]
+type = "topology"
+objects = ["Tray", "Jar_1", "Jar_2", "Jar_3", "Jar_4", "Jar_5", "Jar_6", "Jar_7", "Jar_8", "Jar_9", "Jar_10", "Jar_11", "Jar_12"]
+
+[[checks]]
+type = "face_budget"
+objects = ["Tray", "Jar_1", "Jar_2", "Jar_3", "Jar_4", "Jar_5", "Jar_6", "Jar_7", "Jar_8", "Jar_9", "Jar_10", "Jar_11", "Jar_12"]
+max = 5000
+
+[[checks]]
+type = "bbox"
+label = "bbox_tray"
+object = "Tray"
+min = [-0.15, -0.11, 0.0]
+max = [0.15, 0.11, 0.01]
+tol = 0.0003
+
+[[checks]]
+type = "bbox"
+label = "bbox_jar_1"
+object = "Jar_1"
+min = [-0.13, -0.095, 0.0105]
+max = [-0.08, -0.045, 0.0705]
+tol = 0.0003
+
+[[checks]]
+type = "bbox"
+label = "bbox_jar_2"
+object = "Jar_2"
+min = [-0.06, -0.095, 0.0105]
+max = [-0.01, -0.045, 0.0705]
+tol = 0.0003
+
+[[checks]]
+type = "bbox"
+label = "bbox_jar_3"
+object = "Jar_3"
+min = [0.01, -0.095, 0.0105]
+max = [0.06, -0.045, 0.0705]
+tol = 0.0003
+
+[[checks]]
+type = "bbox"
+label = "bbox_jar_4"
+object = "Jar_4"
+min = [0.08, -0.095, 0.0105]
+max = [0.13, -0.045, 0.0705]
+tol = 0.0003
+
+[[checks]]
+type = "bbox"
+label = "bbox_jar_5"
+object = "Jar_5"
+min = [-0.13, -0.025, 0.0105]
+max = [-0.08, 0.025, 0.0705]
+tol = 0.0003
+
+[[checks]]
+type = "bbox"
+label = "bbox_jar_6"
+object = "Jar_6"
+min = [-0.06, -0.025, 0.0105]
+max = [-0.01, 0.025, 0.0705]
+tol = 0.0003
+
+[[checks]]
+type = "bbox"
+label = "bbox_jar_7"
+object = "Jar_7"
+min = [0.01, -0.025, 0.0105]
+max = [0.06, 0.025, 0.0705]
+tol = 0.0003
+
+[[checks]]
+type = "bbox"
+label = "bbox_jar_8"
+object = "Jar_8"
+min = [0.08, -0.025, 0.0105]
+max = [0.13, 0.025, 0.0705]
+tol = 0.0003
+
+[[checks]]
+type = "bbox"
+label = "bbox_jar_9"
+object = "Jar_9"
+min = [-0.13, 0.045, 0.0105]
+max = [-0.08, 0.095, 0.0705]
+tol = 0.0003
+
+[[checks]]
+type = "bbox"
+label = "bbox_jar_10"
+object = "Jar_10"
+min = [-0.06, 0.045, 0.0105]
+max = [-0.01, 0.095, 0.0705]
+tol = 0.0003
+
+[[checks]]
+type = "bbox"
+label = "bbox_jar_11"
+object = "Jar_11"
+min = [0.01, 0.045, 0.0105]
+max = [0.06, 0.095, 0.0705]
+tol = 0.0003
+
+[[checks]]
+type = "bbox"
+label = "bbox_jar_12"
+object = "Jar_12"
+min = [0.08, 0.045, 0.0105]
+max = [0.13, 0.095, 0.0705]
+tol = 0.0003
+
+# 300 * 220 * 10
+[[checks]]
+type = "volume"
+label = "volume_tray"
+object = "Tray"
+mm3 = 660000
+rel_tol = 0.005
+
+# pi * 25^2 * 60
+[[checks]]
+type = "volume"
+label = "volume_jar_1"
+object = "Jar_1"
+mm3 = 117810
+rel_tol = 0.01
+
+# pi * 25^2 * 60
+[[checks]]
+type = "volume"
+label = "volume_jar_12"
+object = "Jar_12"
+mm3 = 117810
+rel_tol = 0.01
+
+[variants]
+good = []
+wrong_pitch = ["bbox_jar_1", "bbox_jar_2", "bbox_jar_3", "bbox_jar_4", "bbox_jar_5", "bbox_jar_6", "bbox_jar_7", "bbox_jar_8", "bbox_jar_9", "bbox_jar_10", "bbox_jar_11", "bbox_jar_12"]
+touching_tray = ["bbox_jar_1", "bbox_jar_2", "bbox_jar_3", "bbox_jar_4", "bbox_jar_5", "bbox_jar_6", "bbox_jar_7", "bbox_jar_8", "bbox_jar_9", "bbox_jar_10", "bbox_jar_11", "bbox_jar_12"]
+transposed = ["bbox_jar_1", "bbox_jar_2", "bbox_jar_3", "bbox_jar_4", "bbox_jar_5", "bbox_jar_6", "bbox_jar_7", "bbox_jar_8", "bbox_jar_9", "bbox_jar_10", "bbox_jar_11", "bbox_jar_12"]
+missing_jar = ["objects", "bbox_jar_12", "volume_jar_12", "transforms_applied", "watertight", "shells", "self_intersection", "topology", "face_budget"]
+small_jars = ["bbox_jar_1", "bbox_jar_2", "bbox_jar_3", "bbox_jar_4", "bbox_jar_5", "bbox_jar_6", "bbox_jar_7", "bbox_jar_8", "bbox_jar_9", "bbox_jar_10", "bbox_jar_11", "bbox_jar_12", "volume_jar_1", "volume_jar_12"]
+thin_tray = ["bbox_tray", "volume_tray", "bbox_jar_1", "bbox_jar_2", "bbox_jar_3", "bbox_jar_4", "bbox_jar_5", "bbox_jar_6", "bbox_jar_7", "bbox_jar_8", "bbox_jar_9", "bbox_jar_10", "bbox_jar_11", "bbox_jar_12"]

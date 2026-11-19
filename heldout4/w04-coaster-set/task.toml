@@ -1,0 +1,181 @@
+id = "w04-coaster-set"
+title = "Coaster set: holder with thumb notch, two coasters stacked inside, two beside it (one turned 45 degrees)"
+group = "layout"
+starting_scene = "empty"
+
+prompt = """
+Lay out a product shot in the open Blender scene: a set of four hypothetical square drink coasters with their holder, as five mesh objects. Units are metres (1 Blender unit = 1 m). Everything stands on the ground plane (z = 0). The holder is centred on the world Z axis; the loose coasters sit beside it on the +X side.
+
+Holder (mesh object "Holder"): an open-top tray.
+- Outside: seen from above, a rounded square 104 mm by 104 mm (x and y from -52 mm to +52 mm) whose four vertical corners are rounded with a 12 mm radius, from its flat underside at z = 0 to a flat rim at z = 25 mm.
+- Inside: a pocket open at the top, a rounded square 98 mm by 98 mm (x and y from -49 mm to +49 mm) with its vertical corners rounded with a 9 mm radius, down to a flat floor at z = 3 mm. So the walls are 3 mm thick all the way round and the floor is 3 mm thick.
+- Thumb notch: a rectangular notch cut down into the -Y wall, right through the wall, 30 mm wide (x from -15 mm to +15 mm), with vertical sides and a flat bottom at z = 12 mm.
+- All edges are sharp.
+
+Coasters (mesh objects "Coaster_1" to "Coaster_4"): four identical solid slabs, each a rounded square 96 mm by 96 mm with its vertical corners rounded with an 8 mm radius, 6 mm thick, with sharp edges. Each is a flat slab, its sides parallel to the world axes unless stated otherwise.
+- "Coaster_1" lies in the holder, centred on the Z axis, its bottom 0.5 mm above the holder floor (z = 3.5 mm to 9.5 mm).
+- "Coaster_2" lies on top of "Coaster_1", centred on the Z axis, its bottom 0.5 mm above the top of "Coaster_1".
+- "Coaster_3" lies on the ground (bottom at z = 0) beside the holder, centred at (x, y) = (140, 0) mm, its sides parallel to the world axes.
+- "Coaster_4" lies on top of "Coaster_3", centred over it at (x, y) = (140, 0) mm, its bottom 0.5 mm above the top of "Coaster_3", and turned 45 degrees about the vertical axis through its centre, so its corners point along +X, -X, +Y and -Y.
+
+Every object:
+- A single closed (watertight) mesh, one connected piece, with consistent outward normals and no self-intersections. No two objects touch or intersect.
+- Transforms applied: location at the origin, no rotation, scale 1, so the mesh data holds world coordinates.
+- At most 5,000 faces each.
+- No other mesh objects in the scene.
+
+Mesh hygiene: no duplicate or coincident vertices, no zero-length edges and no zero-area faces. Merge any coincident vertices before you finish.
+
+Tell me when you're done.
+"""
+
+[[checks]]
+type = "objects"
+expected = ["Holder", "Coaster_1", "Coaster_2", "Coaster_3", "Coaster_4"]
+
+[[checks]]
+type = "transforms_applied"
+objects = ["Holder", "Coaster_1", "Coaster_2", "Coaster_3", "Coaster_4"]
+
+[[checks]]
+type = "watertight"
+objects = ["Holder", "Coaster_1", "Coaster_2", "Coaster_3", "Coaster_4"]
+
+[[checks]]
+type = "shells"
+objects = ["Holder", "Coaster_1", "Coaster_2", "Coaster_3", "Coaster_4"]
+
+[[checks]]
+type = "self_intersection"
+objects = ["Holder", "Coaster_1", "Coaster_2", "Coaster_3", "Coaster_4"]
+
+[[checks]]
+type = "topology"
+objects = ["Holder", "Coaster_1", "Coaster_2", "Coaster_3", "Coaster_4"]
+
+[[checks]]
+type = "face_budget"
+objects = ["Holder", "Coaster_1", "Coaster_2", "Coaster_3", "Coaster_4"]
+max = 5000
+
+[[checks]]
+type = "bbox"
+label = "bbox_holder"
+object = "Holder"
+min = [-0.052, -0.052, 0.0]
+max = [0.052, 0.052, 0.025]
+tol = 0.0002
+
+[[checks]]
+type = "bbox"
+label = "bbox_coaster_1"
+object = "Coaster_1"
+min = [-0.048, -0.048, 0.0035]
+max = [0.048, 0.048, 0.0095]
+tol = 0.0002
+
+[[checks]]
+type = "bbox"
+label = "bbox_coaster_2"
+object = "Coaster_2"
+min = [-0.048, -0.048, 0.01]
+max = [0.048, 0.048, 0.016]
+tol = 0.0002
+
+[[checks]]
+type = "bbox"
+label = "bbox_coaster_3"
+object = "Coaster_3"
+min = [0.092, -0.048, 0.0]
+max = [0.188, 0.048, 0.006]
+tol = 0.0002
+
+# turned 45 degrees: corner arc centres sit 40*sqrt(2) = 56.569 mm out along the axes, so the corners
+# reach 64.569 mm from the centre. A corner arc built with no vertex on its midline falls short by at
+# most 8*(1-cos(7.5 deg)) = 0.07 mm at 24 segments per circle.
+[[checks]]
+type = "bbox"
+label = "bbox_coaster_4"
+object = "Coaster_4"
+min = [0.075431, -0.064569, 0.0065]
+max = [0.204569, 0.064569, 0.0125]
+tol = 0.0002
+
+[[checks]]
+type = "no_overlap"
+label = "no_overlap_holder_c1"
+a = "Holder"
+b = "Coaster_1"
+
+[[checks]]
+type = "no_overlap"
+label = "no_overlap_holder_c2"
+a = "Holder"
+b = "Coaster_2"
+
+[[checks]]
+type = "no_overlap"
+label = "no_overlap_c1_c2"
+a = "Coaster_1"
+b = "Coaster_2"
+
+[[checks]]
+type = "no_overlap"
+label = "no_overlap_c3_c4"
+a = "Coaster_3"
+b = "Coaster_4"
+
+# With A(h, r) = 4h^2 - (4-pi)r^2: A(52, 12) * 25 - A(49, 9) * 22 - notch through the 3 mm wall
+# 30 * 3 * 13 = 56381.4. A missing notch is +2.1%.
+[[checks]]
+type = "volume"
+label = "volume_holder"
+object = "Holder"
+mm3 = 56381.4
+rel_tol = 0.01
+
+# A(48, 8) * 6
+[[checks]]
+type = "volume"
+label = "volume_coaster_4"
+object = "Coaster_4"
+mm3 = 54966.4
+rel_tol = 0.01
+
+[[checks]]
+type = "ray_probe"
+label = "probe_holder"
+objects = ["Holder"]
+tol = 0.0003
+probes = [
+  { name = "floor in the 1 mm gap beside the coasters", objects = ["Holder", "Coaster_1", "Coaster_2"], origin = [0.0485, 0.0, 0.2], dir = [0, 0, -1], hit = 0.197 },
+  { name = "rim +X", origin = [0.0505, 0.0, 0.2], dir = [0, 0, -1], hit = 0.175 },
+  { name = "rim -Y beside the notch", origin = [0.03, -0.0505, 0.2], dir = [0, 0, -1], hit = 0.175 },
+  { name = "outside wall +X", origin = [0.07, 0.01, 0.02], dir = [-1, 0, 0], hit = 0.018 },
+  { name = "outside corner -X-Y", origin = [-0.08, -0.08, 0.02], dir = [1, 1, 0], hit = 0.0445685 },
+  { name = "inside wall +X", origin = [0.0, 0.0, 0.02], dir = [1, 0, 0], hit = 0.049 },
+  { name = "inside corner -X+Y", origin = [0.0, 0.0, 0.02], dir = [-1, 1, 0], hit = 0.0655685 },
+  { name = "underside", origin = [0.0, 0.0, -0.01], dir = [0, 0, 1], hit = 0.01 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_notch"
+objects = ["Holder"]
+tol = 0.0003
+probes = [
+  { name = "through the notch to the +Y inside wall", origin = [0.0, -0.1, 0.02], dir = [0, 1, 0], hit = 0.149 },
+  { name = "notch bottom", origin = [0.0, -0.0505, 0.2], dir = [0, 0, -1], hit = 0.188 },
+  { name = "notch side +X", origin = [0.0, -0.0505, 0.02], dir = [1, 0, 0], hit = 0.015 },
+  { name = "notch side -X", origin = [0.0, -0.0505, 0.015], dir = [-1, 0, 0], hit = 0.015 },
+]
+
+[variants]
+good = []
+coarse = []
+touching_stack = ["bbox_coaster_2", "no_overlap_c1_c2"]
+on_floor = ["bbox_coaster_1", "bbox_coaster_2", "no_overlap_holder_c1"]
+c4_square = ["bbox_coaster_4"]
+c4_touching = ["bbox_coaster_4", "no_overlap_c3_c4"]
+big_coasters = ["bbox_coaster_1", "bbox_coaster_2", "bbox_coaster_3", "bbox_coaster_4", "volume_coaster_4", "no_overlap_holder_c1", "no_overlap_holder_c2", "probe_holder"]
+no_notch = ["volume_holder", "probe_notch"]

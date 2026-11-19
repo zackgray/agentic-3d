@@ -1,0 +1,118 @@
+id = "h04-ribbed-cap"
+title = "Closure cap with 24 vertical grip ribs"
+group = "hard-surface"
+starting_scene = "empty"
+
+prompt = """
+Model a hypothetical product part in the open Blender scene: a screw-closure cap with vertical grip ribs, standing open side down, as one mesh object named "Cap". Units are metres (1 Blender unit = 1 m). The cap stands on the ground plane, centred on the world Z axis. Do not model a thread.
+
+- Shell: a cylinder of outer radius 15 mm (30 mm diameter) from its open bottom rim at z = 0 to a flat top at z = 18 mm. All its edges are sharp.
+- Bore: the inside is a cylinder of radius 12.5 mm, open at the bottom, up to a flat ceiling at z = 15 mm. So the side wall is 2.5 mm thick and the top 3 mm thick.
+- Grip ribs: 24 identical vertical ribs evenly spaced round the outside, 15 degrees apart, with the first rib centred on the +X axis (so ribs are centred at 0, 15, 30, ... 345 degrees measured from +X towards +Y). Each rib is a straight bar of rectangular section running the full height, from z = 0 to z = 18 mm, flush with the bottom rim and the top face. Seen from above, each rib is 1.2 mm wide (0.6 mm either side of its centre line) and its flat outer face lies 16 mm from the Z axis, so it stands 1 mm proud of the shell. Each rib is fused to the shell.
+
+The object:
+- A single closed (watertight) mesh, one connected piece, with consistent outward normals and no self-intersections.
+- Transforms applied: location at the origin, no rotation, scale 1, so the mesh data holds world coordinates.
+- At most 20,000 faces.
+- No other mesh objects in the scene.
+
+Mesh hygiene: no duplicate or coincident vertices, no zero-length edges and no zero-area faces. Merge any coincident vertices before you finish.
+
+Tell me when you're done.
+"""
+
+[[checks]]
+type = "objects"
+expected = ["Cap"]
+
+[[checks]]
+type = "transforms_applied"
+objects = ["Cap"]
+
+# the rib at 0 deg sets max x = 16; ribs at 90/270 set y = +-16; the 180 deg rib sets min x = -16
+[[checks]]
+type = "bbox"
+object = "Cap"
+min = [-0.016, -0.016, 0.0]
+max = [0.016, 0.016, 0.018]
+tol = 0.0002
+
+[[checks]]
+type = "watertight"
+objects = ["Cap"]
+
+[[checks]]
+type = "shells"
+objects = ["Cap"]
+
+[[checks]]
+type = "self_intersection"
+objects = ["Cap"]
+
+[[checks]]
+type = "topology"
+objects = ["Cap"]
+
+[[checks]]
+type = "face_budget"
+object = "Cap"
+max = 20000
+
+# shell pi * (15^2 * 18 - 12.5^2 * 15) + ribs 24 * 1.2 * 1 * 18 (the sliver between the flat rib
+# root and the curved shell, 24 * 18 * 0.01 mm^2, is below the tolerance)
+[[checks]]
+type = "volume"
+object = "Cap"
+mm3 = 5879
+rel_tol = 0.02
+
+# radial rays at z = 9 mm from r = 25 mm inwards; rib outer face at r = 16 -> hit 9 mm
+[[checks]]
+type = "ray_probe"
+label = "probe_ribs"
+tol = 0.0003
+probes = [
+  { name = "rib 0 deg", origin = [0.025, 0.0, 0.009], dir = [-1, 0, 0], hit = 0.009 },
+  { name = "rib 15 deg", origin = [0.024148, 0.006470, 0.009], dir = [-0.965926, -0.258819, 0], hit = 0.009 },
+  { name = "rib 45 deg", origin = [0.017678, 0.017678, 0.009], dir = [-1, -1, 0], hit = 0.009 },
+  { name = "rib 105 deg", origin = [-0.006470, 0.024148, 0.009], dir = [0.258819, -0.965926, 0], hit = 0.009 },
+  { name = "rib 210 deg", origin = [-0.021651, -0.0125, 0.009], dir = [0.866025, 0.5, 0], hit = 0.009 },
+  { name = "rib 345 deg", origin = [0.024148, -0.006470, 0.009], dir = [-0.965926, 0.258819, 0], hit = 0.009 },
+  { name = "rib 0 deg near bottom", origin = [0.025, 0.0, 0.0005], dir = [-1, 0, 0], hit = 0.009 },
+  { name = "rib 0 deg near top", origin = [0.025, 0.0, 0.0175], dir = [-1, 0, 0], hit = 0.009 },
+  { name = "rib 0 deg, 0.4 mm off centre", origin = [0.025, 0.0004, 0.009], dir = [-1, 0, 0], hit = 0.009 },
+]
+
+# midway between ribs (7.5 deg off a rib) the ray reaches the shell at r = 15 -> hit 10 mm
+[[checks]]
+type = "ray_probe"
+label = "probe_gaps"
+tol = 0.0003
+probes = [
+  { name = "gap 7.5 deg", origin = [0.024786, 0.003263, 0.009], dir = [-0.991445, -0.130526, 0], hit = 0.01 },
+  { name = "gap 97.5 deg", origin = [-0.003263, 0.024786, 0.009], dir = [0.130526, -0.991445, 0], hit = 0.01 },
+  { name = "gap 187.5 deg", origin = [-0.024786, -0.003263, 0.009], dir = [0.991445, 0.130526, 0], hit = 0.01 },
+  { name = "gap 277.5 deg", origin = [0.003263, -0.024786, 0.009], dir = [-0.130526, 0.991445, 0], hit = 0.01 },
+  { name = "beside rib 0 deg, 1.0 mm off centre", origin = [0.025, 0.001, 0.009], dir = [-1, 0, 0], hit = 0.010033 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_bore"
+tol = 0.0003
+probes = [
+  { name = "bore ceiling", origin = [0.0, 0.0, -0.01], dir = [0, 0, 1], hit = 0.025 },
+  { name = "bore wall +Y", origin = [0.0, 0.0, 0.007], dir = [0, 1, 0], hit = 0.0125 },
+  { name = "bottom rim", origin = [0.014, 0.0, -0.01], dir = [0, 0, 1], hit = 0.01 },
+  { name = "top face", origin = [0.0, 0.0, 0.03], dir = [0, 0, -1], hit = 0.012 },
+]
+
+[variants]
+good = []
+no_ribs = ["bbox", "volume", "probe_ribs"]
+ribs_20 = ["probe_ribs"]
+ribs_offset = ["probe_ribs", "probe_gaps"]
+wide_ribs = ["probe_gaps", "volume"]
+solid = ["volume", "probe_bore"]
+floating_ribs = ["shells"]
+short_ribs = ["probe_ribs"]

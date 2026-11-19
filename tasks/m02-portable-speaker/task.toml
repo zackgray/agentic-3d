@@ -1,0 +1,197 @@
+id = "m02-portable-speaker"
+title = "Portable speaker: cylinder with an 80-hole grille, feet and three top buttons"
+group = "multi-step"
+starting_scene = "empty"
+
+prompt = """
+Model a hypothetical product in the open Blender scene: a cylindrical portable speaker with a perforated grille, four feet and three control buttons, as four separate mesh objects. Units are metres (1 Blender unit = 1 m). The speaker stands upright on its feet on the ground plane, centred on the world Z axis. Angles around the Z axis are measured from +X towards +Y.
+
+Body (mesh object "Body"), one solid part:
+- Shell: a solid cylinder 80 mm in diameter from a flat underside at z = 5 mm to a flat top at z = 150 mm. All edges are sharp.
+- Feet: four solid cylinders 12 mm in diameter, from the ground plane (z = 0) up to the underside, with their axes vertical at (x, y) = (+20, +20), (-20, +20), (-20, -20) and (+20, -20) mm, fused to the body.
+- Grille: 80 round blind holes in a regular array on the curved side: 5 rows at z = 45, 60, 75, 90 and 105 mm, and 16 holes per row at angles 0, 22.5, 45, ... 337.5 degrees (every 22.5 degrees, the first on the +X axis), the same angles in every row. Each hole is 5 mm in diameter, its axis horizontal and pointing straight at the Z axis, with a flat floor perpendicular to its axis, 38 mm from the Z axis (2 mm deep measured along the hole's axis).
+- Button pockets: three flat-bottomed blind holes 12 mm in diameter in the top face, centred at (x, y) = (-15, 0), (0, 0) and (+15, 0) mm, from the top down to floors at z = 147 mm.
+
+Buttons (mesh objects "ButtonMinus" at x = -15 mm, "ButtonPower" at x = 0 and "ButtonPlus" at x = +15 mm, all at y = 0): each a solid cylinder 11 mm in diameter from z = 147.5 mm to z = 152 mm, standing in its pocket 0.5 mm above the pocket floor with 0.5 mm clearance all round, and protruding 2 mm above the top face.
+
+All four objects:
+- Each is a single closed (watertight) mesh in one connected piece, with consistent outward normals and no self-intersections.
+- No two objects touch or intersect.
+- Transforms applied: location at the origin, no rotation, scale 1, so the mesh data holds world coordinates.
+- At most 40,000 faces for the body and 20,000 faces for each button.
+- No other mesh objects in the scene.
+
+Mesh hygiene: no duplicate or coincident vertices, no zero-length edges and no zero-area faces. Merge any coincident vertices before you finish.
+
+Tell me when you're done.
+"""
+
+[[checks]]
+type = "objects"
+expected = ["Body", "ButtonMinus", "ButtonPlus", "ButtonPower"]
+
+[[checks]]
+type = "transforms_applied"
+objects = ["Body", "ButtonMinus", "ButtonPlus", "ButtonPower"]
+
+[[checks]]
+type = "bbox"
+label = "bbox_body"
+object = "Body"
+min = [-0.04, -0.04, 0.0]
+max = [0.04, 0.04, 0.15]
+tol = 0.0003
+
+[[checks]]
+type = "bbox"
+label = "bbox_minus"
+object = "ButtonMinus"
+min = [-0.0205, -0.0055, 0.1475]
+max = [-0.0095, 0.0055, 0.152]
+tol = 0.0003
+
+[[checks]]
+type = "bbox"
+label = "bbox_power"
+object = "ButtonPower"
+min = [-0.0055, -0.0055, 0.1475]
+max = [0.0055, 0.0055, 0.152]
+tol = 0.0003
+
+[[checks]]
+type = "bbox"
+label = "bbox_plus"
+object = "ButtonPlus"
+min = [0.0095, -0.0055, 0.1475]
+max = [0.0205, 0.0055, 0.152]
+tol = 0.0003
+
+[[checks]]
+type = "watertight"
+objects = ["Body", "ButtonMinus", "ButtonPlus", "ButtonPower"]
+
+[[checks]]
+type = "shells"
+objects = ["Body", "ButtonMinus", "ButtonPlus", "ButtonPower"]
+
+[[checks]]
+type = "self_intersection"
+objects = ["Body", "ButtonMinus", "ButtonPlus", "ButtonPower"]
+
+[[checks]]
+type = "topology"
+objects = ["Body", "ButtonMinus", "ButtonPlus", "ButtonPower"]
+
+[[checks]]
+type = "face_budget"
+label = "face_budget_body"
+object = "Body"
+max = 40000
+
+[[checks]]
+type = "face_budget"
+label = "face_budget_buttons"
+objects = ["ButtonMinus", "ButtonPlus", "ButtonPower"]
+max = 20000
+
+[[checks]]
+type = "no_overlap"
+label = "no_overlap_minus"
+a = "Body"
+b = "ButtonMinus"
+
+[[checks]]
+type = "no_overlap"
+label = "no_overlap_power"
+a = "Body"
+b = "ButtonPower"
+
+[[checks]]
+type = "no_overlap"
+label = "no_overlap_plus"
+a = "Body"
+b = "ButtonPlus"
+
+# pi*40^2*145 + feet 4*pi*6^2*5 - pockets 3*pi*6^2*3
+#   - holes 80 * integral over the 5 mm disc of (sqrt(40^2 - u^2) - 38) dA = 80 * 38.886
+[[checks]]
+type = "volume"
+object = "Body"
+mm3 = 726983
+rel_tol = 0.01
+
+[[checks]]
+type = "ray_probe"
+label = "probe_grille"
+objects = ["Body"]
+tol = 0.0003
+probes = [
+  { name = "hole row 45 at 0 deg", origin = [0.05, 0.0, 0.045], dir = [-1, 0, 0], hit = 0.012 },
+  { name = "hole row 60 at 90 deg", origin = [0.0, 0.05, 0.06], dir = [0, -1, 0], hit = 0.012 },
+  { name = "hole row 75 at 22.5 deg", origin = [0.046194, 0.019134, 0.075], dir = [-0.92388, -0.382683, 0], hit = 0.012 },
+  { name = "hole row 75 at 337.5 deg", origin = [0.046194, -0.019134, 0.075], dir = [-0.92388, 0.382683, 0], hit = 0.012 },
+  { name = "hole row 90 at 180 deg", origin = [-0.05, 0.0, 0.09], dir = [1, 0, 0], hit = 0.012 },
+  { name = "hole row 105 at 270 deg", origin = [0.0, -0.05, 0.105], dir = [0, 1, 0], hit = 0.012 },
+  { name = "land between columns at 11.25 deg", origin = [0.049039, 0.009755, 0.075], dir = [-0.980785, -0.19509, 0], hit = 0.01 },
+  { name = "land between rows", origin = [0.05, 0.0, 0.0525], dir = [-1, 0, 0], hit = 0.01 },
+  { name = "land below the grille", origin = [0.05, 0.0, 0.03], dir = [-1, 0, 0], hit = 0.01 },
+  { name = "land above the grille", origin = [0.05, 0.0, 0.12], dir = [-1, 0, 0], hit = 0.01 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_feet"
+objects = ["Body"]
+tol = 0.0003
+probes = [
+  { name = "foot +X+Y underside", origin = [0.02, 0.02, -0.01], dir = [0, 0, 1], hit = 0.01 },
+  { name = "foot -X-Y underside", origin = [-0.02, -0.02, -0.01], dir = [0, 0, 1], hit = 0.01 },
+  { name = "foot -X+Y side", origin = [-0.04, 0.02, 0.002], dir = [1, 0, 0], hit = 0.014 },
+  { name = "body underside between feet", origin = [0.0, 0.0, -0.01], dir = [0, 0, 1], hit = 0.015 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_top"
+objects = ["Body"]
+tol = 0.0003
+probes = [
+  { name = "top face", origin = [0.03, 0.0, 0.16], dir = [0, 0, -1], hit = 0.01 },
+  { name = "pocket floor -15", origin = [-0.015, 0.0, 0.16], dir = [0, 0, -1], hit = 0.013 },
+  { name = "pocket floor 0", origin = [0.0, 0.0, 0.16], dir = [0, 0, -1], hit = 0.013 },
+  { name = "pocket floor +15", origin = [0.015, 0.0, 0.16], dir = [0, 0, -1], hit = 0.013 },
+  { name = "pocket wall +15", origin = [0.015, 0.0, 0.149], dir = [1, 0, 0], hit = 0.006 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_buttons"
+objects = ["ButtonMinus", "ButtonPlus", "ButtonPower"]
+tol = 0.0003
+probes = [
+  { name = "minus top", origin = [-0.015, 0.0, 0.16], dir = [0, 0, -1], hit = 0.008 },
+  { name = "power top", origin = [0.0, 0.0, 0.16], dir = [0, 0, -1], hit = 0.008 },
+  { name = "plus top", origin = [0.015, 0.0, 0.16], dir = [0, 0, -1], hit = 0.008 },
+  { name = "plus side", origin = [0.015, -0.03, 0.151], dir = [0, 1, 0], hit = 0.0245 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_fit"
+tol = 0.0003
+probes = [
+  { name = "down the plus clearance to the floor", origin = [0.02075, 0.0, 0.16], dir = [0, 0, -1], hit = 0.013 },
+  { name = "down the power clearance to the floor", origin = [-0.00575, 0.0, 0.16], dir = [0, 0, -1], hit = 0.013 },
+  { name = "gap under the power button to the pocket wall", origin = [0.0, 0.0, 0.14725], dir = [1, 0, 0], hit = 0.006 },
+]
+
+[variants]
+good = []
+no_grille = ["probe_grille"]
+grille_4_rows = ["probe_grille"]
+narrow_body = ["bbox_body", "volume", "probe_grille"]
+no_feet = ["bbox_body", "probe_feet"]
+floating_feet = ["shells"]
+no_pockets = ["no_overlap_minus", "no_overlap_power", "no_overlap_plus", "probe_top", "probe_fit"]
+power_on_floor = ["bbox_power", "no_overlap_power", "probe_buttons", "probe_fit"]
+tight_plus = ["bbox_plus", "no_overlap_plus", "probe_buttons", "probe_fit"]

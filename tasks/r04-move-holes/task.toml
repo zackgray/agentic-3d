@@ -1,0 +1,132 @@
+id = "r04-move-holes"
+title = "Revision: bigger mounting holes, moved inboard"
+group = "revision"
+starting_scene = "start.py"
+
+prompt = """
+The open Blender scene holds an approved model of a hypothetical product part: a flat mounting plate with a large centre hole and four mounting holes near its corners (mesh object "Plate"). Units are metres (1 Blender unit = 1 m). The client has one revision:
+
+- The four mounting holes grow to 6.5 mm diameter, still straight through the plate.
+- Each mounting hole moves 5 mm inboard in X and 5 mm inboard in Y, towards the plate centre. The holes stay symmetric about both the X and Y axes.
+- The old hole positions are filled: no trace of the old holes remains.
+- Everything else stays exactly as it is: the plate outline, its thickness and corner radii, and the centre hole.
+
+The object keeps its name. It stays a single closed (watertight) mesh in one connected piece, with consistent outward normals and no self-intersections, transforms applied (location at the origin, no rotation, scale 1), and at most 20,000 faces. No other mesh objects in the scene.
+
+Mesh hygiene: no duplicate or coincident vertices, no zero-length edges and no zero-area faces. Merge any coincident vertices before you finish.
+
+Tell me when you're done.
+"""
+
+[[checks]]
+type = "objects"
+expected = ["Plate"]
+
+[[checks]]
+type = "transforms_applied"
+objects = ["Plate"]
+
+[[checks]]
+type = "bbox"
+object = "Plate"
+min = [-0.06, -0.04, 0.0]
+max = [0.06, 0.04, 0.006]
+tol = 0.0001
+
+[[checks]]
+type = "watertight"
+objects = ["Plate"]
+
+[[checks]]
+type = "shells"
+objects = ["Plate"]
+
+[[checks]]
+type = "self_intersection"
+objects = ["Plate"]
+
+[[checks]]
+type = "topology"
+objects = ["Plate"]
+
+[[checks]]
+type = "face_budget"
+object = "Plate"
+max = 20000
+
+# 6*(120*80 - (4-pi)*6^2 - pi*10^2 - 4*pi*3.25^2); the hole change is 325 mm3 = 0.59%
+[[checks]]
+type = "volume"
+object = "Plate"
+mm3 = 54733
+rel_tol = 0.002
+
+[[checks]]
+type = "ray_probe"
+label = "probe_new_holes"
+tol = 0.0003
+probes = [
+  { name = "+X+Y centre open", origin = [0.0450, 0.0250, 0.02], dir = [0, 0, -1], hit = false },
+  { name = "+X+Y open 3.0 mm inboard", origin = [0.0420, 0.0250, 0.02], dir = [0, 0, -1], hit = false },
+  { name = "+X+Y solid 3.6 mm inboard", origin = [0.0414, 0.0250, 0.02], dir = [0, 0, -1], hit = 0.014 },
+  { name = "+X+Y open 3.0 mm outboard", origin = [0.0480, 0.0250, 0.02], dir = [0, 0, -1], hit = false },
+  { name = "+X+Y solid 3.6 mm outboard", origin = [0.0486, 0.0250, 0.02], dir = [0, 0, -1], hit = 0.014 },
+  { name = "+X+Y open 3.0 mm inboard in Y", origin = [0.0450, 0.0220, 0.02], dir = [0, 0, -1], hit = false },
+  { name = "+X+Y solid 3.6 mm outboard in Y", origin = [0.0450, 0.0286, 0.02], dir = [0, 0, -1], hit = 0.014 },
+  { name = "-X+Y centre open", origin = [-0.0450, 0.0250, 0.02], dir = [0, 0, -1], hit = false },
+  { name = "-X+Y open 3.0 mm inboard", origin = [-0.0420, 0.0250, 0.02], dir = [0, 0, -1], hit = false },
+  { name = "-X+Y solid 3.6 mm inboard", origin = [-0.0414, 0.0250, 0.02], dir = [0, 0, -1], hit = 0.014 },
+  { name = "-X+Y open 3.0 mm outboard", origin = [-0.0480, 0.0250, 0.02], dir = [0, 0, -1], hit = false },
+  { name = "-X+Y solid 3.6 mm outboard", origin = [-0.0486, 0.0250, 0.02], dir = [0, 0, -1], hit = 0.014 },
+  { name = "-X+Y open 3.0 mm inboard in Y", origin = [-0.0450, 0.0220, 0.02], dir = [0, 0, -1], hit = false },
+  { name = "-X+Y solid 3.6 mm outboard in Y", origin = [-0.0450, 0.0286, 0.02], dir = [0, 0, -1], hit = 0.014 },
+  { name = "-X-Y centre open", origin = [-0.0450, -0.0250, 0.02], dir = [0, 0, -1], hit = false },
+  { name = "-X-Y open 3.0 mm inboard", origin = [-0.0420, -0.0250, 0.02], dir = [0, 0, -1], hit = false },
+  { name = "-X-Y solid 3.6 mm inboard", origin = [-0.0414, -0.0250, 0.02], dir = [0, 0, -1], hit = 0.014 },
+  { name = "-X-Y open 3.0 mm outboard", origin = [-0.0480, -0.0250, 0.02], dir = [0, 0, -1], hit = false },
+  { name = "-X-Y solid 3.6 mm outboard", origin = [-0.0486, -0.0250, 0.02], dir = [0, 0, -1], hit = 0.014 },
+  { name = "-X-Y open 3.0 mm inboard in Y", origin = [-0.0450, -0.0220, 0.02], dir = [0, 0, -1], hit = false },
+  { name = "-X-Y solid 3.6 mm outboard in Y", origin = [-0.0450, -0.0286, 0.02], dir = [0, 0, -1], hit = 0.014 },
+  { name = "+X-Y centre open", origin = [0.0450, -0.0250, 0.02], dir = [0, 0, -1], hit = false },
+  { name = "+X-Y open 3.0 mm inboard", origin = [0.0420, -0.0250, 0.02], dir = [0, 0, -1], hit = false },
+  { name = "+X-Y solid 3.6 mm inboard", origin = [0.0414, -0.0250, 0.02], dir = [0, 0, -1], hit = 0.014 },
+  { name = "+X-Y open 3.0 mm outboard", origin = [0.0480, -0.0250, 0.02], dir = [0, 0, -1], hit = false },
+  { name = "+X-Y solid 3.6 mm outboard", origin = [0.0486, -0.0250, 0.02], dir = [0, 0, -1], hit = 0.014 },
+  { name = "+X-Y open 3.0 mm inboard in Y", origin = [0.0450, -0.0220, 0.02], dir = [0, 0, -1], hit = false },
+  { name = "+X-Y solid 3.6 mm outboard in Y", origin = [0.0450, -0.0286, 0.02], dir = [0, 0, -1], hit = 0.014 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_old_holes"
+tol = 0.0003
+probes = [
+  { name = "old +X+Y filled", origin = [0.05, 0.03, 0.02], dir = [0, 0, -1], hit = 0.014 },
+  { name = "old -X+Y filled", origin = [-0.05, 0.03, 0.02], dir = [0, 0, -1], hit = 0.014 },
+  { name = "old -X-Y filled", origin = [-0.05, -0.03, 0.02], dir = [0, 0, -1], hit = 0.014 },
+  { name = "old +X-Y filled", origin = [0.05, -0.03, 0.02], dir = [0, 0, -1], hit = 0.014 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_plate"
+tol = 0.0003
+probes = [
+  { name = "centre hole open", origin = [0.0, 0.0, 0.02], dir = [0, 0, -1], hit = false },
+  { name = "centre hole open at r 9.7", origin = [0.0097, 0.0, 0.02], dir = [0, 0, -1], hit = false },
+  { name = "solid at r 10.4", origin = [0.0104, 0.0, 0.02], dir = [0, 0, -1], hit = 0.014 },
+  { name = "underside", origin = [0.02, 0.0, -0.01], dir = [0, 0, 1], hit = 0.01 },
+  { name = "edge +X", origin = [0.08, 0.0, 0.003], dir = [-1, 0, 0], hit = 0.02 },
+  { name = "edge -Y", origin = [0.0, -0.06, 0.003], dir = [0, 1, 0], hit = 0.02 },
+  { name = "corner radius 6", origin = [0.065, 0.045, 0.003], dir = [-1, -1, 0], hit = 0.0095563 },
+]
+
+[variants]
+good = []
+unchanged = ["volume", "probe_new_holes", "probe_old_holes"]
+enlarged_only = ["probe_new_holes", "probe_old_holes"]
+moved_only = ["volume", "probe_new_holes"]
+old_left_open = ["volume", "probe_old_holes"]
+moved_outward = ["probe_new_holes"]
+moved_diagonal = ["probe_new_holes"]
+centre_grown = ["volume", "probe_plate"]

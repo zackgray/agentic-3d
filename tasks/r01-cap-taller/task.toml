@@ -1,0 +1,114 @@
+id = "r01-cap-taller"
+title = "Revision: make the cap 10% taller"
+group = "revision"
+starting_scene = "start.py"
+
+prompt = """
+The open Blender scene holds an approved model of a hypothetical product: a bottle (mesh object "Bottle") with a cap (mesh object "Cap"). Units are metres (1 Blender unit = 1 m). The client has one revision:
+
+- Make the cap 10% taller. Its bottom rim stays exactly where it is, and its outer diameter, side-wall thickness and top-wall thickness stay the same: the extra height goes into the side wall.
+- Leave the bottle exactly as it is.
+
+Both objects keep their names. Each stays a single closed (watertight) mesh in one connected piece, with consistent outward normals and no self-intersections, transforms applied (location at the origin, no rotation, scale 1), and at most 20,000 faces. The cap must not touch or intersect the bottle. No other mesh objects in the scene.
+
+Mesh hygiene: no duplicate or coincident vertices, no zero-length edges and no zero-area faces. Merge any coincident vertices before you finish.
+
+Tell me when you're done.
+"""
+
+[[checks]]
+type = "objects"
+expected = ["Bottle", "Cap"]
+
+[[checks]]
+type = "transforms_applied"
+objects = ["Bottle", "Cap"]
+
+[[checks]]
+type = "bbox"
+label = "bbox_cap"
+object = "Cap"
+min = [-0.017, -0.017, 0.128]
+max = [0.017, 0.017, 0.161]
+tol = 0.0001
+
+[[checks]]
+type = "bbox"
+label = "bbox_bottle"
+object = "Bottle"
+min = [-0.03, -0.03, 0.0]
+max = [0.03, 0.03, 0.1545]
+tol = 0.0001
+
+[[checks]]
+type = "watertight"
+objects = ["Bottle", "Cap"]
+
+[[checks]]
+type = "shells"
+objects = ["Bottle", "Cap"]
+
+[[checks]]
+type = "self_intersection"
+objects = ["Bottle", "Cap"]
+
+[[checks]]
+type = "topology"
+objects = ["Bottle", "Cap"]
+
+[[checks]]
+type = "face_budget"
+objects = ["Bottle", "Cap"]
+max = 20000
+
+[[checks]]
+type = "no_overlap"
+a = "Bottle"
+b = "Cap"
+
+# top disc pi*17^2*3 + side ring pi*(17^2 - 15.5^2)*30
+[[checks]]
+type = "volume"
+label = "volume_cap"
+object = "Cap"
+mm3 = 7318
+rel_tol = 0.01
+
+# body pi*30^2*110 + shoulder frustum pi*15/3*(30^2 + 30*12 + 12^2) + neck pi*12^2*29.5
+[[checks]]
+type = "volume"
+label = "volume_bottle"
+object = "Bottle"
+mm3 = 346417
+rel_tol = 0.005
+
+[[checks]]
+type = "ray_probe"
+label = "probe_cap"
+objects = ["Cap"]
+tol = 0.0001
+probes = [
+  { name = "cap top at 161", origin = [0.0, 0.0, 0.2], dir = [0, 0, -1], hit = 0.039 },
+  { name = "cap ceiling stays 3 mm under the top", origin = [0.014, 0.0, 0.15], dir = [0, 0, 1], hit = 0.008 },
+  { name = "side wall reaches z=159", origin = [0.03, 0.0, 0.159], dir = [-1, 0, 0], hit = 0.013 },
+  { name = "side wall 1.5 mm", origin = [0.0, 0.0, 0.14], dir = [1, 0, 0], hit = 0.0155 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_bottle"
+objects = ["Bottle"]
+tol = 0.0001
+probes = [
+  { name = "neck top", origin = [0.0, 0.0, 0.3], dir = [0, 0, -1], hit = 0.1455 },
+  { name = "shoulder", origin = [0.05, 0.0, 0.1175], dir = [-1, 0, 0], hit = 0.029 },
+  { name = "body", origin = [0.1, 0.0, 0.05], dir = [-1, 0, 0], hit = 0.07 },
+]
+
+[variants]
+good = []
+unchanged = ["bbox_cap", "volume_cap", "probe_cap"]
+scaled = ["volume_cap", "probe_cap"]
+moved_up = ["bbox_cap", "volume_cap"]
+too_tall = ["bbox_cap", "volume_cap", "probe_cap"]
+scene_scaled = ["bbox_bottle", "bbox_cap", "probe_bottle", "probe_cap", "volume_bottle", "volume_cap"]

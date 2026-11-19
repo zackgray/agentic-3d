@@ -1,0 +1,151 @@
+id = "w01-shower-head"
+title = "Hand shower head: filleted round body, chamfered inlet neck with bore, two polar rings of nozzles"
+group = "hard-surface"
+starting_scene = "empty"
+
+prompt = """
+Model a hypothetical product part in the open Blender scene: the spray head of a hand shower, a round puck with an inlet neck on top and nozzle holes in its underside, as one mesh object named "ShowerHead". Units are metres (1 Blender unit = 1 m). The head stands on the ground plane, centred on the world Z axis, with its flat spray face (the underside) at z = 0 and the neck pointing up (+Z).
+
+- Body: a solid of revolution about the Z axis, 64 mm in diameter (radius 32 mm). Its side is vertical from the flat underside at z = 0 up to z = 10 mm. The top outer edge is rounded with a 5 mm radius fillet (a quarter-round blending the side into the top face), so the flat top face at z = 15 mm reaches out to a radius of 27 mm. The bottom edge is sharp.
+- Neck: a solid cylinder 18 mm in diameter (radius 9 mm) on the Z axis, standing on the body's top face and fused to it, from z = 15 mm up to a flat top at z = 34 mm. Its top outer edge is a 1.5 mm by 1.5 mm 45-degree chamfer, so the side is vertical up to z = 32.5 mm and the flat top face is 15 mm in diameter. The edge where the neck meets the body is sharp.
+- Inlet bore: a blind round hole 10 mm in diameter on the Z axis, from the neck top down to a flat floor at z = 7 mm. Its edges are sharp.
+- Nozzles: 18 identical blind round holes, each 3 mm in diameter, cut straight up (parallel to Z) into the underside, from z = 0 to a flat ceiling at z = 4 mm. Angles below are measured about the Z axis from +X towards +Y.
+  - Outer ring: 12 nozzles centred on a circle of radius 22 mm, at 15, 45, 75, ... 345 degrees (every 30 degrees, none on an axis).
+  - Inner ring: 6 nozzles centred on a circle of radius 11 mm, at 0, 60, 120, 180, 240 and 300 degrees (the first on +X).
+
+The object:
+- A single closed (watertight) mesh, one connected piece, with consistent outward normals and no self-intersections.
+- Transforms applied: location at the origin, no rotation, scale 1, so the mesh data holds world coordinates.
+- At most 20,000 faces.
+- No other mesh objects in the scene.
+
+Mesh hygiene: no duplicate or coincident vertices, no zero-length edges and no zero-area faces. Merge any coincident vertices before you finish.
+
+Tell me when you're done.
+"""
+
+[[checks]]
+type = "objects"
+expected = ["ShowerHead"]
+
+[[checks]]
+type = "transforms_applied"
+objects = ["ShowerHead"]
+
+# a 24-segment body turned half a step reaches 32*cos(7.5 deg) = 31.73 mm, inside the tolerance
+[[checks]]
+type = "bbox"
+object = "ShowerHead"
+min = [-0.032, -0.032, 0.0]
+max = [0.032, 0.032, 0.034]
+tol = 0.0005
+
+[[checks]]
+type = "watertight"
+objects = ["ShowerHead"]
+
+[[checks]]
+type = "shells"
+objects = ["ShowerHead"]
+
+[[checks]]
+type = "self_intersection"
+objects = ["ShowerHead"]
+
+[[checks]]
+type = "topology"
+objects = ["ShowerHead"]
+
+[[checks]]
+type = "face_budget"
+object = "ShowerHead"
+max = 20000
+
+# body pi*32^2*10 = 32169.9 + fillet band integral_10^15 pi*(27 + sqrt(25 - (z-10)^2))^2 dz = 15043.9
+# + neck pi*9^2*17.5 = 4453.3 + neck chamfer frustum pi*1.5/3*(9^2 + 9*7.5 + 7.5^2) = 321.5
+# - bore pi*5^2*27 = 2120.6 - nozzles 18*pi*1.5^2*4 = 508.9; total 49359.1.
+# A 24-segment build is 1.1% smaller; tolerance 1.5%. Sharp top edge +2.1%, 5 mm chamfer -2.7%.
+[[checks]]
+type = "volume"
+object = "ShowerHead"
+mm3 = 49359.1
+rel_tol = 0.015
+
+# radial rays at the axes (sagitta of a 24-segment side at r = 32 is 0.27 mm, under the tolerance)
+[[checks]]
+type = "ray_probe"
+label = "probe_body"
+tol = 0.0003
+probes = [
+  { name = "side at z=5, 0 deg", origin = [0.05, 0.0, 0.005], dir = [-1, 0, 0], hit = 0.018 },
+  { name = "side at z=5, 90 deg", origin = [0.0, 0.05, 0.005], dir = [0, -1, 0], hit = 0.018 },
+  { name = "side at z=5, 180 deg", origin = [-0.05, 0.0, 0.005], dir = [1, 0, 0], hit = 0.018 },
+  { name = "underside at r=16", origin = [0.016, 0.0, -0.01], dir = [0, 0, 1], hit = 0.01 },
+  { name = "top face at r=18, 0 deg", origin = [0.018, 0.0, 0.05], dir = [0, 0, -1], hit = 0.035 },
+  { name = "top face at r=18, 90 deg", origin = [0.0, 0.018, 0.05], dir = [0, 0, -1], hit = 0.035 },
+]
+
+# fillet centre (r, z) = (27, 10) mm, radius 5. Down at r = 29: z = 10 + sqrt(21) = 14.5826.
+# 45-degree rays aimed at the fillet centre from 15 mm out hit the arc at 10 mm.
+[[checks]]
+type = "ray_probe"
+label = "probe_fillet"
+tol = 0.0003
+probes = [
+  { name = "fillet at r=29, 0 deg", origin = [0.029, 0.0, 0.05], dir = [0, 0, -1], hit = 0.0354174 },
+  { name = "fillet at r=29, 120 deg", origin = [-0.0145, 0.0251147, 0.05], dir = [0, 0, -1], hit = 0.0354174 },
+  { name = "fillet 45 deg, 0 deg", origin = [0.0376066, 0.0, 0.0206066], dir = [-1, 0, -1], hit = 0.01 },
+  { name = "fillet 45 deg, 240 deg", origin = [-0.0188033, -0.0325683, 0.0206066], dir = [0.5, 0.866025, -1], hit = 0.01 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_neck"
+tol = 0.0003
+probes = [
+  { name = "neck side at z=25", origin = [0.03, 0.0, 0.025], dir = [-1, 0, 0], hit = 0.021 },
+  { name = "neck side at z=25, 270 deg", origin = [0.0, -0.03, 0.025], dir = [0, 1, 0], hit = 0.021 },
+  { name = "neck chamfer at r=8.25", origin = [0.00825, 0.0, 0.05], dir = [0, 0, -1], hit = 0.01675 },
+  { name = "neck top at r=6.25", origin = [0.0, 0.00625, 0.05], dir = [0, 0, -1], hit = 0.016 },
+]
+
+[[checks]]
+type = "ray_probe"
+label = "probe_bore"
+tol = 0.0003
+probes = [
+  { name = "bore floor at z=7", origin = [0.0, 0.0, 0.05], dir = [0, 0, -1], hit = 0.043 },
+  { name = "bore wall +X at z=20", origin = [0.0, 0.0, 0.02], dir = [1, 0, 0], hit = 0.005 },
+  { name = "bore wall -Y at z=20", origin = [0.0, 0.0, 0.02], dir = [0, -1, 0], hit = 0.005 },
+]
+
+# straight up into nozzle centres (ceiling z = 4) and between them (underside z = 0), from z = -10
+[[checks]]
+type = "ray_probe"
+label = "probe_nozzles"
+tol = 0.0003
+probes = [
+  { name = "outer nozzle 15 deg", origin = [0.0212504, 0.0056940, -0.01], dir = [0, 0, 1], hit = 0.014 },
+  { name = "outer nozzle 135 deg", origin = [-0.0155563, 0.0155563, -0.01], dir = [0, 0, 1], hit = 0.014 },
+  { name = "outer nozzle 255 deg", origin = [-0.0056940, -0.0212504, -0.01], dir = [0, 0, 1], hit = 0.014 },
+  { name = "outer ring between, 0 deg", origin = [0.022, 0.0, -0.01], dir = [0, 0, 1], hit = 0.01 },
+  { name = "inner nozzle 0 deg", origin = [0.011, 0.0, -0.01], dir = [0, 0, 1], hit = 0.014 },
+  { name = "inner nozzle 180 deg", origin = [-0.011, 0.0, -0.01], dir = [0, 0, 1], hit = 0.014 },
+  { name = "inner ring between, 30 deg", origin = [0.0095263, 0.0055, -0.01], dir = [0, 0, 1], hit = 0.01 },
+  { name = "top above outer nozzle 15 deg", origin = [0.0212504, 0.0056940, 0.05], dir = [0, 0, -1], hit = 0.035 },
+]
+
+[variants]
+good = []
+coarse = []
+no_fillet = ["volume", "probe_fillet"]
+chamfer_not_fillet = ["volume", "probe_fillet"]
+fillet_r3 = ["probe_fillet"]
+fillet_inside_height = ["volume", "probe_body", "probe_fillet", "probe_nozzles"]
+no_neck_chamfer = ["probe_neck"]
+floating_neck = ["shells"]
+bore_through = ["probe_bore"]
+no_nozzles = ["probe_nozzles"]
+no_inner_ring = ["probe_nozzles"]
+outer_ring_on_axes = ["probe_nozzles"]
+nozzles_through = ["volume", "probe_nozzles"]
