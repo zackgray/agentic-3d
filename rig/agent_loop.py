@@ -7,7 +7,8 @@ from .accounting import Counter, Ledger
 
 
 def run_agent(client, model: str, effort: str, setup, prompt: str, counter: Counter, ledger: Ledger,
-              transcript: list, max_turns: int = 40, max_tokens: int = 16000, request: dict | None = None) -> dict:
+              transcript: list, max_turns: int = 40, max_tokens: int = 16000, request: dict | None = None,
+              max_cost: float | None = None) -> dict:
     ledger.add("system", counter.system(setup.system))
     ledger.add("tool_definitions", counter.tools(setup.tools))
     ledger.add("task_prompt", counter.text(prompt))
@@ -44,6 +45,11 @@ def run_agent(client, model: str, effort: str, setup, prompt: str, counter: Coun
 
         if resp.stop_reason != "tool_use":
             return {"end": resp.stop_reason, "turns": ledger.summary()["turns"]}
+        spent = ledger.summary()["cost_usd"]
+        if max_cost is not None and spent is not None and spent >= max_cost:
+            # A spend guard, scored like the turn cap. No Anthropic run has come near it (dearest
+            # $0.10); a weak model sending malformed calls looped 29 turns (2026-11-19).
+            return {"end": "cost_cap", "turns": ledger.summary()["turns"]}
 
         results, finished = [], False
         for b in resp.content:

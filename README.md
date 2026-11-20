@@ -51,6 +51,7 @@ pip install -e .[dev]
 - **Blender:** the rig looks for `C:/Program Files/Blender Foundation/Blender 5.2/blender.exe`; elsewhere, set `BLENDER_PATH` to the Blender executable.
 - **API key:** put `ANTHROPIC_API_KEY=...` in a `.env` file at the repo root (git-ignored), or set it in the environment.
 - **Sandbox** (recommended whenever a model you don't fully trust writes the code): the `harness-sandbox` setup runs the harness's Blender in a Linux container with no network, a read-only system, no host environment and only the run folder writable; the model sees exactly what `harness` shows it. Needs Docker; build the image once with `docker build -t agentic3d-blender:5.2.3 sandbox`. An audit log of anything the agent's code tries past those walls is kept with each run.
+- **Models from other labs** (the cross-family arm): put `OPENROUTER_API_KEY=...` in `.env`; models and their pinned providers are listed in `rig/models.py`, and run with `--model <name>` on the sandboxed setups (`no-mcp-sandbox`, `harness-sandbox`). A local OpenAI-compatible server is reached through `LOCAL_MODEL_URL`. Each run is capped at $0.50 (`--max-cost`).
 - **MCP baselines** (only to rerun the Phase 2 comparison; Windows, since they need a GUI Blender on a hidden desktop): `python -m rig.vendor_setup` fetches each server at its pinned commit into an isolated Blender profile.
 
 ### Free (no model calls)

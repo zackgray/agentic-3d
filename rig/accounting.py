@@ -88,7 +88,8 @@ class Ledger:
             "output_total": usage.output_tokens,
             "output_by_source": {"thinking": thinking, "agent_code": code_out, "agent_text": text_out,
                                  "unattributed": usage.output_tokens - thinking - code_out - text_out},
-            "cost_usd": self._cost(usage.input_tokens, write, read, usage.output_tokens),
+            "cost_usd": provided if (provided := getattr(usage, "cost_usd", None)) is not None
+            else self._cost(usage.input_tokens, write, read, usage.output_tokens),  # non-Anthropic: provider-reported
         }
         self.turns.append(row)
         return row

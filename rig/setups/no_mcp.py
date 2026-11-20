@@ -68,8 +68,7 @@ class NoMcpSetup:
         result = self.dir / f"{self.calls:03d}.json"
         code.write_text(tool_input["code"], encoding="utf-8")
         try:
-            proc = run_script(self.exe, "exec_code.py", [str(code), str(result)],
-                              blend=self.scene, timeout=self.timeout)
+            proc = self._exec(code, result)
         except subprocess.TimeoutExpired:
             return Outcome(f"Timed out after {self.timeout:.0f} s; scene unchanged.", True,
                            time.monotonic() - t0)
@@ -82,6 +81,10 @@ class NoMcpSetup:
         if len(text) > OUTPUT_CAP:
             text = text[:OUTPUT_CAP] + f"\n[output truncated: {len(text)} characters total]"
         return Outcome(text, not out["ok"], time.monotonic() - t0)
+
+    def _exec(self, code: Path, result: Path) -> subprocess.CompletedProcess:
+        return run_script(self.exe, "exec_code.py", [str(code), str(result)], blend=self.scene,
+                          timeout=self.timeout)
 
     def stop(self) -> None:
         pass

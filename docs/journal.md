@@ -233,3 +233,35 @@ The lower pass rate isn't the sandbox. Replaying all 30 sandboxed runs' code in 
 **Decided (recommended).** Use `harness-sandbox` for any new model arm, and keep `harness` only to reproduce the published h7 numbers. The replay tool now also replays sandbox runs.
 
 **Spend.** $0.05. Phase 3 about $7.20 of $20.
+
+## 2026-11-19/20 · Cross-family models: the harness outside Anthropic
+
+**Why.** Every number so far came from two Anthropic models and a harness tuned on one of them. The question a sceptical reader asks first is whether the harness is general or Haiku-shaped. The owner lifted the Anthropic-only rule for this arm (Kimi stays excluded) with a $10 cap.
+
+**Built.** The no-MCP baseline now also runs in the sandbox (`no-mcp-sandbox`: a fresh container per call, same walls and audit log); the walls test covers both setups, and replaying 30 recorded Haiku baseline runs through it gave the host's verdict and call count on every one. An adapter gives OpenRouter and local OpenAI-compatible servers the Anthropic client's surface, so the agent loop and setups are unchanged. Each model is pinned to one provider with fallbacks off and prompt data collection denied. Totals and cost are the provider's own figures; the split of input by source is approximate (4 characters a token). A per-run spend cap ($0.50, scored like the turn cap) was added after an 8B model sent 28 malformed tool calls in a row; no Anthropic run has cost more than $0.10. A bounding-box check that crashed on an object with no vertices now fails it instead.
+
+**Screen** (3 tasks × both setups per candidate). DeepSeek V4.1 Flash, Qwen 4 Max, Gemini 4 Neon and GPT-6.2 Sol Pro passed 6/6. Llama 3.1 8B never made a valid tool call (0/6) and was replaced by Mistral Small. GPT-6.2 Sol Pro turned out to be Sol in a "pro" mode that bills about four times the input for the same prompt; it was replaced by standard GPT-6.2 Sol (6/6). The local Qwen 3.6 27B on the lab server passed 1/3 with the harness (out-of-date Blender 5.2 calls, a shape miss); its baseline took up to 24 minutes a task and overflowed the server's 98k context once. The owner dropped it from the full round.
+
+**Measured: full round** (development, 30 tasks, one run per task per setup, both sandboxed; Anthropic rows are h7's published 90-run figures). `python -m rig.compare --setups no-mcp-sandbox harness-sandbox --model <model> --groups`.
+
+| Model | Pass, baseline → harness | Tokens per passed task, baseline → harness | Ratio per pass | Ratio typical | Harness cost per pass |
+|---|---|---|---|---|---|
+| Haiku 5.5 | 80/90 → 86/90 | 26,727 → 6,489 | 0.24 | 0.29 | $0.0016 |
+| Sonnet 5.5 | 79/90 → 82/90 | 10,103 → 3,828 | 0.38 | 0.41 | $0.015 |
+| GPT-6.2 Sol | 29/30 → 30/30 | 3,620 → 1,798 | 0.50 | 0.50 | $0.0066 |
+| Gemini 4 Neon | 29/30 → 30/30 | 18,632 → 3,304 | 0.18 | 0.20 | $0.034 |
+| Qwen 4 Max | 28/30 → 30/30 | 41,751 → 3,673 | 0.09 | 0.15 | $0.010 |
+| DeepSeek V4.1 Flash | 26/30 → 23/30 | 210,362 → 11,981 | 0.06 | 0.09 | $0.0030 |
+| Mistral Small | 2/30 → 8/30 | 3.29M → 284k | (0.09) | 0.43 | $0.045 |
+
+**What it means.**
+
+- **The harness is not Haiku-shaped.** Three of the four capable models from other labs passed every task with it (Haiku managed 96%), and all four landed at 1.8k–3.7k tokens per passed task, except DeepSeek, whose failures are below. No home advantage shows. Each lab's models count tokens differently, so cross-lab token figures carry some noise, but ratios within a model don't.
+- **The saving measures how much a model wastes on its own, not how strong it is.** With the harness, capable models converge on roughly 2–4k tokens a task; the ratio is set by the baseline. DeepSeek is accurate alone (87%) but wanders (210k tokens per pass), so it gains most; GPT is already lean (3.6k) and gains least, though still half.
+- **The floor is skill, then tool use.** Mistral Small can drive the tool but can't model: the harness took it from 2 to 8 passes (layout and revisions only) and still failed every hard-surface, multi-step and product task. The 8B Llama couldn't make a valid tool call at all.
+- **DeepSeek is the one model the harness cost accuracy (87% → 77%, under the ~82% guardrail).** Four of its seven harness failures were builds 1,000 times too large (millimetre values written as metres) that ended on a clean first call before the report's bounding boxes were read, the same blind spot as Sonnet's h7 failures. Two more spent the whole output budget thinking. A generic warning on hand-held products tens of metres across would likely have held those four open.
+- **Different winners on different measures.** Fewest tokens and best accuracy: GPT-6.2 Sol with the harness (1,798 per pass, 30/30). Cheapest: still Haiku with h7 ($0.0016 a pass), then DeepSeek ($0.0030).
+
+**Not tested.** Hypothesis 3 (out-of-date Blender knowledge favours the harness) wasn't measured directly; the local Qwen's failures point that way. One round of 30 per model is directional; no held-out set was run for these models.
+
+**Spend.** OpenRouter $8.21 for the arm (screen, round, one void re-run), against the $10 cap; first quoted at $4–5 (Qwen and Gemini cost more on the harder tasks than on the screen). Phase 3 about $15.40 of $20.

@@ -24,6 +24,8 @@ def check_transforms_applied(s, c):
 
 def check_bbox(s, c):
     co = [v.co for v in s.bm(c["object"]).verts]
+    if not co:  # an object with no geometry is the agent's failure, not a crash (void) of the check
+        return False, {"no_vertices": c["object"]}
     lo = [min(p[i] for p in co) for i in range(3)]
     hi = [max(p[i] for p in co) for i in range(3)]
     tol = c.get("tol", 0.0005)

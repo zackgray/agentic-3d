@@ -43,15 +43,16 @@ def image_id() -> str:
     return _image_id
 
 
-def docker_cmd(name: str, workdir, scene_name: str) -> list[str]:
+def docker_cmd(name: str, workdir, scene_name: str, script: str = "harness_server.py",
+               args: tuple = ("--stdio",), interactive: bool = True) -> list[str]:
     return [
-        "docker", "run", "--rm", "-i", "--name", name,
+        "docker", "run", "--rm", *(["-i"] if interactive else []), "--name", name,
         "--network", "none", "--read-only", "--tmpfs", "/tmp:rw,size=1g",
         "--cap-drop", "ALL", "--security-opt", "no-new-privileges",
         "--pids-limit", "512", "--memory", "8g", "--user", "1000:1000", "-e", "HOME=/tmp",
         "-v", f"{workdir.resolve()}:/work", "-v", f"{SIDE.resolve()}:/side:ro",
         IMAGE, "-b", f"/work/{scene_name}", "--factory-startup", "--disable-autoexec",
-        "--python-exit-code", "1", "--python", "/side/harness_server.py", "--", "--stdio",
+        "--python-exit-code", "1", "--python", f"/side/{script}", "--", *args,
     ]
 
 

@@ -21,15 +21,17 @@ from .accounting import Counter, Ledger
 from .agent_loop import run_agent
 from .env import load_env
 from .blender import SetupError, blender_path, blender_version, make_starting_scene, run_checks
+from .models import make_client
 from .prompt_arms import ARMS, REQUEST, apply
 from .setups.harness import HarnessSetup
 from .setups.mcp_servers import MCP_SETUPS
 from .setups.no_mcp import NoMcpSetup
 from .setups.sandbox import SandboxHarnessSetup
+from .setups.no_mcp_sandbox import NoMcpSandboxSetup
 from .task import load_task
 
 ROOT = Path(__file__).resolve().parent.parent
-SETUPS = {"no-mcp": NoMcpSetup, "harness": HarnessSetup, "harness-sandbox": SandboxHarnessSetup, **MCP_SETUPS}
+SETUPS = {"no-mcp": NoMcpSetup, "harness": HarnessSetup, "harness-sandbox": SandboxHarnessSetup, "no-mcp-sandbox": NoMcpSandboxSetup, **MCP_SETUPS}
 
 
 def rig_version() -> str:
@@ -54,7 +56,10 @@ def execute(args, rec: dict, run_dir: Path, transcript: list) -> None:
     rec["versions"]["blender"] = blender_version(exe)
     task = load_task(args.task)
     rec["prompt_sha"] = prompt_sha(task.prompt, args.arm, task.scene_text)
-    client = anthropic.Anthropic(max_retries=4)
+    client = make_client(args.model)
+    if hasattr(client, "describe"):  # a non-Anthropic backend: record exactly what served the run
+        rec["versions"]["model"] = client.describe()
+        rec["versions"]["accounting"] = "provider totals; input by source approximate (4 chars/token)"
     try:
         counter = Counter(client, args.model)  # first API call: bad key or no network fails here, as void
     except TypeError as e:  # the SDK raises TypeError when it finds no credentials at all
@@ -70,7 +75,7 @@ def execute(args, rec: dict, run_dir: Path, transcript: list) -> None:
     try:
         rec["agent"] = run_agent(client, args.model, args.effort, setup, apply(task.prompt, args.arm), counter, ledger,
                                  transcript, max_turns=args.max_turns,
-                                 request=REQUEST.get(args.arm))
+                                 request=REQUEST.get(args.arm), max_cost=args.max_cost)
     finally:
         setup.stop()
         rec["metrics"] = ledger.summary()
@@ -91,6 +96,7 @@ def main(argv=None) -> int:
     p.add_argument("--model", default="claude-haiku-5-5")
     p.add_argument("--effort", default="low")
     p.add_argument("--max-turns", type=int, default=40)
+    p.add_argument("--max-cost", type=float, default=0.50, help="USD per run; the run ends there and is scored (a spend guard)")
     p.add_argument("--blender", help="override the Blender executable (a wrong path must give void)")
     args = p.parse_args(argv)
     load_env(ROOT / ".env")
