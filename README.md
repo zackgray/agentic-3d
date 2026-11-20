@@ -78,9 +78,10 @@ Runs are recorded under `runs/` (git-ignored): result, full transcript and per-c
 
 - `rig/`: the runner, batch and comparison tools, the setups (no MCP, three MCP servers, the harness), and the Blender-side checks and harness server.
 - `tasks/`: the 30-task development suite and shared reference-model helpers; `heldout/` … `heldout4/`: the four held-out sets, each spent.
+- `products/`: invented products briefed as a product page (page text and one front shot, no dimensions), each with a hidden reference model and measured key, for the spec-first workflow.
 - `sandbox/`: the container image for the `harness-sandbox` setup.
 - `tests/`: unit tests (`tests/unit/`) and live-Blender tests.
-- `docs/`: `case-study.md` (the write-up), `journal.md` and the earlier journals (dated record of what was done, decided and measured), `eval-method.md`, `task-authoring.md`, `publishing.md` (how changes reach this repo), `research.md` (the landscape at the start), `roadmap.md`.
+- `docs/`: `report.md` (the Phase 3 report), `case-study.md` (the write-up in order), `journal.md` and the earlier journals (dated record of what was done, decided and measured), `eval-method.md`, `task-authoring.md`, `publishing.md` (how changes reach this repo), `research.md` (the landscape at the start), `roadmap.md`.
 
 ## License
 

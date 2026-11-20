@@ -1,0 +1,9 @@
+id = "northpeak-water-500ml"
+name = "Northpeak Spring Water"
+category = "Still water"
+container = "PET bottle with screw cap"
+net_contents = "16.9 fl oz (500 mL)"
+page = "Northpeak Spring Water. 16.9 fl oz (500 mL) bottle. 1 per container."
+objects = ["Bottle", "Cap"]
+label_mm = [98, 128]
+colours = { Bottle = [0.8, 0.88, 0.95], Cap = [0.95, 0.95, 0.95], Label = [0.2, 0.45, 0.8] }

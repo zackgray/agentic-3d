@@ -1,0 +1,8 @@
+id = "orchard-carton-52oz"
+name = "Orchard Row Apple Juice"
+category = "Juice"
+container = "Gable-top carton"
+net_contents = "52 fl oz (1.54 L)"
+page = "Orchard Row Apple Juice, not from concentrate. 52 fl oz (1.54 L) carton. 1 per container."
+objects = ["Carton"]
+colours = { Carton = [0.93, 0.92, 0.86] }

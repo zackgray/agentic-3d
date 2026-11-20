@@ -1,0 +1,28 @@
+{
+  "objects": {
+    "Carton": {
+      "min_mm": [
+        -45.0,
+        -45.0,
+        0.0
+      ],
+      "max_mm": [
+        45.0,
+        45.0,
+        237.0
+      ],
+      "size_mm": [
+        90.0,
+        90.0,
+        237.0
+      ],
+      "volume_ml": 1683.0,
+      "open_edges": 0
+    }
+  },
+  "overall_mm": {
+    "width_x": 90.0,
+    "depth_y": 90.0,
+    "height_z": 237.0
+  }
+}
