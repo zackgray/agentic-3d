@@ -13,6 +13,7 @@ license-files = ["LICENSE"]
 # Only what the rig imports outside rig/blender_side; that code runs inside Blender's own Python.
 dependencies = [
     "anthropic",
+    "httpx",  # rig/openai_compat.py (the Anthropic SDK no longer brings it)
     "mcp",
 ]
 
