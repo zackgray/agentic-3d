@@ -35,3 +35,40 @@ Dated record of the work: what was done, what was decided and why, and what was 
 **Housekeeping.** Blender stamps metadata into rendered PNGs, including the local path of the scene file, so the renderers now switch it off and the committed views and shots were stripped. Pixels are unchanged (re-renders of two tasks match bit for bit), so the images the models saw are the ones committed; the 44 image-arm run records were re-fingerprinted, with a note, and the comparison above reproduces exactly.
 
 **Next.** One live spec-first session with the owner on these (cents), before any scoring is built. If the specs come back sensible, the scored arm measures the spec against the key (height, width, volume, profile) and the build against the reference.
+
+## 2026-11-20 · First spec-first session: the soda bottle, Haiku throughout
+
+**Built** (free). A two-step runner for the product-page briefs, `python -m rig.spec_session spec|build|compare <product>`. Step 1 is one call with no tools: the page text and the shot, and a request for a dimensioned spec with every value marked [page], [photo], [standard] or [guess] and the scale solved from the net contents. Step 2 is an ordinary sandboxed rig run on a task generated from the approved spec plus the owner's corrections, with the shot attached and only generic checks (names, transforms, watertight, no self-intersection, no overlap). A third step measures the build against the hidden key and renders it beside the reference, for the owner only. A task can now carry its own attached images, folded into the prompt fingerprint like the image arm's views.
+
+**Measured** (owner's go: Haiku 5.5 low for both steps, Volta Citrus Soda, one session). The spec cost $0.003 (1,166 in, 5,563 out, 4,227 of them thinking). From one photo and "591 mL" it solved the bottle to 67 × 221 mm against the key's 68 × 223, and the cap to 30 × 17 mm against 30 × 16.5. It read the waist, the label band (correctly as print, not shape) and the shoulder. Its flaws were ones a non-modeller would approve: a hollow bottle with a 0.3 mm wall, and the neck stopping below the cap instead of running up inside it. The owner approved it with one plain-words correction ("make it solid; the neck continues up inside the cap; flat base and plain cap are fine"). The build passed every check in one turn, 5,343 tokens, $0.0013, 10.6 s: two lathes from the spec's station table.
+
+| | Build | Key |
+|---|---|---|
+| Bottle size | 67 × 203.5 mm | 68 × 220 mm |
+| Bottle volume | 610.7 mL | 654.7 mL |
+| Cap size, top | 30 × 16.6 mm, top at 221.1 | 30 × 16.5 mm, top at 223.0 |
+| Cap volume | 11.6 mL | 11.7 mL |
+
+**What it means.** The thin brief was not the hard part: scale from net contents landed within 2% on height and width, and the spec read the photo well. Where it broke is the correction. The build made the bottle solid but ignored "the neck continues up inside the cap", because it traced the spec's station table literally and the table still stopped the neck at 203.5 mm. So the bottle is 16.5 mm short and the cap floats 1 mm above it, which no generic check catches. The waist is also shallower than the reference's. Lesson for the workflow: a correction has to go back into the spec (the agent revises the spec and the owner re-approves) rather than ride alongside it, since the builder trusts numbers over prose.
+
+**Change and rerun.** Corrections now go back through the spec writer (`revise`: the owner's words as a follow-up turn, the full spec rewritten with the change in its numbers and marked), and the builder sees only the revised spec. The revision ($0.002) put a 26 mm neck from the finish ring up to 217 mm inside a hollow cap with a 1 mm wall, and asked one fair question (the cap is narrower than the finish ring, in the photo and the reference alike). It also added a "cap bottom edge" row to the bottle's station table, a trap a non-modeller wouldn't see; built as-is to test it. The build passed in two turns, 11,675 tokens, $0.0018, and skipped the trap: the neck now runs inside the cap with no overlap, bottle 67 × 217 mm (key 68 × 220), 618 mL (key 655), cap top at 221.1 (key 223.0). The cap is a hollow shell (2.5 mL) where the key's is solid (11.7 mL); that's a reference choice, not an error. What's still off is the spec's reading of the photo, not the hand-off: the waist is drawn 63 mm against a 67 mm body, shallower than the reference's, so the bottle is about 6% light.
+
+**Spend.** $0.008 for the session, all Haiku.
+
+## 2026-11-20 · Spec-first on the other three products (Haiku throughout)
+
+**Run** (owner's go, owner away: the agent wrote the plain-words corrections a non-modeller would give, from the photo and the spec only, without looking at the key). Each product: spec from page text and shot, one revision with the corrections, build on harness-sandbox at h9, compare against the key. All Haiku 5.5 low, one session each.
+
+| Product | Correction given | Build | Key | Build cost |
+|---|---|---|---|---|
+| Halden can | "a normal 12 oz drinks can; closed flat lid slightly below the rim; simple base" | 66 × 122.2 mm, 393 mL | 66 × 122.2 mm, 390 mL | 1 turn, 4,991 tokens |
+| Northpeak bottle | "sounds too big for half a litre; check the volume works out to ~500 mL; ordinary small cap" | 64 × 203 mm, bottle 512 mL | 63 × 195 mm, bottle 500 mL | 1 turn, 5,566 tokens |
+| Orchard carton | "standard gable-top carton: square, the top slopes like a roof to a thin sealed fin" | 88 × 88 × 230 mm, 1.58 L | 90 × 90 × 237 mm, 1.68 L | 2 turns, 10,742 tokens |
+
+Every build passed its generic checks first time.
+
+**What it means.** The first specs got two of three right on scale: the can within 2% from the photo alone, the carton within 3%. The ribbed bottle's first spec was 16% oversized (73 × 231 mm), and its own volume didn't add up to its stated target; a client's "that sounds too big, check the volume" fixed it to within 4%. Naming the standard ("a normal 12 oz can") snapped the can to exact standard dimensions. The carton's front shot hides the gable (face-on, a roof reads as a flat band), so the first spec drew a near-flat top; one sentence from the client gave a correct roof and fin. Two weaknesses repeat: the water bottle's neck again stops below the cap (the cap sits on top, as in the soda's first build, because the correction didn't mention it this time), and its ribs came out as three broad grooves where the photo shows five tight ones. So across four products: scale from net contents plus a photo is within a few per cent once a client sanity-checks it, the hand-off now carries corrections, and what's left is detail read from the photo (rib count, waist depth) and the neck-inside-cap convention, which a standing line in the spec prompt could fix.
+
+**Spend.** $0.02 for the three sessions; about $0.03 for the day's spec-first work. Phase 3 about $15.78 of $20.
+
+**Next (recommended).** Add one line on closures (the neck runs up inside the cap) to the spec prompt and rerun the water bottle; then decide whether to build the scored arm (spec and build scored against the key over several runs per product).

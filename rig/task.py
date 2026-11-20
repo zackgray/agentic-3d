@@ -19,6 +19,7 @@ class Task:
     checks: list[dict]
     folder: Path
     variants: dict[str, list[str]]  # reference variant -> checks it must fail
+    images: list[str] | None = None  # task-local images that always ride in the first message (a product shot)
 
     @property
     def reference(self) -> Path:
@@ -43,6 +44,18 @@ class Task:
             out.append(("image/png", base64.b64encode(f.read_bytes()).decode("ascii")))
         return out
 
+    def attached_images(self) -> list[tuple[str, str]] | None:
+        """(media type, base64) for the task's own images (task.toml `images`), or None."""
+        if not self.images:
+            return None
+        out = []
+        for name in self.images:
+            f = self.folder / name
+            if not f.is_file():
+                raise SetupError(f"missing task image {f}")
+            out.append(("image/png", base64.b64encode(f.read_bytes()).decode("ascii")))
+        return out
+
     def brief_digest(self, subdir: str) -> str:
         """Fingerprint of the attached views, folded into the prompt fingerprint."""
         h = hashlib.sha256()
@@ -60,6 +73,6 @@ def load_task(path: str | Path) -> Task:
         data = tomllib.loads(toml.read_text(encoding="utf-8"))
         return Task(id=data["id"], title=data["title"], prompt=data["prompt"].strip(),
                     starting_scene=data["starting_scene"], checks=data["checks"], folder=folder,
-                    variants=data.get("variants", {"good": []}))
+                    variants=data.get("variants", {"good": []}), images=data.get("images"))
     except (OSError, KeyError, tomllib.TOMLDecodeError) as e:
         raise SetupError(f"Bad task {toml}: {e!r}") from e

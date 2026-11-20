@@ -54,6 +54,8 @@ def prompt_sha(prompt: str, arm: str, scene_text: str = "") -> str:
 def task_sha(task, arm: str) -> str:
     """prompt_sha for a task under an arm; an image arm also folds in the views' bytes."""
     extra = task.brief_digest(IMAGES[arm]) if arm in IMAGES else ""
+    for _, data in task.attached_images() or []:  # a task's own images are part of its prompt too
+        extra += hashlib.sha256(data.encode("ascii")).hexdigest()
     return prompt_sha(task.prompt, arm, task.scene_text + extra)
 
 
@@ -62,7 +64,7 @@ def execute(args, rec: dict, run_dir: Path, transcript: list) -> None:
     rec["versions"]["blender"] = blender_version(exe)
     task = load_task(args.task)
     rec["prompt_sha"] = task_sha(task, args.arm)
-    images = task.brief_images(IMAGES[args.arm]) if args.arm in IMAGES else None
+    images = task.brief_images(IMAGES[args.arm]) if args.arm in IMAGES else task.attached_images()
     client = make_client(args.model)
     if hasattr(client, "describe"):  # a non-Anthropic backend: record exactly what served the run
         rec["versions"]["model"] = client.describe()
@@ -104,6 +106,7 @@ def main(argv=None) -> int:
     p.add_argument("--effort", default="low")
     p.add_argument("--max-turns", type=int, default=40)
     p.add_argument("--max-cost", type=float, default=0.50, help="USD per run; the run ends there and is scored (a spend guard)")
+    p.add_argument("--label", help="free tag kept in the record (e.g. a spec-session stamp)")
     p.add_argument("--blender", help="override the Blender executable (a wrong path must give void)")
     args = p.parse_args(argv)
     load_env(ROOT / ".env")
@@ -116,7 +119,7 @@ def main(argv=None) -> int:
     run_dir = ROOT / "runs" / run_id
     run_dir.mkdir(parents=True)
     rec = {"run_id": run_id, "task": task_id, "setup": args.setup, "model": args.model,
-           "effort": args.effort, "arm": args.arm, "started": started.isoformat(), "verdict": None,
+           "effort": args.effort, "arm": args.arm, "label": args.label, "started": started.isoformat(), "verdict": None,
            "versions": {"rig": rig_version(), "anthropic_sdk": anthropic.__version__,
                         "python": sys.version.split()[0]}}
     transcript: list = []
