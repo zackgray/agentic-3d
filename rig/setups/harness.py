@@ -19,7 +19,7 @@ from ..blender import SIDE, SetupError
 from .harness_prompt import INTRO, SYSTEM, TOOLS
 
 NAME = "harness"
-VERSION = "h7"  # h6 read no circles or paired profiles and reset names every call; h5's loop handling miscounted (review fixes); h4 looped on problems it could not locate or fix; h3 had no mm constant (1,000x builds); h2 reported millimetres (agents built 1,000x); h1 stale matrix_world; bump when the system prompt, tools, helpers, report or executor change
+VERSION = "h9"  # h8 (expected extents, lathe warning) not adopted; h9 adds a one-time scale warning on done; h6 read no circles or paired profiles and reset names every call; h5's loop handling miscounted (review fixes); h4 looped on problems it could not locate or fix; h3 had no mm constant (1,000x builds); h2 reported millimetres (agents built 1,000x); h1 stale matrix_world; bump when the system prompt, tools, helpers, report or executor change
 OUTPUT_CAP = 10_000
 PERSIST = 3    # same problems this many calls in a row: done=true may finish anyway (owner, 2026-11-17)
 CALL_CAP = 8   # backstop: the run ends after this many calls and the scene is checked as it stands
@@ -98,7 +98,8 @@ class HarnessSetup:
         capped = self.calls >= CALL_CAP
         limit = f"\nCall limit ({CALL_CAP}) reached; the task ends here."
         try:
-            resp = self._request({"op": "exec", "code": tool_input["code"]})
+            resp = self._request({"op": "exec", "code": tool_input["code"],
+                                  "done": bool(tool_input.get("done"))})
         except (socket.timeout, TimeoutError, ConnectionError, OSError) as e:
             # The agent's code hung or took Blender down. The scene on disk is the last clean step.
             self._kill()

@@ -265,3 +265,24 @@ The lower pass rate isn't the sandbox. Replaying all 30 sandboxed runs' code in 
 **Not tested.** Hypothesis 3 (out-of-date Blender knowledge favours the harness) wasn't measured directly; the local Qwen's failures point that way. One round of 30 per model is directional; no held-out set was run for these models.
 
 **Spend.** OpenRouter $8.21 for the arm (screen, round, one void re-run), against the $10 cap; first quoted at $4–5 (Qwen and Gemini cost more on the harder tasks than on the screen). Phase 3 about $15.40 of $20.
+
+## 2026-11-20 · h9: a one-time scale warning
+
+**Why.** Four of DeepSeek's seven h7 harness failures were builds 1,000 times too large (millimetre sizes written as metres) that ended on a clean done=true first call, before the report's bounding boxes were read. A prompt line wouldn't help: the metres instruction is already there twice, and DeepSeek's own comments show it knew the sizes were in millimetres.
+
+**Built.** On a done=true call, if any mesh is more than 10 m across, the harness prints one warning naming the parts and their size, reminds the agent that a millimetre size is written `30 * mm`, and holds the run open, the same way a boolean that changed nothing does. It fires at most once a run, so a model that really means a 10 m part finishes on its next done=true call. Calls without done=true never warn, since the report already shows the sizes. One clause was added to the system prompt, so the version is h9 (h8 was the unadopted experiment). Self-tests pass on the host and in the sandbox.
+
+**Free check first.** Across all 525 recorded harness runs, the 10 m threshold would have flagged 6 final scenes, all failures (four DeepSeek, two Haiku, 32–145 m), and no passing run; the largest part in any passing run is 0.36 m. None of Sonnet's h7 failures was a scale error (all its failed scenes are at the right size), so the earlier note that Sonnet's failures share this cause was wrong: they share the early finish, not the units.
+
+**Measured** (development, 30 tasks, one run each, `harness-sandbox`; h7 is the 2026-11-19 round).
+
+| Model | Pass, h7 → h9 | Tokens per passed task | Typical (geometric mean) tokens | Cost per pass | Warning fired |
+|---|---|---|---|---|---|
+| DeepSeek V4.1 Flash | 23/30 → 28/30 | 11,981 → 17,968 | 6,580 → 7,636 | $0.0031 → $0.0029 | 2 runs, both real 1,000x builds, both fixed and passed |
+| Haiku 5.5 | 26/30 → 29/30 | 7,205 → 7,355 | 5,158 → 5,115 | $0.0019 → $0.0017 | never |
+
+**What it means.** The warning did what it was built for: twice DeepSeek built a 70–85 m compact or jar, was held, fixed the units on the next call and passed; in h7 that ended as a fail. There were no false alarms on Haiku. DeepSeek is back over the ~82% guardrail (93%). Its two remaining failures are a cream tube that spent the whole output budget thinking and a logo plaque 1 mm short; neither is about scale. The rest of the pass gain (DeepSeek's p03, p05, h03, r07; Haiku's four) is run-to-run variation, not the warning, which fired on only two runs. DeepSeek's tokens per pass rose mostly on runs the warning never touched (the thinking-budget fail alone is 17k); its typical run is about 1,000 tokens heavier, within one-round noise. The warning costs nothing on runs it doesn't fire on. One round of 30 per model is directional.
+
+**Recommended.** Adopt h9 as the current harness. It changes the published h7 numbers only for new runs; the h7 rows stay as published.
+
+**Spend.** $0.13 (DeepSeek $0.08 on OpenRouter, Haiku $0.05). Phase 3 about $15.53 of $20.

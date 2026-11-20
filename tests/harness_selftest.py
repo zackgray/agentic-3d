@@ -1,4 +1,4 @@
-"""Free checks of the h6 and h7 behaviours against a live harness Blender (no model calls). Run from the repo root:
+"""Free checks of the h6, h7 and h9 behaviours against a live harness Blender (no model calls). Run from the repo root:
 
     python tests/harness_selftest.py [--sandbox]   # --sandbox: the same checks in the container
 """
@@ -94,6 +94,18 @@ boolean('Slab', 'Far')
 expect("missed boolean warns and holds the run", "warning" in o.text and not o.final and "helper warned" in o.text, o)
 o = call("pass", done=True)
 expect("done=true again finishes", o.final, o)
+
+# h9. A part tens of metres across holds a done=true call once per run; never a call without done.
+h.calls = 0
+o = call("remove('Slab')\nbox('Huge', (0, 0, 0), (30, 20, 10))")
+expect("scale: no warning without done", "very large" not in o.text and not o.final, o)
+o = call("pass", done=True)
+expect("scale: done=true held once with a warning", "very large parts: Huge (30 m)" in o.text and not o.final, o)
+o = call("pass", done=True)
+expect("scale: done=true again finishes", o.final, o)
+o = call("box('Huge2', (40, 0, 0), (90, 5, 5))", done=True)
+expect("scale: holds only once per run", "very large" not in o.text and o.final, o)
+call("remove('Huge', 'Huge2')\nbox('Slab', (-1, -1, 0), (1, 1, 0.1))")
 
 # 5. Streak: raised and inspection-only calls don't count; progress resets it.
 h.calls, h.streak, h.prev = 0, 0, None

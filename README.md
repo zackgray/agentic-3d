@@ -30,7 +30,7 @@ The agent gets one tool: run Python in a Blender session that stays open for the
 
 - **A scene report after every call** in place of the inspection code agents otherwise write: per object, the face count and bounds, then generic problems (open edges, separate pieces, self-intersections, flipped normals, coincident vertices, parts touching). It never sees a task's checks.
 - **An opening read of the existing model** for revisions: levels, a revolved part's profile, round holes with their positions, repeated features with count and spacing, and each flat level's outline. Mining 181 recorded revision runs showed this is what agents spent their first calls measuring; h7 cut revision cost from 21.9k to 5.2k tokens per pass.
-- **Auto-finish:** a call marked done ends the run if it raised nothing and the report is clean, so the agent never pays to resend the whole conversation just to say "done".
+- **Auto-finish:** a call marked done ends the run if it raised nothing and the report is clean, so the agent never pays to resend the whole conversation just to say "done". Since h9, a finishing call with a part over 10 m across is held open once, since that is almost always millimetres written as metres; the figures above are h7's, and h9 is measured in the journal (2026-11-20).
 - **Small generic helpers** (primitives, a lathe, an exact boolean, cleanup) and bounded repair loops.
 
 ## How it's measured

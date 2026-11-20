@@ -1,4 +1,4 @@
-"""The h7 harness with its Blender in a container (setup name "harness-sandbox").
+"""The harness with its Blender in a container (setup name "harness-sandbox").
 
 Agent-written code otherwise runs in a Blender that is the owner's Windows user: every file, the
 network, other programs. Here it runs in a Linux container (sandbox/Dockerfile) with
@@ -10,7 +10,7 @@ network, other programs. Here it runs in a Linux container (sandbox/Dockerfile) 
 Each run gets a fresh container, removed when it stops. Inside, an audit hook logs what the agent's
 code tries past those walls (harness_audit); the log is kept with the run.
 
-The model sees exactly what h7 shows it; only where Blender runs changes. Checks still run in the
+The model sees exactly what the harness shows it; only where Blender runs changes. Checks still run in the
 host's Blender on the saved scene, as for every other setup.
 """
 import json

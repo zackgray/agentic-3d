@@ -3,12 +3,13 @@
     blender -b scene.blend --factory-startup --python harness_server.py -- port_file
 
 Listens on 127.0.0.1 (an ephemeral port, written to port_file) for one JSON request per line:
-    {"op": "exec", "code": "..."}  -> {"ok", "output", "warnings", "report", "problems", "keys",
+    {"op": "exec", "code": "...", "done": bool}  -> {"ok", "output", "warnings", "report", "problems", "keys",
                                        "fingerprint"}
     {"op": "report"}               -> the same without ok, output and warnings (detailed: adds Z
                                       and radial levels)
 problems is the count; keys is [[key, count], ...], one per problem; warnings counts the helper
-warnings (e.g. a boolean that changed nothing) printed during the call.
+warnings (e.g. a boolean that changed nothing) printed during the call; on a done call, also the
+one-time scale warning (h9).
     {"op": "quit"}
 With --stdio instead of a port file (the harness-sandbox setup: no network in the container), requests
 come on stdin and each response is one stdout line after MARK, so Blender's own output on the same
@@ -89,6 +90,11 @@ def safe_report(detail):
 def handle(req):
     if req["op"] == "exec":
         ok, output = run_code(req["code"])
+        if ok and req.get("done"):
+            buf = io.StringIO()
+            with contextlib.redirect_stdout(buf):
+                harness_lib.scale_check()
+            output += buf.getvalue()
         warnings = len(harness_lib.WARNINGS) if ok else 0
         return {"ok": ok, "output": output, "warnings": warnings, "audit": harness_audit.take(),
                 **safe_report(False)}

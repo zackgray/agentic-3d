@@ -149,6 +149,28 @@ def warn(msg):
     print("warning: " + msg)
 
 
+HUGE = 10.0  # m: no hand-held product comes near this; a millimetre size written as metres does
+_scale_held = []  # one entry once the scale warning has held a run open
+
+
+def scale_check():
+    """On a done=true call, warn once per run if any mesh is over HUGE across. h7 lost 4 of
+    DeepSeek's 7 failed runs (and some of Sonnet's) to 1,000x builds that ended on a clean first
+    call before the report's bounding boxes were read."""
+    if _scale_held:
+        return
+    big = []
+    for o in bpy.data.objects:
+        if o.type == "MESH" and o.data.vertices:
+            pts = [o.matrix_world @ v.co for v in o.data.vertices]
+            span = max(max(p[i] for p in pts) - min(p[i] for p in pts) for i in range(3))
+            if span > HUGE:
+                big.append(f"{o.name} ({span:.3g} m)")
+    if big:
+        _scale_held.append(1)
+        warn("very large parts: " + ", ".join(big[:5]) + ". Sizes are in metres; a size given in "
+             "millimetres is written 30 * mm. If this scale is intended, call again with done=true.")
+
 def _volume(obj):
     bm = bmesh.new()
     bm.from_mesh(obj.data)
