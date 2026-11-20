@@ -22,7 +22,7 @@ from .agent_loop import run_agent
 from .env import load_env
 from .blender import SetupError, blender_path, blender_version, make_starting_scene, run_checks
 from .models import make_client
-from .prompt_arms import ARMS, REQUEST, apply
+from .prompt_arms import ARMS, IMAGES, REQUEST, apply
 from .setups.harness import HarnessSetup
 from .setups.mcp_servers import MCP_SETUPS
 from .setups.no_mcp import NoMcpSetup
@@ -51,11 +51,18 @@ def prompt_sha(prompt: str, arm: str, scene_text: str = "") -> str:
     return hashlib.sha256((apply(prompt, arm) + scene_text).encode("utf-8")).hexdigest()[:12]
 
 
+def task_sha(task, arm: str) -> str:
+    """prompt_sha for a task under an arm; an image arm also folds in the views' bytes."""
+    extra = task.brief_digest(IMAGES[arm]) if arm in IMAGES else ""
+    return prompt_sha(task.prompt, arm, task.scene_text + extra)
+
+
 def execute(args, rec: dict, run_dir: Path, transcript: list) -> None:
     exe = blender_path(args.blender)
     rec["versions"]["blender"] = blender_version(exe)
     task = load_task(args.task)
-    rec["prompt_sha"] = prompt_sha(task.prompt, args.arm, task.scene_text)
+    rec["prompt_sha"] = task_sha(task, args.arm)
+    images = task.brief_images(IMAGES[args.arm]) if args.arm in IMAGES else None
     client = make_client(args.model)
     if hasattr(client, "describe"):  # a non-Anthropic backend: record exactly what served the run
         rec["versions"]["model"] = client.describe()
@@ -75,7 +82,7 @@ def execute(args, rec: dict, run_dir: Path, transcript: list) -> None:
     try:
         rec["agent"] = run_agent(client, args.model, args.effort, setup, apply(task.prompt, args.arm), counter, ledger,
                                  transcript, max_turns=args.max_turns,
-                                 request=REQUEST.get(args.arm), max_cost=args.max_cost)
+                                 request=REQUEST.get(args.arm), max_cost=args.max_cost, images=images)
     finally:
         setup.stop()
         rec["metrics"] = ledger.summary()

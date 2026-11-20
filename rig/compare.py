@@ -13,7 +13,8 @@ import sys
 from collections import defaultdict
 from statistics import mean
 
-from .run import ROOT, prompt_sha
+from .prompt_arms import IMAGES
+from .run import ROOT, task_sha
 from .task import load_task
 
 
@@ -66,11 +67,16 @@ def main(argv=None) -> int:
     p.add_argument("--effort", default="low")
     p.add_argument("--arm", default="base")
     p.add_argument("--groups", action="store_true", help="also break down by task group")
+    p.add_argument("--tasks", nargs="*", help="only tasks whose names start with these prefixes")
     args = p.parse_args(argv)
 
     folders = sorted(d for d in (ROOT / args.suite).iterdir() if d.is_dir() and not d.name.startswith("_"))
+    if args.tasks:
+        folders = [d for d in folders if any(d.name.startswith(t) for t in args.tasks)]
+    if args.arm in IMAGES:  # an image arm exists only for tasks with rendered views
+        folders = [d for d in folders if (d / IMAGES[args.arm]).is_dir()]
     tasks = {d.name: load_task(d) for d in folders}
-    shas = {n: prompt_sha(t.prompt, args.arm, t.scene_text) for n, t in tasks.items()}
+    shas = {n: task_sha(t, args.arm) for n, t in tasks.items()}
     runs = load_runs(args, shas)
     stats = {s: summarise(runs[s]) for s in args.setups if runs[s]}
     ref = stats.get(args.setups[0])

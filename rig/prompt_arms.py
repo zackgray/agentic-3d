@@ -20,7 +20,16 @@ ARMS = {
     # is resent. Server-side clearing can't do this: it treats a whole tool loop as one turn and keeps
     # it. Dropping a leading run of thinking blocks (oldest first) keeps later blocks valid on Haiku 5.5.
     "clear-thinking": "",
+    # Image arm (owner, 2026-11-20): the full written spec plus rendered views of the reference model,
+    # attached to the first message (IMAGES). Build tasks only; views from rig/render_briefs.py.
+    "views": (
+        "Attached are four views of the finished product: front (looking along +Y), side (looking "
+        "along -X) and top, all orthographic, and a three-quarter view. Each object has its own flat "
+        "colour. The written sizes above are exact; use the views for shape."
+    ),
 }
+
+IMAGES = {"views": "brief"}  # arm -> the task subfolder whose rendered views ride in the first message
 
 REQUEST = {
     "think-off": {"thinking": {"type": "disabled"}},

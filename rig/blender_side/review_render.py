@@ -28,6 +28,8 @@ hi = Vector([max(p[i] for p in pts) for i in range(3)])
 centre, size = (lo + hi) / 2, max((hi - lo).length, 1e-4)
 
 scene.render.engine = "BLENDER_WORKBENCH"
+for flag in [a for a in dir(scene.render) if a.startswith("use_stamp")]:  # no metadata: it holds local paths
+    setattr(scene.render, flag, False)
 shading = scene.display.shading
 shading.light, shading.color_type = "STUDIO", "OBJECT"
 shading.show_cavity = shading.show_object_outline = True

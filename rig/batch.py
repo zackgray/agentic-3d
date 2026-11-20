@@ -10,7 +10,7 @@ import sys
 from collections import Counter
 from pathlib import Path
 
-from .run import ROOT, SETUPS, prompt_sha
+from .run import ROOT, SETUPS, task_sha
 from .task import load_task
 from .run import main as run_one
 
@@ -54,7 +54,7 @@ def main(argv=None) -> int:
     folders = sorted(d for d in (ROOT / args.suite).iterdir() if d.is_dir() and not d.name.startswith("_"))
     tasks = resolve_tasks(folders, args.tasks)
 
-    shas = {t.name: prompt_sha((lt := load_task(t)).prompt, args.arm, lt.scene_text) for t in tasks}
+    shas = {t.name: task_sha(load_task(t), args.arm) for t in tasks}
     done, started = done_counts(args.model, args.effort, args.arm, shas), 0
     for rep in range(args.repeats):
         for task in tasks:

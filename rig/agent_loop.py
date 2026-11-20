@@ -8,7 +8,7 @@ from .accounting import Counter, Ledger
 
 def run_agent(client, model: str, effort: str, setup, prompt: str, counter: Counter, ledger: Ledger,
               transcript: list, max_turns: int = 40, max_tokens: int = 16000, request: dict | None = None,
-              max_cost: float | None = None) -> dict:
+              max_cost: float | None = None, images: list | None = None) -> dict:
     ledger.add("system", counter.system(setup.system))
     ledger.add("tool_definitions", counter.tools(setup.tools))
     ledger.add("task_prompt", counter.text(prompt))
@@ -19,8 +19,13 @@ def run_agent(client, model: str, effort: str, setup, prompt: str, counter: Coun
     opts = dict(request or {})
     drop_old_thinking = opts.pop("rig_drop_old_thinking", False)
     thinking_by_turn: list[int] = []
-    messages = [{"role": "user", "content": prompt}]
-    transcript.append({"role": "user", "content": prompt})
+    first = prompt
+    if images:  # an image arm: the views ride in the first message, before the text, counted on their own
+        ledger.add("images", sum(counter.image(mt, data) for mt, data in images))
+        first = [{"type": "image", "source": {"type": "base64", "media_type": mt, "data": data}}
+                 for mt, data in images] + [{"type": "text", "text": prompt}]
+    messages = [{"role": "user", "content": first}]
+    transcript.append({"role": "user", "content": prompt, "images": len(images or [])})
 
     for _ in range(max_turns):
         t0 = time.monotonic()

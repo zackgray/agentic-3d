@@ -1,9 +1,13 @@
 """Task files: tasks/<id>/task.toml holds the prompt, starting scene and checks."""
+import base64
+import hashlib
 import tomllib
 from dataclasses import dataclass
 from pathlib import Path
 
 from .blender import SetupError
+
+BRIEF_VIEWS = ("front", "side", "top", "three_quarter")  # order the views are attached in
 
 
 @dataclass
@@ -27,6 +31,24 @@ class Task:
         if self.starting_scene == "empty":
             return ""
         return (self.folder / self.starting_scene).read_text(encoding="utf-8")
+
+    def brief_images(self, subdir: str) -> list[tuple[str, str]]:
+        """(media type, base64) for each rendered view in <task>/<subdir>/, in BRIEF_VIEWS order.
+        A missing view is a SetupError: the run would otherwise silently become the text arm."""
+        out = []
+        for v in BRIEF_VIEWS:
+            f = self.folder / subdir / f"{v}.png"
+            if not f.is_file():
+                raise SetupError(f"missing brief view {f} (python -m rig.render_briefs {self.id})")
+            out.append(("image/png", base64.b64encode(f.read_bytes()).decode("ascii")))
+        return out
+
+    def brief_digest(self, subdir: str) -> str:
+        """Fingerprint of the attached views, folded into the prompt fingerprint."""
+        h = hashlib.sha256()
+        for _, data in self.brief_images(subdir):
+            h.update(data.encode("ascii"))
+        return h.hexdigest()
 
 
 def load_task(path: str | Path) -> Task:
