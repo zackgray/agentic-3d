@@ -71,6 +71,8 @@ python -m rig.run tasks/p01-threaded-bottle --setup harness --model claude-haiku
 python -m rig.batch --tasks r01 r02 --setups no-mcp harness --repeats 3
 python -m rig.compare --setups no-mcp harness --version harness=h7 --groups
 python -m rig.spec_session spec volta                  # spec-first: a dimensioned spec from a product page; then revise --notes, build, compare
+python -m rig.spec_arm run --reps 5                    # scored: direct, spec and corrected-spec builds against the hidden keys; then report
+python -m rig.judge build                              # blind judging page for the builds (serve, then reveal)
 ```
 
 Runs are recorded under `runs/` (git-ignored): result, full transcript and per-call records for each. The recorded runs behind every figure above are attached to the `h7` release as a download.
