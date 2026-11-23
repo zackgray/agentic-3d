@@ -1,8 +1,0 @@
-id = "halden-can-12oz"
-name = "Halden Sparkling Water"
-category = "Sparkling water"
-container = "Aluminium can"
-net_contents = "12 fl oz (355 mL)"
-page = "Halden Sparkling Water, lime. 12 fl oz (355 mL) can. 1 per container."
-objects = ["Can"]
-colours = { Can = [0.74, 0.76, 0.8] }

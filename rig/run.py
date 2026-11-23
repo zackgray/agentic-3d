@@ -3,11 +3,13 @@
     python -m rig.run tasks/p01-threaded-bottle --setup no-mcp --model claude-haiku-5-5 --effort low
 
 Void means the rig or environment broke (Blender missing, API unreachable, a check crashed), so the
-run says nothing about the agent. Records go to runs/<run id>/ (git-ignored).
+run says nothing about the agent. Records go to runs/<run id>/ (git-ignored), or under the folder
+named by AGENTIC3D_RUNS when another project drives the rig.
 """
 import argparse
 import hashlib
 import json
+import os
 import subprocess
 import sys
 import time
@@ -31,6 +33,11 @@ from .setups.no_mcp_sandbox import NoMcpSandboxSetup
 from .task import load_task
 
 ROOT = Path(__file__).resolve().parent.parent
+
+
+def runs_dir() -> Path:
+    return Path(os.environ.get("AGENTIC3D_RUNS") or ROOT / "runs")
+
 SETUPS = {"no-mcp": NoMcpSetup, "harness": HarnessSetup, "harness-sandbox": SandboxHarnessSetup, "no-mcp-sandbox": NoMcpSandboxSetup, **MCP_SETUPS}
 
 
@@ -116,7 +123,7 @@ def main(argv=None) -> int:
     run_id = f"{started:%Y%m%d-%H%M%S}_{task_id}_{args.setup}_{args.model}-{args.effort}"
     if args.arm != "base":
         run_id += f"_{args.arm}"
-    run_dir = ROOT / "runs" / run_id
+    run_dir = runs_dir() / run_id
     run_dir.mkdir(parents=True)
     rec = {"run_id": run_id, "task": task_id, "setup": args.setup, "model": args.model,
            "effort": args.effort, "arm": args.arm, "label": args.label, "started": started.isoformat(), "verdict": None,

@@ -70,9 +70,6 @@ python -m rig.opening_read --no-count                  # the opening read on eve
 python -m rig.run tasks/p01-threaded-bottle --setup harness --model claude-haiku-5-5 --effort low
 python -m rig.batch --tasks r01 r02 --setups no-mcp harness --repeats 3
 python -m rig.compare --setups no-mcp harness --version harness=h7 --groups
-python -m rig.spec_session spec volta                  # spec-first: a dimensioned spec from a product page; then revise --notes, build, compare
-python -m rig.spec_arm run --reps 5                    # scored: direct, spec and corrected-spec builds against the hidden keys; then report
-python -m rig.judge build                              # blind judging page for the builds (serve, then reveal)
 ```
 
 Runs are recorded under `runs/` (git-ignored): result, full transcript and per-call records for each. The recorded runs behind every figure above are attached to the `h7` release as a download.
@@ -81,7 +78,6 @@ Runs are recorded under `runs/` (git-ignored): result, full transcript and per-c
 
 - `rig/`: the runner, batch and comparison tools, the setups (no MCP, three MCP servers, the harness), and the Blender-side checks and harness server.
 - `tasks/`: the 30-task development suite and shared reference-model helpers; `heldout/` … `heldout4/`: the four held-out sets, each spent.
-- `products/`: invented products briefed as a product page (page text and one front shot, no dimensions), each with a hidden reference model and measured key, for the spec-first workflow.
 - `sandbox/`: the container image for the `harness-sandbox` setup.
 - `tests/`: unit tests (`tests/unit/`) and live-Blender tests.
 - `docs/`: `report.md` (the Phase 3 report), `case-study.md` (the write-up in order), `journal.md` and the earlier journals (dated record of what was done, decided and measured), `eval-method.md`, `task-authoring.md`, `publishing.md` (how changes reach this repo), `research.md` (the landscape at the start), `roadmap.md`.

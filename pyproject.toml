@@ -19,16 +19,14 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest"]
-judge = ["pillow"]  # rig/judge: the blind shape-judging page
 
 # No console scripts: the CLI stays `python -m rig.<module>`, run from the repo root
 # (the rig finds tasks/, runs/ and vendor/ relative to the source tree, so install editable).
 [tool.setuptools]
-packages = ["rig", "rig.setups", "rig.judge"]
+packages = ["rig", "rig.setups"]
 
 [tool.setuptools.package-data]
 rig = ["blender_side/*.py"]
-"rig.judge" = ["assets/*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests/unit"]

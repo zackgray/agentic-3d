@@ -1,9 +1,0 @@
-id = "volta-soda-20oz"
-name = "Volta Citrus Soda"
-category = "Carbonated soft drink"
-container = "PET bottle with screw cap"
-net_contents = "20 fl oz (591 mL)"
-page = "Volta Citrus Soda. Carbonated soft drink. 20 fl oz (591 mL) bottle. 1 per container."
-objects = ["Bottle", "Cap"]
-label_mm = [112, 148]  # the shot only: a printed sleeve band, not part of the model
-colours = { Bottle = [0.78, 0.84, 0.86], Cap = [0.95, 0.55, 0.12], Label = [0.96, 0.62, 0.18] }
