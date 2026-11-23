@@ -6,6 +6,7 @@ Run `/orient` (or read the private handoff beside the project memory) and the ne
 - **Goal #1 is fewer tokens** for Blender modeling work; accuracy and speed follow. Every claim about efficiency needs a number from the eval.
 - **Pass / fail / void.** A setup fault is void, never a failure. Fix the setup and rerun.
 - **Hypothetical products only.** No client work.
+- **Scope is token cost.** Product-page modelling and shape-accuracy work moved to a separate private project on 2026-11-23; don't bring it back here.
 - **Models.** Anthropic models for the harness work. Other families only for the cross-family arm (owner's go 2026-11-19): the models listed in `rig/models.py`, each pinned to one provider, always on the sandboxed setups. Kimi stays excluded (dropped 2026-11-16). Adding a model or family needs the owner's go.
 - **Spend:** get the owner's go before any run that isn't the agreed pilot or matrix.
 - **Owner's split:** the agent models (and later animates); the owner lights, textures and finishes in other software. Don't build lighting or texturing tooling.

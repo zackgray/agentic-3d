@@ -2,6 +2,8 @@
 
 Drafted 2026-11-16. Each phase ends at a gate: a written exit check, and an owner decision before the next phase starts. Phases end on evidence, not dates.
 
+**Where it stands (2026-11-23):** Phases 0–3 are complete; Phase 3 closed on 2026-11-20 with its report drafted (`report.md`). No phase is active. Phase 4 is next by plan and hasn't started; it needs the owner's go.
+
 ## Phase 0 · Eval rig
 
 **Builds:** the machinery every later number depends on.
@@ -87,3 +89,5 @@ Turntables, a cap twisting off, exploded views, mechanical motion. New task grou
 - 2026-11-16: Phase 3 target is half the tokens of the best baseline at an equal or better pass rate, revisited after Phase 2.
 - 2026-11-16: the Phase 2 baseline report is published as a blog post; the repo stays private.
 - 2026-11-16: Kimi dropped, both as a baseline column and as an authoring worker. Anthropic models only.
+- 2026-11-18: the repository was published (GPL-3.0-or-later), starting from one clean commit; this supersedes "the repo stays private" above.
+- 2026-11-23: product-page modelling (thin briefs, shape accuracy) moved to a separate private project that builds on this rig; this repo stays on token cost.

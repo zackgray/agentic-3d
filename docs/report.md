@@ -108,7 +108,7 @@ DeepSeek was the one model the harness first cost accuracy (87% to 77%). Four of
 
 ## What's next
 
-Text briefs are the easy case. Clients send pictures, so the next experiment gives the agent rendered views of each product instead of, and alongside, the written brief, on the same tasks and checks, with and without the harness. After that comes a viewport that shows the agent's current step and lets an artist stop, undo and redirect it mid-build.
+Text briefs are the easy case, and clients send pictures. The first picture experiment has since run: four rendered views attached to the full written brief added cost and no accuracy (7% more tokens on the typical task without the harness, 17% with it), so pictures only earn their tokens where they carry what the text doesn't. The next phase planned here is a viewport that shows the agent's current step and lets an artist stop, undo and redirect it mid-build.
 
 ## Reproduce it
 
