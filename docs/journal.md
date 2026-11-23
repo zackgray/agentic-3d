@@ -72,3 +72,38 @@ Every build passed its generic checks first time.
 **Spend.** $0.02 for the three sessions; about $0.03 for the day's spec-first work. Phase 3 about $15.78 of $20.
 
 **Next (recommended).** Add one line on closures (the neck runs up inside the cap) to the spec prompt and rerun the water bottle; then decide whether to build the scored arm (spec and build scored against the key over several runs per product).
+
+## 2026-11-23 · The closure line, and the water bottle rerun
+
+**Changed.** One standing line in the spec prompt: a closure fits over the container the way the real one does, with the neck running up inside the cap to just below its top, so the cap's height range overlaps the neck's in the station table.
+
+**Measured** (owner's go, Haiku 5.5 low, Northpeak bottle, same plain-words correction as on 2026-11-20 so the line is the only change). The first spec put the neck inside the cap unprompted (neck to 198 mm inside a cap to 200 mm), and this time landed on scale before any correction: 63 × 200 mm against the key's 63 × 195, where the earlier first spec was 73 × 231. The revision and build followed: bottle 64 × 198 mm, 510 mL (key 63 × 191 mm, 500 mL), cap top at 200 (key 195), all generic checks passed in two turns, 14,927 tokens, $0.0028. The render reads as the same product as the reference. Still off: three broad grooves where the reference has five tight ones, and a hollow 22 mm cap where the key's is a solid 15 mm one (a reference convention, as with the soda).
+
+**What it means.** The neck-inside-cap fault is fixed by the prompt rather than by the client having to know to ask. The first spec's scale swung from 16% oversized to within 3% between two runs of the same prompt, so single sessions can't say how good the first spec is; that's what the scored arm is for.
+
+**Spend.** $0.008 (spec $0.0021, revision $0.0035, build $0.0028). Phase 3 about $15.79 of $20.
+
+## 2026-11-23 · The scored spec-first arm: 60 builds against the hidden keys
+
+**Built** (free). A repeat runner over three arms, a scorer, review renders and a blind judging page. The arms, per product and rep: *direct* (page text and photo straight to the builder, no spec), *spec* (the first spec built unread, as if a non-modeller approved it), and *spec1* (the first spec, one fixed correction, the revised spec built). The corrections were written and frozen before any run, one per product, naming the kind of product and no numbers ("a standard 20 oz soda bottle; make it solid", "a normal 12 oz drinks can with a closed lid", "an ordinary half-litre water bottle; check the volume works out", "a standard gable-top carton, the top slopes like a roof to a thin fin"). A rep passes when the main container's height, width and volume are all within 5% of the key and the generic build checks pass.
+
+**Scorer change before the run.** The first smoke rep showed enclosed volume punishes a convention: a first-spec can drew a thin-walled hollow can, matched height and width exactly, and scored −92% on volume. The scorer now measures the outside: rays fired inward at 120 heights × 32 angles on both the build and the key's reference model, integrated into an outside volume. Solid or hollow no longer counts, as already for caps. A scale-free profile error is recorded but not scored.
+
+**Measured** (owner's go, Haiku 5.5 low, harness-sandbox at h9, 4 products × 3 arms × 5 reps, no voids, $0.25).
+
+| Arm | Passed | Median tokens | Tokens per pass | Cost |
+|---|---|---|---|---|
+| direct | 7/20 | 5,103 | 17,988 | $0.034 |
+| spec | 10/20 | 11,882 | 26,985 | $0.082 |
+| spec1 | 11/20 | 22,620 | 54,462 | $0.150 |
+
+| Product | direct | spec | spec1 |
+|---|---|---|---|
+| Can | 5/5 | 4/5 | 4/5 |
+| Water bottle | 1/5 | 1/5 | 4/5 |
+| Carton | 0/5 | 1/5 | 2/5 |
+| Soda | 1/5 | 4/5 | 1/5 |
+
+**What it means.** The spec step earns its tokens: 10 passes against 7, at 1.5× the tokens per pass, and it's what makes the soda land (4/5 against 1/5). Building straight from the brief only works for a product with one obvious standard size (the can, 5/5 at 4k tokens). The generic correction is a coin flip: it fixes what the first spec got wrong (water bottle 1 → 4, the first specs ran 7% tall and 16% over volume) and breaks what it got right (soda 4 → 1: "a standard 20 oz bottle" pulls the height to the model's idea of a standard bottle, 6–9% shorter than this reference). It also doubles the tokens, and the corrected water bottles turned into 3–6-turn builds of hollow bottles (median 51k). The carton is the weak product in every arm: widths 6–12% narrow, since a face-on shot hides the depth and the gable. Five reps per cell is small; the direction is clear, the per-cell numbers are not.
+
+**Next.** The owner grades shape blind on the judging page (60 items); the reveal joins grades to arms. Then the case study.

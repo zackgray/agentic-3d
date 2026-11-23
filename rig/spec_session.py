@@ -24,7 +24,7 @@ from .blender import blender_path, run_checks, run_script
 from .env import load_env
 from .models import make_client
 from .product_briefs import build as build_reference
-from .spec_prompts import BUILD, NOTES, REVISE, SPEC
+from .spec_prompts import BUILD, DIRECT, NOTES, REVISE, SPEC
 from . import run as rig_run
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -45,7 +45,8 @@ def newest(folder: Path) -> Path:
     return sessions[-1]
 
 
-def write_spec(folder: Path, model: str, effort: str, parent: Path | None = None, notes: str = "") -> Path:
+def write_spec(folder: Path, model: str, effort: str, parent: Path | None = None, notes: str = "",
+               out: Path | None = None, quiet: bool = False) -> Path:
     """A spec from the brief, or (with parent and notes) the parent spec revised by the owner's notes,
     as a follow-up turn in the same conversation. Either way a new session folder holds the result."""
     meta = tomllib.loads((folder / "product.toml").read_text(encoding="utf-8"))
@@ -60,7 +61,7 @@ def write_spec(folder: Path, model: str, effort: str, parent: Path | None = None
     resp = make_client(model).messages.create(
         model=model, max_tokens=16000, output_config={"effort": effort}, messages=messages)
     spec = "\n".join(b.text for b in resp.content if b.type == "text").strip()
-    out = SESSIONS / folder.name / f"{datetime.now():%Y%m%d-%H%M%S}"
+    out = out or SESSIONS / folder.name / f"{datetime.now():%Y%m%d-%H%M%S}"
     out.mkdir(parents=True)
     u = resp.usage
     p_in, p_out, _ = PRICES.get(model, (0, 0, 0))
@@ -69,17 +70,23 @@ def write_spec(folder: Path, model: str, effort: str, parent: Path | None = None
     (out / "spec.json").write_text(json.dumps({
         "product": folder.name, "model": model, "effort": effort, "stop_reason": resp.stop_reason,
         "prompt": prompt, "parent": parent.name if parent else None, "notes": notes, "usage": u.model_dump(mode="json"), "cost_usd": round(cost, 5)}, indent=2), encoding="utf-8")
-    print(spec)
+    if not quiet:
+        print(spec)
     print(f"\n[{model} {effort}: in {u.input_tokens}, out {u.output_tokens}, ${cost:.4f}] -> {out}")
     return out
 
 
-def make_task(folder: Path, session: Path, notes: str) -> Path:
+def make_task(folder: Path, session: Path, notes: str, direct: bool = False) -> Path:
+    """The build task for a session folder: from its spec.md, or (direct) from the brief itself."""
     meta = tomllib.loads((folder / "product.toml").read_text(encoding="utf-8"))
     names = meta["objects"]
-    spec = (session / "spec.md").read_text(encoding="utf-8").strip()
-    prompt = BUILD.format(spec=spec, notes=NOTES.format(notes=notes.strip()) if notes.strip() else "",
-                          names=" and ".join(f'"{n}"' for n in names))
+    quoted = " and ".join(f'"{n}"' for n in names)
+    if direct:
+        prompt = DIRECT.format(page=meta["page"], names=quoted)
+    else:
+        spec = (session / "spec.md").read_text(encoding="utf-8").strip()
+        prompt = BUILD.format(spec=spec, notes=NOTES.format(notes=notes.strip()) if notes.strip() else "",
+                              names=quoted)
     task = session / f"spec-{folder.name}"
     task.mkdir(exist_ok=True)
     (task / "shot.png").write_bytes((folder / "shot.png").read_bytes())
@@ -88,7 +95,7 @@ def make_task(folder: Path, session: Path, notes: str) -> Path:
               {"type": "watertight", "objects": names},
               {"type": "self_intersection", "objects": names}]
     checks += [{"type": "no_overlap", "a": a, "b": b} for i, a in enumerate(names) for b in names[i + 1:]]
-    toml = [f'id = "spec-{folder.name}"', f'title = "{meta["name"]} from its approved spec"',
+    toml = [f'id = "spec-{folder.name}"', f'title = "{meta["name"]} from {"its brief" if direct else "its approved spec"}"',
             'starting_scene = "empty"', 'images = ["shot.png"]', f"prompt = {json.dumps(prompt)}"]
     for c in checks:
         toml.append("\n[[checks]]")

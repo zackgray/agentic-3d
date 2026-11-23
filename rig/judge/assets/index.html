@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Judging</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header id="top">
+  <b id="title"></b>
+  <span id="progress"></span>
+  <span id="saved"></span>
+  <span class="spacer"></span>
+  <button id="btn-save" title="E">Save grades file</button>
+  <button id="btn-import">Import grades</button>
+  <button id="btn-help" title="?">Keys</button>
+  <input type="file" id="file" accept="application/json,.json" hidden>
+</header>
+<main>
+  <section id="viewer">
+    <div id="stage">
+      <img id="im-item" alt="">
+      <img id="im-ref" alt="">
+      <img id="im-photo" alt="">
+      <div id="none">Nothing to show here.</div>
+    </div>
+    <div id="caption"></div>
+  </section>
+  <aside id="panel">
+    <div id="product"></div>
+    <div id="question"></div>
+    <div id="scale"></div>
+    <label id="note-box"><span>Note (optional) <kbd>N</kbd></span>
+      <input id="note" type="text" maxlength="200" autocomplete="off" spellcheck="false">
+    </label>
+    <div id="hint">Hold <kbd>R</kbd> for the reference model, <kbd>P</kbd> for the product photo.</div>
+  </aside>
+</main>
+<nav id="strip" aria-label="All items"></nav>
+<div id="toast"></div>
+<div id="overlay" hidden></div>
+<script src="data.js"></script>
+<script src="state.js"></script>
+<script src="model.js"></script>
+<script src="view.js"></script>
+<script src="panel.js"></script>
+<script src="save.js"></script>
+<script src="keys.js"></script>
+<script src="main.js"></script>
+</body>
+</html>
